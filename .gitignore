@@ -1,0 +1,53 @@
+# Secrets first, because this repository is public and the cost of getting this
+# wrong is not a build error. Nothing that identifies a person, signs a release,
+# or opens an account may ever be tracked here.
+local.properties
+*.jks
+*.keystore
+keystore.properties
+signing.properties
+google-services.json
+play-console-key.json
+*.p8
+*.p12
+*.pem
+secrets.properties
+.env
+.env.*
+
+# Gradle and the Android build
+.gradle/
+build/
+captures/
+.cxx/
+*.apk
+*.aab
+*.ap_
+*.dex
+*.class
+output.json
+release/
+
+# Kotlin
+.kotlin/
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+
+# Operating systems
+.DS_Store
+Thumbs.db
+*~
+
+# Editors and scratch
+*.swp
+*.swo
+/scratch/
+
+# Anything captured from a real device that has not been reviewed. Screenshots
+# that ship are added deliberately, one by one, under docs/screenshots/.
+docs/screenshots/raw/

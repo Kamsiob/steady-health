@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Steady: Today, warm and shaped</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --white:#FFFFFF;--ground:#FBF8F3;--ink:#1F2340;--ink2:#5C6180;--ink3:#9A9DB3;
+  --orange:#F5843E;--orange-d:#E86A22;--orange-l:#FFB27A;--peach:#FFD9BF;
+  --navy:#1E2A5A;--navy-l:#2E3D7D;--sky:#7FA6F2;--sky-l:#DCE7FC;
+  --sand:#F6E7D3;--butter:#FFD766;--sage:#BFD8C4;--green:#2E8B62;--green-l:#DDF0E4;
+  --f:'Figtree',system-ui,sans-serif;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#ECE8E1;color:var(--ink);font-family:var(--f);-webkit-font-smoothing:antialiased;line-height:1.45}
+.wrap{max-width:1360px;margin:0 auto;padding:60px 30px 100px}
+h1{font-weight:800;font-size:clamp(28px,3.4vw,42px);letter-spacing:-.035em;line-height:1.05;max-width:22ch;color:var(--navy)}
+.lede{margin-top:12px;font-size:16px;color:var(--ink2);max-width:66ch}
+.row{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:36px;align-items:start;margin-top:40px}
+.unit{display:flex;flex-direction:column;gap:14px;align-items:center}
+.cap{font-size:13.5px;color:var(--ink2);max-width:390px}.cap b{color:var(--ink);font-weight:700}
+h2{font-weight:800;font-size:20px;letter-spacing:-.02em;margin:54px 0 6px;color:var(--navy)}
+.rules{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:14px}
+.r{background:#fff;border-radius:20px;padding:18px 20px}.r b{display:block;font-size:14px;margin-bottom:6px;color:var(--navy)}.r p{font-size:13.5px;color:var(--ink2)}
+.pal{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+.pal div{width:64px;height:64px;border-radius:20px}
+
+.bez{width:406px;background:#111214;border-radius:54px;padding:8px;box-shadow:0 40px 80px rgba(30,20,10,.28),inset 0 0 0 1px #2C2E33}
+.sc{width:390px;height:844px;border-radius:46px;overflow:hidden;position:relative;background:var(--ground);color:var(--ink);font-family:var(--f);display:flex;flex-direction:column}
+.island{position:absolute;left:50%;top:14px;width:104px;height:30px;border-radius:20px;background:#111214;transform:translateX(-50%);z-index:20}
+.sb{height:50px;flex:none;display:flex;justify-content:space-between;align-items:flex-end;padding:0 30px 4px;font-size:14px;font-weight:700;color:var(--navy)}
+.content{flex:1;padding:6px 18px 0;display:flex;flex-direction:column;gap:12px;overflow:hidden}
+.content>*{flex-shrink:0}
+.hd{display:flex;align-items:flex-end;justify-content:space-between;padding:4px 4px 2px}
+.hd .d{font-size:13px;font-weight:600;color:var(--ink3)}
+.hd .g{font-size:28px;font-weight:800;letter-spacing:-.035em;line-height:1.05;color:var(--navy)}
+.hd .av{width:40px;height:40px;border-radius:50%;background:var(--butter);display:grid;place-items:center;font-size:13px;font-weight:800;color:var(--navy)}
+
+/* hero: colour block with a sun and hills, no faces */
+.hero{position:relative;border-radius:30px;overflow:hidden;background:var(--orange);color:#fff;padding:22px 22px 18px;min-height:240px;display:flex;flex-direction:column;justify-content:flex-end}
+.hero.evening{background:var(--navy)}
+.hero svg.art{position:absolute;inset:0;width:100%;height:100%}
+.hero .lbl{position:relative;font-size:14px;font-weight:700;opacity:.92}
+.hero .n{position:relative;font-size:64px;font-weight:900;letter-spacing:-.05em;line-height:1;margin-top:4px;font-variant-numeric:tabular-nums}
+.hero .n small{font-size:20px;font-weight:700;letter-spacing:-.01em;margin-left:6px;opacity:.9}
+.hero .ex{position:relative;font-size:13.5px;font-weight:500;line-height:1.4;margin-top:10px;max-width:30ch;opacity:.95}
+.hero .ex b{font-weight:800}
+.hero .tag{position:relative;display:inline-flex;align-items:center;gap:6px;background:rgba(255,255,255,.22);padding:6px 11px;border-radius:100px;font-size:12.5px;font-weight:700;margin-top:12px;align-self:flex-start}
+
+.sec{display:flex;align-items:baseline;justify-content:space-between;padding:6px 4px 0}
+.sec .t{font-size:17px;font-weight:800;letter-spacing:-.02em;color:var(--navy)}
+.sec .s{font-size:13px;font-weight:600;color:var(--ink3)}
+.three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.card{border-radius:24px;padding:14px 12px 12px;min-height:150px;display:flex;flex-direction:column;justify-content:space-between;position:relative;overflow:hidden}
+.card .glyph{height:54px;display:flex;align-items:flex-start}
+.card .glyph svg{width:52px;height:52px;overflow:visible}
+.card .t{font-size:14px;font-weight:800;letter-spacing:-.02em;line-height:1.15;color:var(--navy)}
+.card .s{font-size:11.5px;font-weight:600;color:var(--ink2);margin-top:3px;line-height:1.3}
+.card.c1{background:var(--sand)}.card.c2{background:var(--sky-l)}.card.c3{background:var(--green-l)}
+.card.done{background:var(--white);box-shadow:inset 0 0 0 2px var(--green-l)}
+.card .chk{position:absolute;right:10px;top:10px;width:24px;height:24px;border-radius:50%;background:var(--green);display:grid;place-items:center}
+.card .chk svg{width:13px;height:13px;stroke:#fff;stroke-width:3;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.walk{border-radius:26px;background:var(--navy);color:#fff;padding:16px 18px;display:flex;align-items:center;gap:14px;position:relative;overflow:hidden}
+.walk.evening{background:var(--white);color:var(--navy);box-shadow:inset 0 0 0 2px var(--sand)}
+.walk .k{font-size:12.5px;font-weight:700;opacity:.8}
+.walk .v{font-size:20px;font-weight:900;letter-spacing:-.03em;line-height:1.1;margin-top:2px}
+.walk .b{margin-left:auto;background:var(--orange);color:#fff;font-size:14px;font-weight:800;padding:11px 18px;border-radius:100px;flex:none}
+.walk.evening .b{background:var(--navy)}
+.walk .path{position:absolute;right:88px;top:-10px;opacity:.25}
+.week{display:flex;justify-content:space-between;padding:2px 6px 0}
+.week div{display:flex;flex-direction:column;align-items:center;gap:5px;font-size:11px;font-weight:700;color:var(--ink3)}
+.week i{width:26px;height:26px;border-radius:50%;background:#EDE7DE;display:block}
+.week i.on{background:var(--orange)}
+.week i.t{background:#fff;box-shadow:inset 0 0 0 2.5px var(--navy)}
+.week div.t{color:var(--navy)}
+.tab{flex:none;height:82px;background:#fff;border-top:1px solid #EFEAE2;display:flex;justify-content:space-around;align-items:flex-start;padding:10px 24px 0;color:var(--ink3)}
+.tab div{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:11px;font-weight:700;width:72px}
+.tab svg{width:26px;height:26px;fill:currentColor}
+.tab div.on{color:var(--navy)}
+.home{position:absolute;left:50%;bottom:8px;width:134px;height:5px;border-radius:3px;background:var(--navy);transform:translateX(-50%);z-index:12;opacity:.9}
+</style></head><body><div class="wrap">
+<h1>Today, warm and shaped.</h1>
+<p class="lede">Headspace's confidence with colour and its friendly, rounded type, but the illustration is built from shapes, not characters: a sun, hills, an arc, a dotted path. No faces, no doodles. Colour blocks do the organising, so each of the three daily things has its own field and you can find them without reading.</p>
+
+<div class="row">
+
+<div class="unit"><div class="bez"><div class="sc">
+<div class="island"></div>
+<div class="sb"><span>9:41</span><span>●●●</span></div>
+<div class="content">
+  <div class="hd"><div><div class="d">Sunday, September 6</div><div class="g">Morning, Karim</div></div><div class="av">KB</div></div>
+  <div class="hero">
+    <svg class="art" viewBox="0 0 354 240" preserveAspectRatio="xMidYMid slice">
+      <circle cx="306" cy="58" r="56" fill="#FFB27A"/>
+      <circle cx="306" cy="58" r="36" fill="#FFD9BF"/>
+      <path d="M-20 200 C60 150 120 150 200 190 C260 220 320 210 380 180 L380 260 L-20 260 Z" fill="#E86A22"/>
+      <path d="M-20 225 C80 180 160 190 240 220 C300 240 340 236 380 222 L380 260 L-20 260 Z" fill="#D65A16"/>
+    </svg>
+    <div class="lbl">Your weight, smoothed</div>
+    <div class="n">226.4<small>lb</small></div>
+    <div class="ex">Smoothed means one heavy morning doesn't move it. <b>The scale said 228.1 today.</b></div>
+    <div class="tag">▼ 1.2 lb this month</div>
+  </div>
+  <div class="sec"><div class="t">Today</div><div class="s">1 of 3 done</div></div>
+  <div class="three">
+    <div class="card done"><div class="chk"><svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg></div><div class="glyph"><svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="22" fill="var(--sand)"/><circle cx="26" cy="26" r="9" fill="var(--orange)"/></svg></div><div><div class="t">Weighed in</div><div class="s">7:42</div></div></div>
+    <div class="card c2"><div class="glyph"><svg viewBox="0 0 52 52"><path d="M8 14 Q8 6 16 6 H36 Q44 6 44 14 V28 Q44 36 36 36 H22 L12 44 V36 Q8 36 8 28 Z" fill="var(--sky)"/><circle cx="20" cy="21" r="3" fill="#fff"/><circle cx="30" cy="21" r="3" fill="#fff"/></svg></div><div><div class="t">Say how today went</div><div class="s">Talk or type, 20 seconds</div></div></div>
+    <div class="card c3"><div class="glyph"><svg viewBox="0 0 52 52"><path d="M6 40 C16 40 14 16 26 16 S36 40 46 40" fill="none" stroke="var(--green)" stroke-width="5" stroke-linecap="round" stroke-dasharray="1 9"/><circle cx="46" cy="40" r="6" fill="var(--green)"/></svg></div><div><div class="t">Move two minutes</div><div class="s">The mailbox is enough</div></div></div>
+  </div>
+  <div class="walk"><svg class="path" width="120" height="90" viewBox="0 0 120 90"><path d="M0 80 C30 80 30 20 60 20 S90 80 120 80" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" stroke-dasharray="2 10"/></svg><div><div class="k">Your next walk, 11 minutes</div><div class="v">Around the block</div></div><div class="b">Go</div></div>
+  <div class="week"><div><i class="on"></i>M</div><div><i class="on"></i>T</div><div><i></i>W</div><div><i class="on"></i>T</div><div class="t"><i class="t"></i>F</div><div><i></i>S</div><div><i></i>S</div></div>
+</div>
+<div class="tab"><div class="on"><svg viewBox="0 0 24 24"><path d="M12 3l9 8h-3v9h-5v-6H11v6H6v-9H3z"/></svg>Today</div><div><svg viewBox="0 0 24 24"><circle cx="14" cy="4" r="2.2"/><path d="M8 22l2.5-7 3 2.2 1-5.4-4.2-3 2-5 3 3 3.2 1.1-1 2.2-3-1-1.3 3.2 2.8 2.4L14 22z"/></svg>Move</div><div><svg viewBox="0 0 24 24"><path d="M4 20h16v-2H6V4H4zm4-4l4-5 3 3 5-7 1.5 1.3-6.5 9-3-3-2.5 3.3z"/></svg>History</div></div>
+<div class="home"></div>
+</div></div><p class="cap"><b>Morning.</b> The hero is a colour block with a sun and two hills, drawn from circles and curves. Each daily thing has its own tinted card and its own glyph: a dot for the scale, a bubble for talking, a dotted path for moving. Done goes white with a green mark.</p></div>
+
+<div class="unit"><div class="bez"><div class="sc">
+<div class="island"></div>
+<div class="sb"><span>21:14</span><span>●●●</span></div>
+<div class="content">
+  <div class="hd"><div><div class="d">Thursday, November 12</div><div class="g">Evening, Karim</div></div><div class="av">KB</div></div>
+  <div class="hero evening">
+    <svg class="art" viewBox="0 0 354 240" preserveAspectRatio="xMidYMid slice">
+      <circle cx="270" cy="70" r="46" fill="#FFD766"/>
+      <circle cx="90" cy="40" r="2" fill="#fff" opacity=".7"/><circle cx="140" cy="24" r="1.6" fill="#fff" opacity=".6"/><circle cx="200" cy="50" r="2" fill="#fff" opacity=".5"/><circle cx="40" cy="90" r="1.5" fill="#fff" opacity=".6"/>
+      <path d="M-20 200 C60 150 120 150 200 190 C260 220 320 210 380 180 L380 260 L-20 260 Z" fill="#2E3D7D"/>
+      <path d="M-20 225 C80 180 160 190 240 220 C300 240 340 236 380 222 L380 260 L-20 260 Z" fill="#3A4C93"/>
+    </svg>
+    <div class="lbl">Your weight, smoothed</div>
+    <div class="n">219.8<small>lb</small></div>
+    <div class="ex"><b>The scale said 221.6 today.</b></div>
+    <div class="tag">▼ 2.1 lb this month</div>
+  </div>
+  <div class="sec"><div class="t">Today</div><div class="s">All done</div></div>
+  <div class="three">
+    <div class="card done"><div class="chk"><svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg></div><div class="glyph"><svg viewBox="0 0 52 52"><circle cx="26" cy="26" r="22" fill="var(--sand)"/><circle cx="26" cy="26" r="9" fill="var(--orange)"/></svg></div><div><div class="t">Weighed in</div><div class="s">7:10</div></div></div>
+    <div class="card done"><div class="chk"><svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg></div><div class="glyph"><svg viewBox="0 0 52 52"><path d="M8 14 Q8 6 16 6 H36 Q44 6 44 14 V28 Q44 36 36 36 H22 L12 44 V36 Q8 36 8 28 Z" fill="var(--sky-l)"/><circle cx="20" cy="21" r="3" fill="var(--sky)"/><circle cx="30" cy="21" r="3" fill="var(--sky)"/></svg></div><div><div class="t">Said how today went</div><div class="s">"Long day, walked at lunch"</div></div></div>
+    <div class="card done"><div class="chk"><svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg></div><div class="glyph"><svg viewBox="0 0 52 52"><path d="M6 40 C16 40 14 16 26 16 S36 40 46 40" fill="none" stroke="var(--green-l)" stroke-width="5" stroke-linecap="round" stroke-dasharray="1 9"/><circle cx="46" cy="40" r="6" fill="var(--green)"/></svg></div><div><div class="t">Moved</div><div class="s">18 min, twice around</div></div></div>
+  </div>
+  <div class="walk evening"><svg class="path" width="120" height="90" viewBox="0 0 120 90"><path d="M0 80 C30 80 30 20 60 20 S90 80 120 80" fill="none" stroke="var(--navy)" stroke-width="4" stroke-linecap="round" stroke-dasharray="2 10"/></svg><div><div class="k">Getting off the floor</div><div class="v">7.4 s, from 9.1</div></div><div class="b" style="background:var(--sand);color:var(--navy)">See</div></div>
+  <div class="week"><div><i class="on"></i>M</div><div><i class="on"></i>T</div><div><i></i>W</div><div class="t"><i class="on"></i>T</div><div><i></i>F</div><div><i></i>S</div><div><i></i>S</div></div>
+</div>
+<div class="tab"><div class="on"><svg viewBox="0 0 24 24"><path d="M12 3l9 8h-3v9h-5v-6H11v6H6v-9H3z"/></svg>Today</div><div><svg viewBox="0 0 24 24"><circle cx="14" cy="4" r="2.2"/><path d="M8 22l2.5-7 3 2.2 1-5.4-4.2-3 2-5 3 3 3.2 1.1-1 2.2-3-1-1.3 3.2 2.8 2.4L14 22z"/></svg>Move</div><div><svg viewBox="0 0 24 24"><path d="M4 20h16v-2H6V4H4zm4-4l4-5 3 3 5-7 1.5 1.3-6.5 9-3-3-2.5 3.3z"/></svg>History</div></div>
+<div class="home"></div>
+</div></div><p class="cap"><b>Evening.</b> Same shapes, navy instead of orange, a moon instead of a sun, a few stars. All three cards are done and gone white. The bottom module swaps from the next walk to the last test. Nothing on the screen had to be invented for night.</p></div>
+
+</div>
+
+<h2>The system behind it</h2>
+<div class="rules">
+<div class="r"><b>Palette</b><div class="pal"><div style="background:#F5843E"></div><div style="background:#1E2A5A"></div><div style="background:#7FA6F2"></div><div style="background:#FFD766"></div><div style="background:#F6E7D3"></div><div style="background:#DCE7FC"></div><div style="background:#DDF0E4"></div><div style="background:#2E8B62"></div></div><p style="margin-top:10px">Sunrise orange and deep navy carry the app. Sky, butter, sand, and two tints do the sorting. Green is only ever "done."</p></div>
+<div class="r"><b>Shapes, not characters</b><p>Every illustration is built from circles, arcs, and hills. A sun, a moon, a dotted path, a speech bubble with two dots instead of a face. Warm without being cute.</p></div>
+<div class="r"><b>Colour does the organising</b><p>Weighing is sand, talking is sky, moving is green. Once learned, you find them without reading. Done is white with a green mark, so the day visibly clears.</p></div>
+<div class="r"><b>Type</b><p>Figtree, 800 and 900 for headings and the number, 600 for labels, 500 for body. Round terminals are what make it friendly; the weight is what keeps it from being soft.</p></div>
+<div class="r"><b>Radius</b><p>30 on the hero, 24 on cards, 26 on the walk module, full round on buttons and pills. Big radii everywhere, consistently, is most of the Headspace feel.</p></div>
+<div class="r"><b>Time of day</b><p>The hero changes with the clock: sun to moon, orange to navy. The rest of the screen stays put, so the change reads as weather, not as a new layout.</p></div>
+</div>
+</div></body></html>

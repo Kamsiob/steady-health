@@ -1,0 +1,125 @@
+SESSION HANDOFF PROMPTS FOR CLAUDE CODE
+
+Two prompts. Run the first in a session that is ending, run the second in the fresh session that replaces it.
+
+The second prompt establishes a standing rule that keeps the handoff current from then on, so in normal use you should only ever need the first prompt once. Keep it here anyway for the case where a session dies without warning and its handoff was left stale.
+
+The sequence: run the BEFORE prompt, wait for it to commit and push, check that HANDOFF.md is substantial rather than thin, exit, relaunch Claude Code in the same folder, confirm the model with /status, then paste the AFTER prompt.
+
+=====================================================================
+BEFORE: RUN THIS IN THE SESSION THAT IS ENDING
+=====================================================================
+
+This session is ending and a fresh session with no memory of any of our conversations will continue this project. Write a complete handoff so that fresh session can pick up without repeating work, reversing decisions, or breaking something it does not understand. Take this seriously and be thorough rather than brief; an overly long handoff costs nothing, an incomplete one costs days.
+
+Create or overwrite HANDOFF.md in the repository root as the primary handoff document, and additionally fold anything durable into DECISIONS.md, MASTER_SPEC.md, and DESIGN.md so it survives even if HANDOFF.md is later deleted. Commit and push everything at the end.
+
+SECTION ONE: WHERE YOU ARE RIGHT NOW
+
+State exactly what you were doing at the moment this session ended: which task, which document it came from, which item within it, which sub-step, which files were open or being edited, and what the very next action was going to be. Be precise enough that someone could resume mid-thought.
+
+List anything currently uncommitted, anything half-migrated, anything stubbed out, anything temporarily disabled, and anything in an inconsistent state where stopping now leaves the code or data mid-transition. Say explicitly what would break if someone assumed it was finished.
+
+SECTION TWO: EVERYTHING THAT DID NOT WORK
+
+This is the single most valuable part of this document, because it is the knowledge most likely to be lost and most likely to be wastefully repeated.
+
+List every approach tried that failed or was rejected, with what was tried, what happened, and why it was abandoned. Include failed configurations, settings that made performance worse, libraries or APIs that turned out not to fit, techniques that looked promising in research but did not hold up on the device, and anything that appeared to work but was reverted.
+
+For each, state plainly whether it should never be tried again, or whether it might be worth revisiting under specific different circumstances, and name those circumstances.
+
+Include anything that failed for environmental reasons rather than conceptual ones, such as a tool crashing, a version incompatibility, or a platform limitation, since those are easy to misdiagnose as the idea being wrong.
+
+SECTION THREE: MEASUREMENTS AND FACTS ESTABLISHED
+
+Record every measurement taken, with the actual numbers, so nothing is re-benchmarked unnecessarily. Include performance figures before and after each change, memory figures, model load times, time to first token, tokens per second per model, and anything else quantified.
+
+Record everything learned about this specific environment that is not obvious from reading the code: device quirks, toolchain behaviour, build settings that matter, version pins and why they are pinned, anything that behaves differently from its documentation, and any workaround currently in place that would look wrong to someone who does not know why it exists.
+
+SECTION FOUR: DECISIONS AND THEIR REASONING
+
+List every decision made across this project that a fresh session might otherwise reverse, with the reasoning behind it. Pay particular attention to decisions that look counterintuitive, suboptimal, or arbitrary from the outside, since those are exactly the ones a new session will try to fix.
+
+Include decisions made in conversation with the owner that may never have been written into a specification document, since those exist nowhere else once this session ends.
+
+Note any place where the code deliberately does something unusual, and why, so it is not tidied away.
+
+SECTION FIVE: COMPLETE INVENTORY OF REMAINING WORK
+
+Account for every task document and instruction set you have been working through, by name, including the four mode update, the round three bug and research list, the master specification phase plan, and any other prompt or task list given to you.
+
+For each document, go through it section by section and item by item. For every item, state whether it is finished and verified on the device, finished but not yet verified, partially done, not started, deliberately skipped, or blocked. Do not summarise a document as mostly complete. List its items and mark each one individually.
+
+For every partially done item, describe exactly how far it got: which files were touched, what currently works, what does not, what was left half-implemented, and what the next concrete step was. Be specific enough that someone can open the relevant file and continue without rereading the entire source document.
+
+Give the order in which remaining work should be done, and the reasoning. Call out dependencies where one item must precede another, anything that would be wasted effort if done before something else lands, and anything touching shared foundations such as the data model, navigation, the inference layer, or the design tokens, since those should precede work that builds on them.
+
+List everything deferred, with the reason and the specific condition that would un-defer it.
+
+List everything implemented in code but not yet verified on the device, so it can be confirmed rather than assumed or rebuilt.
+
+Flag any remaining item whose instructions are now ambiguous, contradicted by a later instruction, or overtaken by a decision made since it was written, and say what you would do about it rather than leaving the next session to discover the conflict.
+
+Keep this inventory accurate rather than optimistic. Overstating completion is far worse than admitting something is half-finished, because the next session will build on top of it and the error compounds.
+
+SECTION SIX: STATE OF THE ISSUE TRACKER
+
+Describe, in your own words, the real state of the open and recently closed GitHub issues: what is genuinely done and device-verified, what is closed but was never actually verified, what is open and in progress right now, and what is open but has not been started. Where an issue's comments do not reflect reality, correct them now.
+
+SECTION SEVEN: THINGS OUTSIDE THE CODE
+
+Note anything with a clock or an external dependency that a fresh session would not know about, including the Play Console state, anything awaiting the owner, anything blocked on a manual step, and any credential or account detail that matters operationally without ever appearing in the repository.
+
+Note anything the owner asked for verbally that has not yet been written into a specification document, so it is not lost.
+
+SECTION EIGHT: OPEN QUESTIONS
+
+List every question you were about to resolve, every assumption you have been operating on that has not been verified, and anything you are uncertain about in the current implementation. Say what you would check first.
+
+Finally, update DECISIONS.md, MASTER_SPEC.md, and DESIGN.md so they describe the application as it actually is right now, correcting anything stale, then commit and push all of it.
+
+=====================================================================
+AFTER: RUN THIS IN THE FRESH SESSION
+=====================================================================
+
+Fresh session on the Kam AI project. This work has been in progress across many previous sessions and you have no memory of any of them, so the repository is the complete record. Read thoroughly before touching anything.
+
+Read in this order. HANDOFF.md first, in full, since it was written specifically for this handover and contains things recorded nowhere else. Then DECISIONS.md. Then MASTER_SPEC.md and DESIGN.md. Then the task documents referenced in the handoff, including the four mode update and the round three list, so you have the original instructions alongside their completion status. Then git log for recent history. Then the open and recently closed GitHub issues including their comments and working notes. Then run git status to see whether anything is uncommitted or mid-change.
+
+RULES FOR THIS HANDOVER, ALL OF THEM IMPORTANT
+
+Do not redo completed work. Before starting any item, check whether it is already implemented, already attempted, or already rejected. The handoff lists things that were tried and failed; do not retry them unless you can state specifically what has changed to make the outcome different.
+
+Do not reverse existing decisions. Where something looks wrong, suboptimal, or arbitrary, assume there was a reason and find it before acting. If you believe a recorded decision is genuinely wrong, say so and explain why the original reasoning no longer holds, rather than silently changing it.
+
+Do not tidy away things you do not understand. Unusual code, workarounds, version pins, and disabled paths frequently exist for reasons recorded in the handoff. Read before removing.
+
+Resolve conflicts by this priority. The actual built code and its verified behaviour on the device comes first, then HANDOFF.md, then DECISIONS.md, then the specification documents, then anything else including older task documents. Where you find something stale, correct it as you go, since the specifications are living documents.
+
+Do not trust completion claims. Anything marked done but not device-verified must be verified before you build on top of it. An issue being closed is not evidence that the feature works.
+
+Verify current behaviour on the connected phone rather than inferring it from documents, before making any change that depends on how something currently behaves.
+
+Prefer finishing partially done work over starting new work, unless the handoff's recommended ordering says otherwise, since half-finished items are where inconsistencies accumulate.
+
+BEFORE YOU BEGIN WORKING
+
+Summarise back to me, briefly, what you understand the current state to be: what is genuinely finished, what is in progress and how far along, what remains, what has already been tried and ruled out, and what you are picking up first with the reasoning. If anything in the documents is contradictory, unclear, or appears to have been overtaken by a later decision, raise it here rather than guessing.
+
+PERMANENT RULE: KEEP THE HANDOFF CURRENT SO IT NEVER HAS TO BE REQUESTED AGAIN
+
+From now on, maintaining HANDOFF.md is part of your ongoing work rather than something done when asked. I should never have to prompt you to write a handoff, because the repository should already be resumable at any moment by a session with no memory. Treat the following as a standing obligation for this project and every future session on it.
+
+Update HANDOFF.md, and commit and push it, at every one of these moments. Whenever you finish or partially finish any item. Whenever you commit. Whenever you are about to pause, stop, wait, or hand back to me for any reason. Whenever you notice your available context getting low, before it becomes a problem, rather than after. Whenever a session appears to be ending. Whenever something fails or is rejected, so the failure is recorded while you still remember the details. And whenever you make a decision that a future session might reverse.
+
+If you are ever interrupted or the session ends unexpectedly, the last committed HANDOFF.md is what the next session inherits, so it must never be more than one increment out of date.
+
+HANDOFF.md must always contain, kept current rather than appended to indefinitely: exactly where the work stands right now and what the next concrete step is; everything tried that did not work, with why, and whether it is worth revisiting; every measurement taken with the actual numbers; everything learned about this environment, device, toolchain, or models that is not obvious from the code; every decision and its reasoning, especially counterintuitive ones; a complete item by item inventory of remaining work across every task document, marking each item as verified, unverified, partial, not started, skipped, or blocked, with partial items described precisely enough to resume mid-task; the recommended order for remaining work and any dependencies; anything deferred and what would un-defer it; anything done in code but not verified on the device; the real state of the issue tracker as distinct from what its labels claim; anything with an external dependency, a clock, or a manual step waiting on me; anything I asked for verbally that has not yet been written into a specification document; and every open question or unverified assumption.
+
+Keep it accurate rather than optimistic. Overstating completion is far worse than admitting something is half-finished, because the next session builds on top of it and the error compounds. Rewrite stale sections rather than letting the document accumulate contradictions, and keep it readable, since a handoff nobody can parse is not a handoff.
+
+Also record this standing rule in DECISIONS.md so it survives independently of this conversation, and apply the same discipline to MASTER_SPEC.md, DESIGN.md, and the issue tracker, which must equally be updated with every commit so they always describe the application as it currently is.
+
+THEN CONTINUE
+
+After your initial summary, continue working. Work continuously through the remaining items without stopping for approval or pausing at section boundaries. Commit and push tested increments. Use GitHub issues properly, opening them for new work, keeping real working notes, referencing them in commits, and closing them only when genuinely done and device-verified. Do not produce release artefacts. Surface something to me only if it is a genuine blocker that only I can resolve, an irreversible decision with real cost, or a safety or privacy issue.
