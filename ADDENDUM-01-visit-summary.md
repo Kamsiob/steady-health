@@ -1,5 +1,11 @@
 # ADDENDUM 01: The visit summary
 
+> **Merged.** Folded into MASTER_SPEC.md, LOGIC.md, AI.md, DESIGN.md,
+> ONBOARDING.md and COMPLIANCE.md in commit `230a3d2`, September 6, 2026. Those
+> documents are the source of truth for this feature now. This file is kept as the
+> record of what was asked for and is no longer authoritative; where it and a
+> specification document disagree, the specification document wins.
+
 Added September 6, 2026, after the build began. This is an addition to MASTER_SPEC.md, DESIGN.md, LOGIC.md, AI.md, ONBOARDING.md, and COMPLIANCE.md, not a replacement for any of them. Where this file and an earlier document disagree, this file wins for anything concerning the visit summary and nothing else.
 
 Fold every section below into the document it names, in the same pass, rather than leaving this file as a separate source of truth. Delete nothing from the existing documents except where this file says to replace something. Record in DECISIONS.md that the addendum was folded in and on which commit.

@@ -89,3 +89,36 @@ tells a builder to compare against `design/steady-today-approved.html`. The file
 the archive is `design/today-approved-look.html`. Same file, older name. Treated as
 the current name, and DESIGN.md is left as written because it is the binding
 document and correcting a filename inside it is the owner's call.
+
+## ADDENDUM-01 folded in, September 6, 2026
+
+The visit summary arrived as an addendum after the reset and after Phase 0 had
+started. It was committed as received in `47465c9`, then folded into the six
+documents it names in `230a3d2`, and the addendum now carries a merged note at its
+top pointing at that commit. It stays in the repository as the record of what was
+asked for, and is no longer a source of truth.
+
+**Two things the addendum implied rather than stated, decided here.** AI.md opened
+with "the model is visible in exactly three places" and MASTER_SPEC with "three
+visible jobs". The addendum calls the summary "the app's principal use of the
+language model", which makes four. Both were updated rather than left contradicting
+the job 6 they now contain. Reversal: none contemplated; the alternative was a
+document that argues with itself.
+
+**The doctor page was renamed, not removed.** MASTER_SPEC 6.7 and LOGIC 13 are now
+"the measures table", which is what they always described, and the written summary
+sits above the table from Phase 5. Three stale references to "the doctor page" and
+"the doctor summary PDF" elsewhere in LOGIC.md and DECISIONS.md were updated in the
+same pass, because a rename that leaves the old name in three places is not a
+rename.
+
+**Build order consequence.** The addendum is explicit that the job 6 validator is
+built before the model is wired in, with its adversarial corpus. That is recorded
+here because it inverts the obvious order: the natural instinct is to get a
+sentence out of the model first and check it afterwards, and for this one feature
+that is the wrong way round. An invented chair-stand count in a page somebody hands
+to a clinician is the failure that actually matters, and the validator is the only
+thing standing between the model and that page.
+
+**Phase.** The feature lands in Phase 5. Phase 0 was in progress when the addendum
+arrived and continues from where it was.
