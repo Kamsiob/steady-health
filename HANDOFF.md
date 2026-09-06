@@ -7,8 +7,8 @@ it cannot see the reasoning for, or breaking something it does not understand.
 Read this in full. Then DECISIONS.md. Then MASTER_SPEC.md and DESIGN.md. Then
 `git log`.
 
-**Last updated:** 2026-09-06, after Phase 0's shell, database and smoke tests ran
-on the Pixel 8.
+**Last updated:** 2026-09-06, after Phase 0 completed and CI went green on the
+fresh repository.
 
 ---
 
@@ -21,7 +21,8 @@ starting point. The repository history was rewritten: the root commit is
 `dd4c3bd` and nothing before it is reachable. Details in DECISIONS.md under "The
 reset".
 
-**Phase 0 is nearly complete. Phases 1 to 7 have not started.**
+**Phase 0 is complete. Phase 1 has started: the component library exists, no
+screens do.**
 
 What runs on the phone right now: the app installs, opens to a three tab shell
 (Today, Move, Abilities) with the real theme, the bundled Figtree, and the
@@ -38,8 +39,19 @@ What is proven rather than assumed:
 - Every shipped string passes the banned word list, the dash rule and the
   no-shouting rule. Unit test, reading the real resource file.
 
-**The very next concrete step:** finish Phase 0 by committing the repository
-documents and watching CI run, then start Phase 1 at ONBOARDING.md screen 1.
+CI ran green on the fresh repository (run 34063225991, 5m15s): assemble, unit
+tests, lint with warnings as errors, and detekt at zero.
+
+Built and compiling but not yet used by any screen: `SteadyScreen` (the section 4
+anatomy, taking the status bar inset once so no screen has to remember),
+`TopRow`, `SectionTitle`, `Paragraph`, `PrimaryButton`, `SecondaryButton`,
+`Pill`, `ThreeUpChoice`, `TextLink`, and the glyph language (weigh, talk, move,
+sun, moon, glyph tile).
+
+**The very next concrete step:** the rest of the components DESIGN.md section 3
+names, which Phase 1 needs: Hero, Daily card, Block, List item, Ability tile,
+Ability row, Life card, Rating row, Week row, Dial. Then ONBOARDING.md screen by
+screen from screen 1.
 
 ### What is uncommitted or mid-flight
 
@@ -58,21 +70,20 @@ Nothing at the last commit. Check `git status` before assuming.
 
 ## 2. The next concrete steps, in order
 
-1. **Finish Phase 0.** Commit the repository documents, confirm CI is green.
-2. **Phase 1**, which is the largest single piece of value: onboarding through the
+1. **Phase 1**, which is the largest single piece of value: onboarding through the
    first weigh-in and the first ability, Today for the on-your-feet path, the
    daily three, and Abilities with self-rated items. ONBOARDING.md is screen by
    screen with final copy. The measured target is the first weigh-in and the first
    tracked ability both saved inside two minutes.
-3. **Phase 2**, the other three ways of getting around.
-4. **Phase 3**, the model. Verify the integration path at build time rather than
+2. **Phase 2**, the other three ways of getting around.
+3. **Phase 3**, the model. Verify the integration path at build time rather than
    trusting AI.md, which says so itself.
-5. **Phase 4**, the monthly check. The accelerometer and MediaPipe work is the
+4. **Phase 4**, the monthly check. The accelerometer and MediaPipe work is the
    largest unknown in the build.
-6. **Phase 5**, Try it and see, and the visit summary. Build the job 6 validator
+5. **Phase 5**, Try it and see, and the visit summary. Build the job 6 validator
    and its adversarial corpus **before** the model is wired in. ADDENDUM-01 is
    explicit about that and the reasoning is in DECISIONS.md.
-7. **Phases 6 and 7.**
+6. **Phases 6 and 7.**
 
 ---
 

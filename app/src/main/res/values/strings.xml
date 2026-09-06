@@ -26,6 +26,8 @@
     <string name="action_back">Back</string>
     <string name="action_settings">Settings</string>
     <string name="action_ask">Ask a question</string>
+    <!-- The chevron on the back button. A glyph, not a sentence. -->
+    <string name="back_chevron" translatable="false">\u2039</string>
 
     <!-- Phase 0 only. Removed when the screen behind it is built. -->
     <string name="placeholder_phase">This screen is next.</string>
