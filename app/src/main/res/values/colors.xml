@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Only the few the platform needs outside Compose. The palette lives in Color.kt. -->
+<resources>
+    <color name="ground">#FBF8F3</color>
+    <color name="navy">#1E2A5A</color>
+    <color name="orange">#F5843E</color>
+    <color name="white">#FFFFFF</color>
+</resources>

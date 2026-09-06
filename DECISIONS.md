@@ -122,3 +122,53 @@ thing standing between the model and that page.
 
 **Phase.** The feature lands in Phase 5. Phase 0 was in progress when the addendum
 arrived and continues from where it was.
+
+## Phase 0
+
+### The palette and the accessibility floor disagreed, and the floor won for words
+
+DESIGN.md section 2 gives the approved colours and section 7 asks for 4.5:1 on
+ground and on white. Measured, four of them cannot do both: ink3 is 2.53:1 as a
+caption, orange-d is 3.22:1 as a word, green is 4.21:1, and the primary button,
+white at 16/800 on orange, is 2.54:1 against a threshold of 3.0 for text at that
+size and weight.
+
+The resolution keeps every approved hex and adds nothing new to the palette. The
+table gives fills, lines and illustration; a word painted in one of those hues
+takes the darkest member of the same hue that clears the floor. So ink3-text
+#6C708F, orange-text #BD5114, green-text #287855, each derived by darkening the
+approved colour along its own hue until it passed on both surfaces. ink3 itself is
+unchanged wherever it is a shape.
+
+One fill moved with it. The primary button is filled orange-d #E86A22, already in
+the table as "pressed state", which gives white 3.22:1. Orange #F5843E keeps every
+other job it has: the walk, the weight line, the morning sky, the dial arc.
+
+Written into DESIGN.md section 2 before being built, as section 8 requires, and
+held by `ContrastTest`, which also checks that no colour in the palette is red.
+
+### Two smaller readings of DESIGN.md, recorded so they are not mistaken for drift
+
+The tab bar label is 11 sp, which section 3 specifies and which is small for the
+people this is for. Kept, because it is sp and grows with the system font setting,
+and because changing an approved size is a larger deviation than the one it would
+fix. The inactive tab colour is ink3-text rather than ink3, for the contrast
+reason above.
+
+Section 8 step 6 says to compare against `design/steady-today-approved.html`. The
+file in the archive is `design/today-approved-look.html`. Same file, older name.
+
+### Figtree ships as one variable font
+
+Google Fonts publishes Figtree only as a variable font now, and that is the better
+answer anyway: 62 KB covers weights 400 through 900, against roughly 1.6 MB for
+six static files covering six points on the same axis. Variable fonts are read
+from API 26 and this app is API 29 up, so there is no fallback to maintain.
+Font synthesis is turned off, because a synthesised bold would be a worse copy of
+a weight the file already contains.
+
+### Icons are bundled as vectors, not as a dependency
+
+Phosphor is MIT and the five icons the shell needs were converted from its own SVG
+source into Android vector drawables, with the licence in `licenses/`. A
+dependency for five paths would be more to audit than to read.

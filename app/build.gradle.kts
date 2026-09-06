@@ -75,6 +75,11 @@ android {
             // ships neither an en dash nor an em dash anywhere a person reads.
             "TypographyDashes",
         )
+        // Reported, not fatal, until Phase 7. Right now the unused ones are
+        // colours and strings written for screens the next phases build, and
+        // deleting work that is about to be used is worse than a check that
+        // waits. warningsAsErrors would otherwise promote these back.
+        informational += setOf("UnusedResources")
     }
 }
 
@@ -88,7 +93,7 @@ kotlin {
 
 // The schema JSON is checked in so a migration can be written against exactly
 // what shipped rather than against what the code says today.
-room {
+room3 {
     schemaDirectory("$projectDir/schemas")
 }
 

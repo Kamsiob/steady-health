@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The app mark, from the illustration language in DESIGN.md section 2: a sun of
+  two concentric circles over two overlapping hills. No characters, no faces.
+  The sun sits behind the hills, which is the order the approved render draws them.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+
+    <path android:fillColor="#FFB27A" android:pathData="M69,40m-17,0a17,17 0,1 1,34 0a17,17 0,1 1,-34 0" />
+    <path android:fillColor="#FFD9BF" android:pathData="M69,40m-11,0a11,11 0,1 1,22 0a11,11 0,1 1,-22 0" />
+
+    <path android:fillColor="#E86A22"
+        android:pathData="M18,63 C31,53 44,53 57,61 C67,67 78,65 90,59 L90,90 L18,90 Z" />
+    <path android:fillColor="#1E2A5A"
+        android:pathData="M18,72 C34,63 47,66 60,72 C70,77 80,76 90,71 L90,90 L18,90 Z" />
+</vector>

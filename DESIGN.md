@@ -32,6 +32,27 @@ Headspace's confidence with colour and its friendly, rounded type, with the illu
 
 Rules. Orange is the walk and the weight line and the primary button. Navy is where you are and any hero that is not the time-of-day sky. Green means done and nothing else. Butter marks a milestone. Sand, sky-l, and green-l sort the three daily things (weigh, talk, move) and never change jobs. The four abilities have their own fixed tints and never swap: Get up is sand, Go is green-l, Carry is sky-l, Steady is plum-t. There is no red anywhere in the app; a deadline or a warning uses navy text on sand. Nothing turns a different colour because a number went the wrong way.
 
+### Colour that carries text
+Section 7 requires every piece of text to pass 4.5:1 on ground and on white, and
+four of the tokens above cannot do that while staying the colour they are. The
+resolution is that the table above gives fill, line and illustration colours, and
+text takes a slightly darker member of the same hue. Nothing in the table changes,
+and no new hue is introduced.
+
+| Token | Hex | On white | On ground | Job |
+|---|---|---|---|---|
+| ink3-text | #6C708F | 4.83 | 4.55 | captions and the provenance line, wherever ink3 would have been the text colour |
+| orange-text | #BD5114 | 4.83 | 4.56 | orange words, including the Summary text action |
+| green-text | #287855 | 5.37 | 5.07 | the word done, and the Better pill (4.52 on green-l) |
+
+One fill changes with it. The primary button is white at 16/800 on orange, which
+is 2.54:1 and fails even the 3.0:1 that Android allows for text at that size and
+weight. The button's fill is **orange-d #E86A22**, already in the table, which
+gives 3.22:1. Orange #F5843E keeps every one of its other jobs: the walk, the
+weight line, the morning sky, the dial arc.
+
+ink3 itself stays exactly as it is wherever it is a shape rather than a word.
+
 Dark theme is not designed yet. Do not invent one; ship light only and record it in DECISIONS.md.
 
 ### Type

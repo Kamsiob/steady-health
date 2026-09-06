@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Every word a person reads.
+
+  Three rules, checked by VoiceTest against this file rather than trusted:
+  no word from the banned list in DESIGN.md section 6, no em dash and no en
+  dash, and no exclamation point. The app describes; the person concludes.
+-->
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <string name="app_name">Steady Health</string>
+    <string name="app_name_full">Steady Health by Kamsiob</string>
+
+    <!-- ===================== Tabs ===================== -->
+    <string name="tab_today">Today</string>
+    <string name="tab_move">Move</string>
+    <string name="tab_abilities">Abilities</string>
+
+    <!-- ===================== The four abilities ===================== -->
+    <string name="ability_get_up">Get up</string>
+    <string name="ability_go">Go</string>
+    <string name="ability_carry">Carry</string>
+    <string name="ability_steady">Steady</string>
+
+    <!-- ===================== Top row ===================== -->
+    <string name="action_back">Back</string>
+    <string name="action_settings">Settings</string>
+    <string name="action_ask">Ask a question</string>
+
+    <!-- Phase 0 only. Removed when the screen behind it is built. -->
+    <string name="placeholder_phase">This screen is next.</string>
+</resources>

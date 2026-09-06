@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+      The starting theme, which is what shows for the moment before Compose draws.
+      It is the ground colour so the app never flashes white or black on launch.
+    -->
+    <style name="Theme.SteadyHealth.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/ground</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_splash</item>
+        <item name="postSplashScreenTheme">@style/Theme.SteadyHealth</item>
+    </style>
+
+    <style name="Theme.SteadyHealth" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="android:windowBackground">@color/ground</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">true</item>
+    </style>
+</resources>
