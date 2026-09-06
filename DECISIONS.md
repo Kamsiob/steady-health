@@ -45,3 +45,47 @@ Seeded September 6, 2026 from the design and research process. Claude Code appen
 
 ---
 (Claude Code appends here.)
+
+## The reset, September 6, 2026
+
+The working tree and the GitHub repository were rebuilt to match the capability
+specification. Recorded here because a forced history rewrite should never be
+something a reader has to reconstruct from a diff.
+
+**What was deleted.** Everything in the working directory except `.git`, then the
+kept files were restored from the handoff archive. What went: a complete Kotlin
+and Compose source tree for the weight-tracking version (app/, roughly 700 unit
+tests, an instrumented suite, a Room schema, a working Gemma 4 E2B integration),
+its Gradle scaffolding (build.gradle.kts, settings.gradle.kts, gradle.properties,
+gradle/, gradlew, gradlew.bat, config/), its build output (build/, .gradle/,
+.kotlin/, 379 MB in total), its repository documents (README.md, ARCHITECTURE.md,
+CONTRIBUTING.md, SECURITY.md, CODE_OF_CONDUCT.md, CHANGELOG.md, HANDOFF.md,
+LICENSE, .github/, .gitignore, docs/, licenses/), its earlier specification
+documents, the old tools/ directory, an untracked `local.properties`, a
+`gradle-env.sh` helper, and a stale `steady-project.zip`.
+
+**What was kept.** Only what arrived in the archive: MASTER_SPEC.md, DESIGN.md,
+LOGIC.md, AI.md, ONBOARDING.md, CONTENT.md, COMPLIANCE.md, PRIVACY.md, VISUALS.md,
+DECISIONS.md, START_HERE.md, MASTER_PROMPT.md, and the design/, research/,
+standards/ and tools/ directories.
+
+**What could not be deleted.** Nothing. The repository had one branch and no tags,
+releases, issues or pull requests, so there was nothing to close or relabel. The
+repository itself was kept, as instructed, because the URL and settings are worth
+keeping.
+
+**The fresh initial commit** is `dd4c3bd491740a978ed58ebe65f2722ebf6d1e9b`, "Steady
+Health: a record of what your body can do, and what changes it", force-pushed to
+main so the previous 39 commits are no longer reachable. `.gitignore` is in that
+commit, before any file that could carry a secret could exist.
+
+**The repository was not renamed.** `steady-health` describes the app as
+MASTER_SPEC.md describes it and was never named for the weight framing. Its
+description, website and topics were rewritten: `weight-tracking` was removed and
+`functional-fitness`, `mobility` and `gemma` were added.
+
+**One inconsistency to note rather than fix silently.** DESIGN.md section 8 step 6
+tells a builder to compare against `design/steady-today-approved.html`. The file in
+the archive is `design/today-approved-look.html`. Same file, older name. Treated as
+the current name, and DESIGN.md is left as written because it is the binding
+document and correcting a filename inside it is the owner's call.
