@@ -1,0 +1,301 @@
+package com.kamsiob.steadyhealth.data.entity
+
+import androidx.room3.Entity
+import androidx.room3.Index
+import androidx.room3.PrimaryKey
+
+/**
+ * Every table, in one file, designed once.
+ *
+ * The whole schema is defined at version 1 rather than grown a table per phase.
+ * Two reasons. The standards require that anything the app can store, the export
+ * contains and the import restores, and a table that appears in phase five is
+ * exactly the kind that gets left out of the export. And LOGIC.md already says
+ * what the app stores, so there is nothing to discover later that would justify a
+ * migration.
+ *
+ * Ids are the stable strings from the domain enums, never ordinals, because an
+ * ordinal is a number that changes when somebody reorders an enum and a row
+ * written last year has no way to know.
+ */
+
+/** One morning on the scale. LOGIC.md section 1. */
+@Entity(tableName = "weigh_ins", indices = [Index(value = ["epochDay"], unique = true)])
+data class WeighInEntity(
+    @PrimaryKey val epochDay: Long,
+    val recordedAt: Long,
+    val rawKg: Double,
+    /** The exponentially weighted average, alpha 0.10, seeded by the first reading. */
+    val smoothedKg: Double,
+    val source: String,
+)
+
+/** One day said out loud or typed. LOGIC.md section 3. */
+@Entity(tableName = "check_ins", indices = [Index(value = ["epochDay"], unique = true)])
+data class CheckInEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val epochDay: Long,
+    val recordedAt: Long,
+    /** Stored verbatim and shown back. Never edited by the app. */
+    val sentence: String,
+    val sleepHalfHours: Int?,
+    val dayRating: String?,
+    val spoken: Boolean,
+)
+
+/** A tag on a day. Only ever one of the twenty-four. */
+@Entity(
+    tableName = "check_in_tags",
+    primaryKeys = ["checkInId", "tag"],
+    indices = [Index("checkInId"), Index("tag")],
+)
+data class CheckInTagEntity(
+    val checkInId: Long,
+    val tag: String,
+    /** True when the reader proposed it and the person kept it. */
+    val fromReader: Boolean = false,
+)
+
+/**
+ * A phrase this person corrected the app on, and what they meant by it.
+ *
+ * AI.md job 2: corrections are stored and passed back in later calls so the
+ * mapping improves without the vocabulary growing.
+ */
+@Entity(tableName = "person_synonyms", indices = [Index(value = ["phrase"], unique = true)])
+data class PersonSynonymEntity(
+    @PrimaryKey val phrase: String,
+    val tag: String,
+    val learnedAt: Long,
+)
+
+/** One session of moving. LOGIC.md section 3 and 6. */
+@Entity(tableName = "sessions", indices = [Index("epochDay"), Index("ladder")])
+data class SessionEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val epochDay: Long,
+    val startedAt: Long,
+    val endedAt: Long,
+    val durationSeconds: Int,
+    val ladder: String,
+    val stepIndex: Int,
+    val talkTest: String?,
+    val steps: Int?,
+    val distanceMetres: Double?,
+    val nextDayFeel: String?,
+    val nextDayAskedOnDay: Long?,
+)
+
+/** The person's own name for a step, asked the first time they do it. */
+@Entity(tableName = "step_names", primaryKeys = ["ladder", "stepIndex"])
+data class StepNameEntity(
+    val ladder: String,
+    val stepIndex: Int,
+    val name: String,
+    val namedAt: Long,
+)
+
+/** Where a person is on one ladder, and what the app has offered them. */
+@Entity(tableName = "ladder_state")
+data class LadderStateEntity(
+    @PrimaryKey val ladder: String,
+    val currentStepIndex: Int,
+    val lastOfferedDay: Long?,
+    val offerDeclinedUntilDay: Long?,
+    val easingUntilDay: Long?,
+    val lastSessionDay: Long?,
+)
+
+/**
+ * One thing the person said they would like to be able to do, in their own words.
+ *
+ * LOGIC.md 3b. The verbatim text is never rewritten, because it is the whole
+ * point: a number only means something next to a life, and this is the life.
+ */
+@Entity(tableName = "tracked_items", indices = [Index("domain")])
+data class TrackedItemEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val text: String,
+    val domain: String,
+    val createdAt: Long,
+    val archivedAt: Long?,
+)
+
+/** A rating of one tracked item, 0 to 10, re-asked monthly. */
+@Entity(
+    tableName = "item_ratings",
+    primaryKeys = ["itemId", "epochDay"],
+    indices = [Index("itemId")],
+)
+data class ItemRatingEntity(
+    val itemId: Long,
+    val epochDay: Long,
+    val rating: Int,
+    val recordedAt: Long,
+)
+
+/** One monthly check, and the measures taken inside it. LOGIC.md 7b. */
+@Entity(tableName = "checks", indices = [Index(value = ["epochDay"], unique = true)])
+data class CheckEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val epochDay: Long,
+    val completedAt: Long,
+    val gettingAround: String,
+)
+
+/**
+ * One measure taken during a check.
+ *
+ * [countedBy] records whether the phone timed it, the camera counted it, or the
+ * person tapped it, because AI.md requires the app to be honest about that and
+ * because a manual count and a sensor count are not the same evidence.
+ */
+@Entity(
+    tableName = "measure_results",
+    indices = [Index("checkId"), Index("measureId"), Index("epochDay")],
+)
+data class MeasureResultEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val checkId: Long?,
+    val measureId: String,
+    val domain: String,
+    val epochDay: Long,
+    val recordedAt: Long,
+    val value: Double,
+    val countedBy: String,
+)
+
+/** Waist, in centimetres. LOGIC.md section 2. */
+@Entity(tableName = "waist", indices = [Index(value = ["epochDay"], unique = true)])
+data class WaistEntity(
+    @PrimaryKey val epochDay: Long,
+    val recordedAt: Long,
+    val centimetres: Double,
+)
+
+/** Blood pressure, entered by the person, never interpreted by the app. */
+@Entity(tableName = "blood_pressure", indices = [Index("epochDay")])
+data class BloodPressureEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val epochDay: Long,
+    val recordedAt: Long,
+    val systolic: Int,
+    val diastolic: Int,
+)
+
+/** A Sunday photo. The file lives in app-private storage and never leaves it. */
+@Entity(tableName = "photos", indices = [Index(value = ["epochDay"], unique = true)])
+data class PhotoEntity(
+    @PrimaryKey val epochDay: Long,
+    val takenAt: Long,
+    val fileName: String,
+)
+
+/** The Sunday write-up, kept so it reads the same tomorrow as it did today. */
+@Entity(tableName = "weekly_notes", indices = [Index(value = ["weekStartDay"], unique = true)])
+data class WeeklyNoteEntity(
+    @PrimaryKey val weekStartDay: Long,
+    val writtenAt: Long,
+    val paragraphs: String,
+    /** True when the reader wrote it, false when the engine filled the template. */
+    val byModel: Boolean,
+)
+
+/** A pattern the engine found and the model worded. LOGIC.md section 11. */
+@Entity(tableName = "patterns", indices = [Index("tag")])
+data class PatternEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val tag: String,
+    val measure: String,
+    val direction: String,
+    val weeksWith: Int,
+    val weeksWithout: Int,
+    val splitNumerator: Int,
+    val splitDenominator: Int,
+    val sentence: String,
+    val detail: String,
+    val foundOnDay: Long,
+)
+
+/**
+ * A two-week comparison the person agreed to run. LOGIC.md 9b.
+ *
+ * [stoppedAt] exists because the person may stop at any time and nothing is
+ * recorded as a failure, which needs a field that is not an outcome.
+ */
+@Entity(tableName = "experiments")
+data class ExperimentEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val variable: String,
+    val measureId: String,
+    val startedOnDay: Long,
+    val switchOnDay: Long,
+    val endsOnDay: Long,
+    val stoppedAt: Long?,
+    val resultHeadline: String?,
+    val resultDetail: String?,
+)
+
+/**
+ * A generated visit summary, with the window it covered.
+ *
+ * Stored because regenerating replaces it and because a page somebody may have
+ * shown a clinician should still exist afterwards. The brief is kept beside the
+ * paragraphs so the validator's work can be re-checked against exactly what the
+ * model was given.
+ */
+@Entity(tableName = "visit_summaries", indices = [Index("generatedAt")])
+data class VisitSummaryEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val generatedAt: Long,
+    val windowStartDay: Long,
+    val windowEndDay: Long,
+    val paragraphs: String,
+    val questions: String,
+    val briefJson: String,
+    /** False when the template wrote it, because the reader was absent or failed. */
+    val byModel: Boolean,
+)
+
+/**
+ * Every one-time note the app has shown, and when.
+ *
+ * This is what stops the app repeating itself: the soft wall note, the sore rule,
+ * the smoothed-weight explanation, the summary introduction. "Shown once" is a
+ * fact on disk rather than a hope.
+ */
+@Entity(tableName = "notices")
+data class NoticeEntity(
+    @PrimaryKey val noticeId: String,
+    val shownAt: Long,
+)
+
+/** Every reminder actually sent, so the two-a-week ceiling can be counted. */
+@Entity(tableName = "reminders_sent", indices = [Index("sentAt")])
+data class ReminderSentEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val type: String,
+    val sentAt: Long,
+)
+
+/** Everything the settings screen holds, as strings, because they are settings. */
+@Entity(tableName = "settings")
+data class SettingEntity(
+    @PrimaryKey val key: String,
+    val value: String,
+)
+
+/** One thing the person said to leave out. No reason is ever stored. */
+@Entity(tableName = "exclusions")
+data class ExclusionEntity(
+    @PrimaryKey val exclusion: String,
+    val chosenAt: Long,
+)
+
+/** One readiness answer. Never blocks anything; shows one note once. */
+@Entity(tableName = "readiness")
+data class ReadinessEntity(
+    @PrimaryKey val flag: String,
+    val answeredYes: Boolean,
+    val answeredAt: Long,
+)

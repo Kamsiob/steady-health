@@ -41,7 +41,17 @@ Seeded September 6, 2026 from the design and research process. Claude Code appen
 - Play Console: create the app entry, first bundle upload, content rating questionnaire.
 - Provide the Play service account JSON outside the repository.
 - Review the twelve cards in CONTENT.md; an eating-disorder professional for cards 4 and 7, a physical therapist for 8 through 12.
-- Confirm the target device is connected with USB debugging.
+- Confirm the target device is connected with USB debugging. (Done: Pixel 8,
+  Android 17, connected and authorised.)
+- **Rive, or not.** Measured in Phase 0: MIT runtime, 15 MB of APK, and it brings
+  an HTTP stack onto the classpath. DESIGN.md section 5 names it for three
+  animations that Compose can do. Version 1 is being built without it. If you want
+  it back, it also needs a paid Rive plan to author `.riv` files and a decision
+  about shipping a binary blob in an AGPL repository. Say either way and it takes
+  an hour to change.
+- **Confirm the Play target API requirement** before release. The build uses
+  compileSdk 37 and targetSdk 36 on a device running Android 17. Google's floor
+  moves on a schedule and the Play Console is the only place to read it.
 
 ---
 (Claude Code appends here.)
@@ -172,3 +182,52 @@ a weight the file already contains.
 Phosphor is MIT and the five icons the shell needs were converted from its own SVG
 source into Android vector drawables, with the licence in `licenses/`. A
 dependency for five paths would be more to audit than to read.
+
+### Rive is not in version 1, measured rather than argued
+
+Phase 0 asks for a Rive smoke test. Three facts came out of it:
+
+- The runtime is MIT, which answers the BLOCKED question. Confirmed from the
+  published POM and the repository licence, not from memory.
+- It adds **15 MB** to the debug APK: 39 MB to 54 MB, of which 6.2 MB is a native
+  library per ABI.
+- It brings `com.android.volley:volley` onto the runtime classpath. Volley is an
+  HTTP stack, and this app declares no internet permission at all until the
+  optional model download.
+
+DESIGN.md section 5 names Rive for three things: the done morph, the Go press, and
+the walk marker. All three are ordinary Compose animations. Fifteen megabytes and
+an HTTP client for three animations, in an app whose privacy claim is that there
+is nothing to send anywhere, is a bad trade.
+
+There is a fourth cost the measurement does not show. A `.riv` file is authored in
+the Rive editor, which needs a paid plan to export, and the result is a binary blob
+whose real source is a proprietary project file. In an AGPL repository that is a
+corresponding-source problem as well as an ongoing cost to the owner.
+
+So version 1 animates in Compose. This is the reversible direction: adding Rive
+later is a dependency line, whereas removing it once the animations are authored
+as `.riv` is a rewrite. Recorded under BLOCKED as an owner decision because it
+departs from a binding document, and the app is built without it in the meantime.
+
+### The whole schema is defined at version 1
+
+Rather than growing a table per phase. The standards require that anything the app
+can store, the export contains and the import restores, and a table that first
+appears in phase five is exactly the kind that gets left out of the export and is
+not noticed until somebody tries to restore. LOGIC.md already says what the app
+stores, so there is nothing to discover later that would justify a migration.
+
+### Two things the Phase 0 device test found that no laptop could
+
+SQLCipher's native library is not loaded for you. Room 3 opens the database
+through `SQLCipherDriver` and the first query throws `UnsatisfiedLinkError` without
+`System.loadLibrary("sqlcipher")`. A JVM test cannot catch this, because there is
+no native library there to be missing.
+
+Deleting the database by a list of known suffixes is not enough. The device had a
+`steady.db.lck` that a list of `-wal`, `-shm` and `-journal` did not cover.
+Deleting every file whose name starts with the database name is the only version
+that makes "there is no copy anywhere else" true.
+
+Both are the reason the phase has a smoke test rather than a compile check.

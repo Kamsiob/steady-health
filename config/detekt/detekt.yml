@@ -35,6 +35,9 @@ complexity:
   TooManyFunctions:
     thresholdInClasses: 70
     thresholdInFiles: 70
+    # A DAO with fourteen queries is fourteen queries, not fourteen decisions.
+    # The count says nothing about whether the interface is doing too much.
+    thresholdInInterfaces: 30
     ignorePrivate: true
 
 naming:
