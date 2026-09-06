@@ -89,10 +89,23 @@ Curve band (weight). A sand band drawn from the expected weight-loss shape (fast
 Range band (waist). 12 px track, green-l zone to 0.5, sand zone 0.5 to 0.6, plain beyond; a 4 px navy marker with the value above it.
 Tab bar. White, 82 px, hairline top #EFEAE2, three items, filled Phosphor icons 26 px over 11/700 labels; active is navy, inactive ink3. A 5 px navy home indicator.
 Postcard. White, 26 radius, orange band with a sun and hills 110 px tall, week label 20/900 white bottom-left, body 14.5/400 ink.
-Doc page (doctor summary). White, 20 radius, 11.5 px rows with hairlines, values 800 navy.
+Doc page (the measures table). White, 20 radius, 11.5 px rows with hairlines, values 800 navy.
+Window pill row. Three pills, 3 months / 6 months / All, 6 months selected by default. Standard pill component, no new tokens.
+Ability strip. The four abilities as one white block, 24 radius, four rows separated by hairlines, each with its 32 px tinted glyph, the ability name 14/800, and its pill on the right. A compressed ability row, reusing the same tints. Same is styled identically to Better in weight and size; only the pill colour differs: Better is green-l on green, Same is sand on navy, and Quieter is also sand on navy, because Quieter must not read as an alarm.
+Summary card. White, 26 radius, 18 px padding, three paragraphs at 15/400 ink, 1.5 line height, 10 px between them. Words quoted from the person are navy 500, never italic. No heading above it; the page title already says what it is.
+Question list. A sand block, 24 radius, headed "Things you might ask about" 15/800 navy. Each question is a row: a small navy circle bullet, the question 14.5/600 navy, and under it the evidence line 12.5/600 ink2. With no candidates the whole block is replaced by one line in ink2.
+Provenance line. 12/600 ink3, centred, at the foot of a page that was written rather than recorded. It says where the words came from and that nothing was sent.
 
 ## 4. Screen anatomy
 Every content screen: a 44 px top row (round back button with a 2 px sand inset outline, title 20/800 navy, optional orange-d text action on the right), then blocks on the 12 px grid, then the primary button pinned in a 8/18/14 footer, then the tab bar where the screen is a tab root. Today and Welcome back replace the top row with the date (13/600 ink3), the greeting (28/800 navy), and a butter avatar disc.
+
+The visit summary page. Reached from a top-right text action reading "Summary" on the Abilities tab and on every ability detail page, in orange-d at 13.5/800, and from one row in Settings under Your data. It is never a fourth tab, never badged, and never announced. Top row with a back button, the title "Your visit summary" 20/800 navy, and a text action reading "Export". Then, in order: the window pill row; the ability strip; the summary card; the question list; the measures block under a section title "The numbers"; and the provenance line. Primary button "Export as a PDF", with a secondary ghost button "Regenerate".
+
+Its empty state, when there is not enough data, shows the ability strip if there is one, then a sand block saying what is still needed and that the numbers below are complete, then the measures block and the export button. The button is never disabled.
+
+Its loading state shows the Material 3 Expressive contained loading indicator inside the summary card with one line, "Reading back through your months." No percentage, and no skeleton text that could be mistaken for content.
+
+The exported PDF is the same content in the same order, on white, with the app name and the date range at the top and the provenance line at the bottom. Figtree, the same type scale, and the ability tints reduced to a small coloured square before each name so it prints legibly in greyscale. One page if it fits, two if it does not, never more.
 
 ## 5. Motion
 Material 3 Expressive springs, standard scheme. The daily card morphs from its tint to white and the check disc scales in when done; no confetti, no sound by default. The Go pill scales on press. The hero sky crossfades at dawn and dusk over two seconds. Rive for the pieces that react to state (done morph, Go, the walk marker); Lottie only for play-once art the project authored. All motion stops under the system reduce-motion setting.
@@ -101,6 +114,8 @@ Material 3 Expressive springs, standard scheme. The daily card morphs from its t
 The app describes; the person concludes. Every sentence passes one test: would a friend say this out loud. The app may not use a word it has not taught; the first time an idea appears, the sentence carries its own explanation, and later it shortens.
 
 Words that do not exist in the app: rung, tier, trail, trend, postcard, story, check-in, streak, score, goal, target, calories, burn, earn, cheat, fail, should, must, senior, elderly, frail, frailty, fall risk, decline, sarcopenia, patient, diagnosis, prescribe.
+
+The visit summary additionally never contains: report, assessment, evaluation, findings, results, recommendations. It is a summary, and it is the person's own page.
 Words that do: walk, where you started, months, your weight smoothed, your week written up, say how today went, done, that counts, get up, go, carry, steady, better, same, what you said you want.
 
 The ability sentence pattern, used everywhere a measure is reported: what you can do now, then what it was. "You got off the floor without your hands this month. In March you used a chair." Never the instrument's language, never the seconds first.
@@ -122,6 +137,8 @@ Fixed strings (final copy, do not paraphrase):
 - Counting: "On this phone. Nothing recorded."
 - Data: "Gone. There is no copy anywhere else." 
 - Support link label, always: "Support this work."
+- Visit summary, tab action and settings row: "Summary". Page title: "Your visit summary". Question block heading: "Things you might ask about". No candidates: "Nothing stood out this time." Measures heading: "The numbers". Provenance: "Written on your phone from what you logged between [date] and [date]. Nothing was sent anywhere." Loading: "Reading back through your months." Validation fallback: "The written summary could not be produced this time. The numbers below are complete." Export button: "Export as a PDF".
+- Introducing the summary, shown once in place above the ability rows: "There's enough here now for a summary you can take to an appointment. It's written on your phone, from your own months." with one action, "Have a look."
 
 Numbers-off mode replaces every figure with a direction word ("a little lower than last month") app-wide, hides the destination line, and removes the axis from charts.
 

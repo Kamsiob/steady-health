@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!--
+      Permissions are added in the phase that needs them, never ahead of it, so
+      that what this file asks for and what the app does stay the same thing.
+      Right now it asks for nothing, which means this build cannot open a network
+      connection, read a sensor, or see the camera.
+
+      Planned, each with the one sentence that justifies it to a person:
+        ACTIVITY_RECOGNITION  counts your steps while a walk is running.
+        CAMERA                counts your push-ups, and takes the Sunday photo.
+        ACCESS_FINE_LOCATION  measures distance, only if you turn it on.
+        POST_NOTIFICATIONS    shows a reminder, only if you turn one on.
+        INTERNET              downloads the optional reader once, if you ask.
+    -->
+
+    <!--
+      localeConfig is read from Android 13 onward, where the system settings
+      offer a per-app language. Below that it is ignored and the app's own
+      language picker is what a person uses. Both are wanted, so lint is told
+      this is deliberate.
+    -->
+    <application
+        android:name=".SteadyApplication"
+        tools:ignore="UnusedAttribute"
+        android:allowBackup="false"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:localeConfig="@xml/locales_config"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.SteadyHealth.Starting">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:configChanges="orientation|screenSize|screenLayout|keyboardHidden|uiMode|density|fontScale|locale|layoutDirection"
+            android:theme="@style/Theme.SteadyHealth.Starting"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>

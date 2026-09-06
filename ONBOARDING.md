@@ -61,6 +61,7 @@ Total: eleven screens, most of them one tap, under two minutes for someone who s
 - Tests are offered once, after the first two weeks of any movement, one test at a time, chosen by profile: "Want to try something you can measure? It takes a minute and only needs a chair."
 - The Sunday write-up arrives after the first full week and explains itself in its first paragraph, once.
 - The question mark on Today opens Ask a question, whose first card is "How Steady works," written by the owner, four short paragraphs.
+- The visit summary is not mentioned during setup. It is introduced once, in place, the first time the person opens the Abilities tab after there is enough data for it: a sand block above the ability rows reading "There's enough here now for a summary you can take to an appointment. It's written on your phone, from your own months." with a single action, "Have a look". Dismissing it removes it permanently, and the Summary action in the top row stays where it is.
 
 ## Returning after a gap
 Any gap over 7 days shows the welcome-back screen instead of Today, once. It states the gap length, that the weight line and the walks are still there, and the single change (a shorter suggested walk for two weeks, or nothing for a short gap). No mention of missed days beyond the length, no streak language, no apology from the app. Gaps over 90 days re-run screens 4 and 5 with the previous answers pre-selected.

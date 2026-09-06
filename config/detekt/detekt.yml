@@ -1,0 +1,50 @@
+build:
+  maxIssues: 0
+
+formatting:
+  active: true
+  android: true
+  MaximumLineLength:
+    active: true
+    maxLineLength: 110
+
+style:
+  MaxLineLength:
+    active: true
+    maxLineLength: 110
+  MagicNumber:
+    active: true
+    ignoreNumbers: ['-1', '0', '1', '2']
+    ignorePropertyDeclaration: true
+    ignoreCompanionObjectPropertyDeclaration: true
+    ignoreAnnotation: true
+    ignoreEnums: true
+  ReturnCount:
+    active: true
+    max: 4
+  UnusedPrivateMember:
+    active: true
+
+complexity:
+  LongParameterList:
+    # Compose screens take one callback per action by design, and collapsing
+    # them into an object hides which screen uses which.
+    functionThreshold: 9
+    constructorThreshold: 9
+    ignoreDefaultParameters: true
+  TooManyFunctions:
+    thresholdInClasses: 70
+    thresholdInFiles: 70
+    ignorePrivate: true
+
+naming:
+  FunctionNaming:
+    # Composables are PascalCase by convention.
+    functionPattern: '[a-zA-Z][a-zA-Z0-9]*'
+
+comments:
+  active: true
+  UndocumentedPublicClass:
+    active: false
+  UndocumentedPublicFunction:
+    active: false

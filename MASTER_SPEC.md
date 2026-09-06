@@ -10,7 +10,7 @@ Steady Health is a free, open-source Android app that keeps a record of what a p
 Positioning line: "What can you do?"
 Full name everywhere the app introduces itself: Steady Health by Kamsiob.
 
-Everything runs on the phone. No account, no server, no analytics, no ads, no subscription. AGPL-3.0. An optional on-device model (Gemma 4 E4B) does three visible jobs described in AI.md.
+Everything runs on the phone. No account, no server, no analytics, no ads, no subscription. AGPL-3.0. An optional on-device model (Gemma 4 E4B) does four visible jobs described in AI.md, of which the visit summary is the principal one.
 
 ## 2. Why capability and not weight
 Gait speed alone predicts survival about as well as a panel of age, sex, chronic conditions, smoking, blood pressure, BMI and hospitalization combined (Studenski, JAMA 2011). Grip strength beats systolic blood pressure as a mortality predictor (PURE, Lancet 2015). The sitting-rising test's lowest scorers had 3.8 to 6 times the mortality of the highest over 12 years, and each point is worth about 21% better survival. Function is the better measure and the one people feel. Full evidence in research/04.
@@ -52,14 +52,21 @@ Three or four measures, ten minutes, chair and wall only. The phone times chair 
 ### 6.6 Try it and see (grid 14, 15)
 After six weeks of check-ins the app may offer a two-week test of one change it noticed in the person's own words. It states what it will measure, reports the result honestly including no difference, and can be turned off in settings.
 
-### 6.7 For your doctor or therapist (grid 21)
-One page, function first, then the levers. Exported as PDF. Nothing transmitted.
+### 6.7 The measures table (grid 21)
+Function first, then the levers, as a table of rows and numbers. Nothing transmitted. From Phase 5 this table sits underneath the written visit summary (6.10) and is exported with it as one page. It was called "For your doctor" before the summary existed.
 
 ### 6.8 Ask a question (grid 22 in v1 grid; CONTENT.md)
 Eleven hand-written cards. The model only picks which to show.
 
 ### 6.9 Settings and data (grid 22)
-How you get around, working with a therapist, weigh in, show numbers, try it and see, the reader, anything to leave out, language, reminders, export, delete, Made with, Support this work.
+How you get around, working with a therapist, weigh in, show numbers, try it and see, the reader, anything to leave out, language, reminders, export, delete, Made with, Support this work. Under Your data, one row: Visit summary, subtitled "Read it, or export a page for your appointment."
+
+### 6.10 The visit summary
+One page, written on the phone from the person's own six months of data, saying what changed, what they mentioned, and what is worth asking about. Generated on demand from the Abilities tab and from the ability detail pages. Two outputs: read it on screen, or export a PDF that also carries the measures table (6.7). Requires at least eight weeks of data and at least two monthly checks; below that the button explains what is still needed instead of producing a thin page.
+
+This is the app's principal use of the language model and the feature the AI story rests on. Everything else the model does is bounded extraction; this is synthesis across months of measures, ratings, sentences, sessions and weight, deciding what matters enough to say. There is no rule that can be written for that, which is why it is the model's job.
+
+The engine does all selection, all arithmetic, and all thresholding, and hands the model a structured brief in which every fact carries an id. The model never sees a database, never computes, and never states a number it was not given. Every factual claim is checked against the source data before the page renders, and any sentence that cannot be traced is dropped. That validator is the load-bearing engineering here and is built before the model is wired in. LOGIC.md 13b and AI.md job 6.
 
 ## 7. What is deliberately absent
 Calorie counting or any food logging. Streaks, chains, badges, scores. Numeric targets set by the app. Anything red. A combined capability score. Any diagnosis, condition name, or inference of one. Medication tracking. Any social feature. Any cloud service.
@@ -72,15 +79,15 @@ Phase 0: repository, scaffolding, theme from DESIGN.md, database, three-tab shel
 Phase 1: onboarding through the first weigh-in and first ability (ONBOARDING.md), Today for the on-your-feet path, the daily three, Abilities with self-rated items only. Daily-usable at the end.
 Phase 2: the other three ways of getting around, each with its own Today tiles, Move sets, and measures. Exclusions, readiness flags, pacing mode, gap decay.
 Phase 3: the model. Words-to-abilities, tagging, the Sunday write-up, card retrieval, with fixtures and fallbacks.
-Phase 4: the monthly check. Accelerometer timing for chair stands, MediaPipe counting for push-ups and band rows, results reported as life, the decline path, the doctor page.
-Phase 5: Try it and see. Pattern detection, the offer, the two-week protocol, the honest result.
+Phase 4: the monthly check. Accelerometer timing for chair stands, MediaPipe counting for push-ups and band rows, results reported as life, the decline path, the measures table.
+Phase 5: Try it and see, and the visit summary. Pattern detection, the offer, the two-week protocol, the honest result. Then the summary brief, the job 6 validator built before the model is wired in, the summary page, and the PDF. Both depend on the same longitudinal data and the same validator infrastructure.
 Phase 6: numbers-off mode, four languages with RTL, text size, TalkBack, reminders with the two-a-week ceiling, Health Connect, export, import, delete.
 Phase 7: hardening and release per the template.
 
 Visuals for the exercise library are deferred to a later version. See VISUALS.md. Ship version 1 with text instructions and form cues only, written so they stand alone.
 
 ## 10. Testing
-Unit tests for every rule in LOGIC.md with thresholds as named constants. Fixture tests for every model job. Instrumented tests for: onboarding to first ability under two minutes; the accelerometer chair-stand count against a manual count on device; numbers-off mode showing no digits anywhere; the two-a-week reminder ceiling; delete leaving no files. Full user-testing protocol from the template in every theme, largest font sizes, TalkBack, fresh install and upgrade, offline throughout.
+Unit tests for every rule in LOGIC.md with thresholds as named constants, including every visit-summary question-candidate rule and its boundary cases at 5 days, 2 rating points, and three consecutive checks. Fixture tests for every model job. A validator corpus of at least 30 deliberately bad job 6 outputs, each of which must be caught. Instrumented tests for: onboarding to first ability under two minutes; the accelerometer chair-stand count against a manual count on device; numbers-off mode showing no digits anywhere; the two-a-week reminder ceiling; delete leaving no files; a visit summary generated from a seeded six-month database, asserting that every numeral on the rendered page appears in the brief; and the summary rendering correctly with the model absent, with the model failing, and with all three paragraphs failing validation. Full user-testing protocol from the template in every theme, largest font sizes, TalkBack, fresh install and upgrade, offline throughout.
 
 ## 11. Open questions, marked open
 Rive Android runtime licence at the version used. The exact Gemma 4 E4B on-device integration path on the current Android release. Whether MediaPipe rep counting holds above 80% in real home conditions with older users; if not, drop automated counting to optional and lead with self-report. Springer single-leg per-cell norms (ship without until verified). Cooper category bands (formula only until verified). Dark theme (not designed; light only).

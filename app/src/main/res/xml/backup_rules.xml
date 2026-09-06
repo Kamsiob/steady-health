@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Nothing is backed up. The database is encrypted with a key held in the Android
+  Keystore, which does not leave the device, so a copy of the database somewhere
+  else would be a file nobody can ever open. Export from Settings is the way to
+  move data, and it says so.
+-->
+<full-backup-content>
+    <exclude domain="root" path="." />
+    <exclude domain="database" path="." />
+    <exclude domain="sharedpref" path="." />
+    <exclude domain="file" path="." />
+</full-backup-content>

@@ -28,7 +28,7 @@ Four fixed domains: get_up, go, carry, steady. Every measure, exercise, and trac
 
 Tracked items (the person's own list). Created at onboarding from their words (AI.md job 1), each with: verbatim text, domain, rating 0 to 10, created date, and a rating history. Re-rated monthly with the check. A change of 2 or more points is reported as a change; 1 point is within noise and is shown but not announced (from the Patient-Specific Functional Scale MCID range of about 1.3 to 3.0).
 
-Ability state. Each domain is Better, Same, or Quieter, computed from its measures over the last three checks. Better: any measure improved beyond its detectable change and none declined. Same: all measures within detectable change. Quieter: any measure declined beyond detectable change in three consecutive checks. Same is displayed as a result, in the same visual weight as Better. Quieter is displayed once per domain per six months, with the sentence in DESIGN.md and every measure that held listed beside it, and it offers the doctor page. It never changes a colour and never repeats.
+Ability state. Each domain is Better, Same, or Quieter, computed from its measures over the last three checks. Better: any measure improved beyond its detectable change and none declined. Same: all measures within detectable change. Quieter: any measure declined beyond detectable change in three consecutive checks. Same is displayed as a result, in the same visual weight as Better. Quieter is displayed once per domain per six months, with the sentence in DESIGN.md and every measure that held listed beside it, and it offers the visit summary. It never changes a colour and never repeats.
 
 The life sentence. Each domain has a small set of hand-written sentence templates keyed to a measure crossing a threshold, filled deterministically by the engine (not the model): floor rise without hands, stairs without a stop, groceries in one trip, one foot for 20 seconds. The engine picks the sentence; the model never writes one.
 
@@ -111,8 +111,50 @@ Computed after six weeks of check-ins. For each tag, compare weeks where the tag
 ## 12. Reminders
 Off by default. Per-type switches: walk reminder (at the anchor moment), Sunday photo, Sunday write-up ready, a longer walk is ready. Hard ceiling of two notifications in any rolling seven days regardless of switches; the settings screen shows the count used. Copy under ten words. No reminder ever references a missed day.
 
-## 13. Doctor summary
-One page, function first: the four abilities and what changed in each; the person's own list with then and now ratings; every measure's first and latest result; then the levers. Date range; smoothed weight then and now; waist-to-height then and now; days and minutes moved in the last four weeks; current walking step and duration; each test's first and latest result; blood pressure entries if any; the line "Not tracked here: medication." Exported as PDF to the share sheet. Nothing is transmitted.
+## 13. The measures table (part of the visit summary export)
+One page, function first: the four abilities and what changed in each; the person's own list with then and now ratings; every measure's first and latest result; then the levers. Date range; smoothed weight then and now; waist-to-height then and now; days and minutes moved in the last four weeks; current walking step and duration; each test's first and latest result; blood pressure entries if any; the line "Not tracked here: medication." Exported as PDF to the share sheet. Nothing is transmitted. From Phase 5 this table is the second half of the visit summary export; the written summary sits above it.
+
+## 13b. The visit summary: what the engine assembles
+
+The engine does all selection, all arithmetic, and all thresholding. It produces a structured brief. The model receives only that brief.
+
+**Window.** Default is the last six months, or since the first weigh-in if shorter. The person can choose three months or all time. Minimum to generate: 8 weeks of data and 2 completed monthly checks.
+
+**What goes in the brief, and how each item is chosen.**
+
+*Ability changes.* For each of the four domains, the change between the first and last check inside the window, in the domain's own units, labelled Better, Same, or Quieter by the rules in section 3b. All four are always included, including Same.
+
+*Measures.* For each measure taken at least twice in the window: first value with its date, last value with its date, number of times taken, and whether the difference exceeds that measure's detectable change. Never a percentage, never a projection.
+
+*The person's own list.* Each tracked item with its verbatim text, its first rating and date, its last rating and date, and whether the change is at least 2 points.
+
+*Mentions.* For each tag in the closed vocabulary, the count of days it appeared in the window, and the three most recent verbatim sentences containing it. A tag is only passed if it appeared on 5 or more days. Body tags (sore, pain, unwell) are always passed if they appeared at all, with their count and dates.
+
+*Co-occurrence.* Any tag-and-measure or tag-and-tag pair the engine already found for Try it and see (section 9b rules), with its split. Nothing new is computed here; if the engine has not found a pattern, none is passed.
+
+*Sessions.* Days moved and total minutes per month across the window, the current walk or set and its duration, and any gap of 14 days or more with its dates.
+
+*Levers.* Weight direction as one of "a little lower," "about the same," "a little higher," plus the first and last smoothed values and the number of weigh-ins. Any blood pressure entries with their dates. Sleep average per month.
+
+*Way of getting around*, and whether it changed during the window.
+
+*Exclusions and pacing mode*, as flags only, never with any reason attached.
+
+**What is never in the brief:** the raw journal text beyond the three most recent sentences per passed tag; anything about food beyond the food tags; any exclusion reason; any age; any diagnosis, because none is stored.
+
+**Question candidates.** The engine, not the model, decides what is worth asking about. A candidate is generated only by one of these rules, and each carries the evidence that triggered it:
+
+1. A body tag (sore, pain, unwell) appearing on 5 or more days in the window, or on 3 or more days that fall within 48 hours of a session.
+2. A measure that declined beyond its detectable change across three consecutive checks (the Quieter rule).
+3. A tracked item whose rating fell by 2 or more points.
+4. A blood pressure entry outside the range the person's other entries sit in, stated only as "worth checking again," never interpreted.
+5. Weight falling faster than 1.5 kg per week averaged over four weeks (the existing rate-of-loss rule).
+6. A gap of 30 days or more in sessions where the person also logged a body tag in the same period.
+7. A measure that improved beyond its detectable change while a related tracked item did not, which is worth raising because the person's experience and the number disagree.
+
+At most four candidates go to the model, ordered by rule number. If there are none, the summary has no question list and says so in one line. The model may reword a candidate but may not add one, and any question in its output that does not map to a candidate is dropped by the validator.
+
+**Refresh.** Generated on demand, not on a schedule. The last generated summary is stored with its window and generation date. Regenerating replaces it. Nothing about it is ever notified.
 
 ## 14. Data
-Single encrypted SQLite database (SQLCipher, key in Android Keystore). Export: a folder containing a CSV of weigh-ins, a CSV of check-ins with tags, a CSV of sessions and tests, the photos, and the doctor summary PDF. Delete: everything, immediately, with one confirmation, and the copy says there is no other copy. Import restores from the export folder.
+Single encrypted SQLite database (SQLCipher, key in Android Keystore). Export: a folder containing a CSV of weigh-ins, a CSV of check-ins with tags, a CSV of sessions and tests, the photos, and the visit summary PDF. Delete: everything, immediately, with one confirmation, and the copy says there is no other copy. Import restores from the export folder.
