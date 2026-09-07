@@ -44,6 +44,7 @@ import com.kamsiob.steadyhealth.ui.screens.PatternScreen
 import com.kamsiob.steadyhealth.ui.screens.SayHowScreen
 import com.kamsiob.steadyhealth.ui.screens.SettingsActions
 import com.kamsiob.steadyhealth.ui.screens.SettingsScreen
+import com.kamsiob.steadyhealth.ui.screens.SummaryScreen
 import com.kamsiob.steadyhealth.ui.screens.TodayScreen
 import com.kamsiob.steadyhealth.ui.screens.WalkDoneScreen
 import com.kamsiob.steadyhealth.ui.screens.WalkingScreen
@@ -66,12 +67,20 @@ fun SteadyApp() {
     val settingsViewModel: SettingsViewModel = viewModel()
     val checkViewModel: CheckViewModel = viewModel()
     val abilityViewModel: AbilityViewModel = viewModel()
+    val summaryViewModel: SummaryViewModel = viewModel()
     val onboarded by viewModel.onboardingComplete.collectAsStateWithLifecycle()
 
     when (onboarded) {
         null -> Box(Modifier.fillMaxSize().background(SteadyPalette.Ground))
         false -> OnboardingFlow(onFinished = viewModel::onboardingFinished)
-        true -> Tabs(viewModel, askViewModel, settingsViewModel, checkViewModel, abilityViewModel)
+        true -> Tabs(
+            viewModel,
+            askViewModel,
+            settingsViewModel,
+            checkViewModel,
+            abilityViewModel,
+            summaryViewModel,
+        )
     }
 }
 
@@ -82,6 +91,7 @@ private fun Tabs(
     settingsViewModel: SettingsViewModel,
     checkViewModel: CheckViewModel,
     abilityViewModel: AbilityViewModel,
+    summaryViewModel: SummaryViewModel,
 ) {
     val navController = rememberNavController()
     var tab by rememberSaveable { mutableStateOf(Tab.Today) }
@@ -143,6 +153,10 @@ private fun Tabs(
                                 LaunchedEffect(Unit) { viewModel.refresh() }
                                 AbilitiesScreen(
                                     state = state,
+                                    onSummary = {
+                                        summaryViewModel.open()
+                                        navController.navigate(Route.SUMMARY)
+                                    },
                                     onAbility = {
                                         abilityViewModel.open(it)
                                         navController.navigate(Route.ABILITY)
@@ -160,6 +174,7 @@ private fun Tabs(
                     askRoutes(askViewModel, navController, back)
                     checkRoutes(checkViewModel, navController, back)
                     abilityRoutes(abilityViewModel, navController, back)
+                    summaryRoutes(summaryViewModel, back)
                     settingsRoutes(settingsViewModel, navController, back)
 
                     composable(Route.WALK_DONE) {
@@ -295,6 +310,23 @@ private fun NavGraphBuilder.dailyRoutes(
  * Reached from a tile on Today and from a row on Abilities, which are the two
  * places the four are shown, so tapping one anywhere goes to the same page.
  */
+/**
+ * The visit summary. Never a fourth tab, and reached from the places DESIGN.md
+ * names: the Abilities tab, an ability page, and one row in settings.
+ */
+private fun NavGraphBuilder.summaryRoutes(viewModel: SummaryViewModel, back: () -> Unit) {
+    composable(Route.SUMMARY) {
+        val state by viewModel.state.collectAsStateWithLifecycle()
+        SummaryScreen(
+            state = state,
+            onWindow = viewModel::setWindow,
+            onExport = viewModel::export,
+            onRegenerate = viewModel::regenerate,
+            onBack = back,
+        )
+    }
+}
+
 private fun NavGraphBuilder.abilityRoutes(
     viewModel: AbilityViewModel,
     navController: NavHostController,

@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- The visit summary, from DESIGN.md sections on the page and its voice. -->
+    <string name="summary_action">Summary</string>
+    <string name="summary_title">Your visit summary</string>
+    <string name="summary_questions">Things you might ask about</string>
+    <string name="summary_no_questions">Nothing stood out this time.</string>
+    <string name="summary_numbers">The numbers</string>
+    <string name="summary_provenance">Written on your phone from what you logged between %1$s and %2$s. Nothing was sent anywhere.</string>
+    <string name="summary_loading">Reading back through your months.</string>
+    <string name="summary_fallback">The written summary could not be produced this time. The numbers below are complete.</string>
+    <string name="summary_export">Export as a PDF</string>
+    <string name="summary_regenerate">Regenerate</string>
+
+    <!-- The window the summary covers. LOGIC.md 13b. -->
+    <string name="summary_window_three">3 months</string>
+    <string name="summary_window_six">6 months</string>
+    <string name="summary_window_all">All time</string>
+
+    <!--
+      Shown instead of the summary when there is not enough behind it. LOGIC.md
+      13b sets the floor at eight weeks and two checks, and a summary written from
+      less than that would be a page of guesses with a doctor's name on it.
+    -->
+    <string name="summary_not_yet_title">Not enough here yet</string>
+    <string name="summary_not_yet">A summary needs about two months of days and two monthly checks behind it. Until then the numbers below are everything the app has.</string>
+
+    <!-- The measures block. -->
+    <string name="summary_from_to">%1$s to %2$s</string>
+    <string name="summary_not_tracked">Not tracked here: medication.</string>
+
+</resources>

@@ -3,6 +3,7 @@ package com.kamsiob.steadyhealth.data
 import com.kamsiob.steadyhealth.ai.Synonym
 import com.kamsiob.steadyhealth.ai.TagCount
 import com.kamsiob.steadyhealth.ai.TagReader
+import com.kamsiob.steadyhealth.ai.VisitWindow
 import com.kamsiob.steadyhealth.ai.WeekBrief
 import com.kamsiob.steadyhealth.ai.WeekNote
 import com.kamsiob.steadyhealth.ai.WeightDirection
@@ -23,6 +24,7 @@ import com.kamsiob.steadyhealth.data.entity.TrackedItemEntity
 import com.kamsiob.steadyhealth.data.entity.WeeklyNoteEntity
 import com.kamsiob.steadyhealth.data.entity.WeighInEntity
 import com.kamsiob.steadyhealth.domain.AbilityDomain
+import com.kamsiob.steadyhealth.domain.AbilityState
 import com.kamsiob.steadyhealth.domain.Anchor
 import com.kamsiob.steadyhealth.domain.ChairEase
 import com.kamsiob.steadyhealth.domain.DayRating
@@ -40,13 +42,20 @@ import com.kamsiob.steadyhealth.domain.WalkTolerance
 import com.kamsiob.steadyhealth.domain.WeightSource
 import com.kamsiob.steadyhealth.engine.DoneSession
 import com.kamsiob.steadyhealth.engine.Envelope
+import com.kamsiob.steadyhealth.engine.Gap
+import com.kamsiob.steadyhealth.engine.ItemHistory
 import com.kamsiob.steadyhealth.engine.Ladders
 import com.kamsiob.steadyhealth.engine.MeasureResult
 import com.kamsiob.steadyhealth.engine.Measures
+import com.kamsiob.steadyhealth.engine.Mention
+import com.kamsiob.steadyhealth.engine.MonthOfSessions
 import com.kamsiob.steadyhealth.engine.PacingEngine
 import com.kamsiob.steadyhealth.engine.Reading
 import com.kamsiob.steadyhealth.engine.Smoothed
+import com.kamsiob.steadyhealth.engine.VisitInputs
+import com.kamsiob.steadyhealth.engine.VisitSummaryEngine
 import com.kamsiob.steadyhealth.engine.WeightEngine
+import java.time.LocalDate
 
 /**
  * The only things that touch the database.
@@ -590,5 +599,155 @@ class CheckRepository(private val db: SteadyDatabase) {
                 ),
             )
         }
+    }
+}
+
+/**
+ * Everything the visit summary is allowed to know, gathered from rows.
+ *
+ * All the selection and arithmetic happen in [VisitSummaryEngine]; this only
+ * fetches. The split matters because the engine is where the rules are, and a
+ * rule buried in a query is a rule nobody can test.
+ */
+class VisitRepository(private val db: SteadyDatabase) {
+
+    suspend fun firstDay(): Long? = db.weighIns().allOnce().minOfOrNull { it.epochDay }
+
+    @Suppress("LongParameterList")
+    suspend fun inputs(
+        window: VisitWindow,
+        abilityNames: Map<AbilityDomain, String>,
+        measureNames: Map<String, String>,
+        stateNames: Map<AbilityState, String>,
+    ): VisitInputs {
+        val from = window.fromDay
+        val to = window.toDay
+        val results = db.checks().measuresBetween(from, to)
+            .map { MeasureResult(it.measureId, it.epochDay, it.value) }
+        val sessions = db.sessions().between(from, to)
+        val weighIns = db.weighIns().allOnce().filter { it.epochDay in from..to }
+
+        return VisitInputs(
+            window = window,
+            weeks = ((to - from) / DAYS_IN_WEEK).toInt(),
+            checkCount = db.checks().countBetween(from, to),
+            results = results,
+            items = items(from, to),
+            mentions = mentions(from, to),
+            months = months(from, to),
+            gaps = gaps(sessions.map { it.epochDay }.distinct().sorted(), from, to),
+            currentStep = currentStep(),
+            weightFirstKg = weighIns.minByOrNull { it.epochDay }?.smoothedKg,
+            weightLastKg = weighIns.maxByOrNull { it.epochDay }?.smoothedKg,
+            weighInCount = weighIns.size,
+            fastestWeeklyLossKg = fastestLoss(weighIns.map { it.epochDay to it.smoothedKg }),
+            abilityNames = abilityNames,
+            measureNames = measureNames,
+            stateNames = stateNames,
+            pacing = ProfileRepository(db).pacing(),
+            anyExclusions = db.profile().exclusionIds().isNotEmpty(),
+            wayChanged = false,
+        )
+    }
+
+    private suspend fun items(from: Long, to: Long): List<ItemHistory> =
+        db.abilities().itemsOnce().mapNotNull { item ->
+            val ratings = db.abilities().ratingsFor(item.id)
+                .filter { it.epochDay in from..to }
+                .sortedBy { it.epochDay }
+            if (ratings.isEmpty()) return@mapNotNull null
+            ItemHistory(
+                text = item.text,
+                firstRating = ratings.first().rating,
+                firstDay = ratings.first().epochDay,
+                lastRating = ratings.last().rating,
+                lastDay = ratings.last().epochDay,
+            )
+        }
+
+    /**
+     * Tags, with up to three of the person's own sentences each.
+     *
+     * The sentences are the only raw journal text that reaches the brief, and
+     * LOGIC.md 13b caps it at three per passed tag for exactly that reason.
+     */
+    private suspend fun mentions(from: Long, to: Long): List<Mention> {
+        val checkIns = db.checkIns().allOnce().filter { it.epochDay in from..to }
+        val byId = checkIns.associateBy { it.id }
+        return db.checkIns().allTagsOnce()
+            .filter { it.checkInId in byId.keys }
+            .groupBy { it.tag }
+            .map { (tag, rows) ->
+                val days = rows.mapNotNull { byId[it.checkInId] }
+                Mention(
+                    tag = tag,
+                    days = days.map { it.epochDay }.distinct().size,
+                    recent = days.sortedByDescending { it.epochDay }
+                        .map { it.sentence }
+                        .filter { it.isNotBlank() }
+                        .take(THREE),
+                )
+            }
+    }
+
+    private suspend fun months(from: Long, to: Long): List<MonthOfSessions> =
+        db.sessions().between(from, to)
+            .filter { it.durationSeconds >= Ladders.COUNTS_AS_A_SESSION_SECONDS }
+            .groupBy { LocalDate.ofEpochDay(it.epochDay).month }
+            .map { (month, rows) ->
+                MonthOfSessions(
+                    month = month.name.lowercase().replaceFirstChar { it.uppercase() },
+                    daysMoved = rows.map { it.epochDay }.distinct().size,
+                    minutes = rows.sumOf { it.durationSeconds } / SECONDS_PER_MINUTE,
+                )
+            }
+
+    /** Every stretch with no session in it, from the days that had one. */
+    private fun gaps(days: List<Long>, from: Long, to: Long): List<Gap> {
+        if (days.isEmpty()) return listOf(Gap(from, to))
+        return (listOf(from) + days + listOf(to))
+            .zipWithNext { a, b -> Gap(a, b) }
+            .filter { it.days >= VisitSummaryEngine.GAP_DAYS }
+    }
+
+    private suspend fun currentStep(): String {
+        val way = ProfileRepository(db).gettingAround()
+        val ladder = when (way) {
+            GettingAround.OnFeet, GettingAround.Walker -> Ladder.Walking
+            GettingAround.Wheelchair -> Ladder.Wheeling
+            GettingAround.InBed -> Ladder.InBed
+        }
+        val index = db.ladders().state(ladder.id)?.currentStepIndex ?: 0
+        val steps = when (ladder) {
+            Ladder.Walking -> Ladders.walking
+            Ladder.Wheeling -> Ladders.wheeling
+            else -> Ladders.inBed
+        }
+        return db.ladders().nameFor(ladder.id, index) ?: steps.getOrNull(index)?.name.orEmpty()
+    }
+
+    /**
+     * The fastest four-week stretch of losing, in kilos a week.
+     *
+     * One of the seven question-candidate rules turns on it. Computed here rather
+     * than in the engine only because it needs the whole series; the threshold it
+     * is compared against lives in the engine with the other six.
+     */
+    private fun fastestLoss(series: List<Pair<Long, Double>>): Double? {
+        if (series.size < 2) return null
+        val sorted = series.sortedBy { it.first }
+        return sorted.indices.mapNotNull { i ->
+            val later = sorted.lastOrNull { it.first <= sorted[i].first + FOUR_WEEKS }
+            if (later == null || later.first == sorted[i].first) return@mapNotNull null
+            val weeks = (later.first - sorted[i].first) / DAYS_IN_WEEK.toDouble()
+            if (weeks < 1) null else (sorted[i].second - later.second) / weeks
+        }.maxOrNull()
+    }
+
+    private companion object {
+        const val DAYS_IN_WEEK = 7
+        const val SECONDS_PER_MINUTE = 60
+        const val THREE = 3
+        const val FOUR_WEEKS = 28L
     }
 }

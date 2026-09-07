@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The one directory this app ever shares out of.
+
+  Nothing else in the app's storage is reachable through the provider, so a bug
+  in a share intent cannot hand somebody the database. Files land here only when
+  the person asks for an export, and the system clears the cache on its own.
+-->
+<paths>
+    <cache-path name="shared" path="shared/" />
+</paths>

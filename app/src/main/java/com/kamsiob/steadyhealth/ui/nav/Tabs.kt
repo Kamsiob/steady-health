@@ -47,4 +47,5 @@ object Route {
     const val CHECK_DONE = "check-done"
     const val ABILITY = "ability"
     const val WEIGHT = "weight"
+    const val SUMMARY = "summary"
 }

@@ -1,5 +1,6 @@
 package com.kamsiob.steadyhealth.ui.screens
 
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -11,6 +12,7 @@ import com.kamsiob.steadyhealth.ui.components.ListItem
 import com.kamsiob.steadyhealth.ui.components.Paragraph
 import com.kamsiob.steadyhealth.ui.components.SectionTitle
 import com.kamsiob.steadyhealth.ui.components.SteadyScreen
+import com.kamsiob.steadyhealth.ui.components.TextLink
 import com.kamsiob.steadyhealth.ui.theme.SteadyPalette
 import com.kamsiob.steadyhealth.ui.theme.SteadyText
 import com.kamsiob.steadyhealth.ui.theme.SteadyType
@@ -54,6 +56,7 @@ fun AbilitiesScreen(
     state: AbilitiesUiState,
     onAbility: (AbilityDomain) -> Unit,
     onCheck: () -> Unit,
+    onSummary: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     SteadyScreen(title = null, onBack = null, modifier = modifier) {
@@ -79,6 +82,15 @@ fun AbilitiesScreen(
             heading = stringResource(R.string.check_title),
             subtitle = stringResource(R.string.check_intro_lede),
             onClick = onCheck,
+        )
+
+        // DESIGN.md puts this here as a text action rather than a card: it is a
+        // door, not a thing to look at, and a badge on it would make a page about
+        // somebody's body into something that nags them.
+        TextLink(
+            label = stringResource(R.string.summary_action),
+            onClick = onSummary,
+            modifier = Modifier.fillMaxWidth(),
         )
 
         if (state.week.isNotEmpty()) {

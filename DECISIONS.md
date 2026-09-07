@@ -545,3 +545,59 @@ LOGIC.md groups seated band rows into the chair-and-standing ladder because of
 where they are done. The ability they feed is Carry. MASTER_SPEC requires every
 exercise to belong to exactly one of the four, so the step carries the domain and
 the ladder it sits in carries none.
+
+## Phase 5
+
+### The validator was built first, and the model still is not wired
+
+ADDENDUM-01 is explicit: "the validator in AI.md Job 6 is not optional: build it
+before the model is wired in, with the adversarial fixture corpus." So the order
+was validator, corpus, engine, template writer, screen, and the model has not been
+touched. It goes into the same slot the template writer occupies and through the
+same check.
+
+The corpus is 37 deliberately bad paragraphs, every one of them a sentence a
+language model writes readily against the brief: a computed percentage, a
+projection, a month that is not in a cited fact, an altered quotation, "which
+means", a condition name. All 37 are caught. Six honest paragraphs are in the
+same file and all six survive, because a validator that rejects everything
+protects nobody: the summary would always fall back and the feature would be
+dead.
+
+### "Directly entailed" is read strictly
+
+AI.md says every number must appear in, or be directly entailed by, a cited fact.
+A looser reading would need the validator to do arithmetic, and a validator that
+computes is a second thing that can be wrong. So: a digit passes when its value is
+in a cited fact's numbers, and a number written as a word passes either that way
+or when the word itself is in a cited fact's text.
+
+That second half exists because "One foot" is the name of a measure, not a claim
+that something happened once, and the engine's own sentence says so. Found by the
+test, not by thinking about it.
+
+### The template summary passes the same validator
+
+Forty-eight briefs, generated from the axes that actually change the output rather
+than typed out, because a Quieter domain with a gap and a falling item is a
+different brief from any of them alone and is exactly the combination that breaks
+a template. Every one of their template summaries passes the check.
+
+A template that could not pass would be one nobody should trust either, so the
+property is worth more than the coverage number.
+
+### Every fact declares its own numbers
+
+A fact whose text says "A 14 minute walk" has to declare 14, or the validator is
+right to reject a summary that repeats it. Found by the test on the first run,
+and it is the kind of thing that would have shipped as a mysterious fallback.
+
+### The PDF is drawn, not rendered
+
+Android has no HTML-to-PDF path that does not involve a WebView, and a WebView in
+a local-first app is a network stack sitting next to somebody's health record for
+no reason. So the page is drawn onto a `PdfDocument` canvas.
+
+It leaves through a `FileProvider` that exposes exactly one cache directory and
+nothing else, so a mistake in a share intent cannot hand somebody the database.
+Nothing is transmitted, and the app has no network permission with which to.

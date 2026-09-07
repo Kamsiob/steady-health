@@ -1,0 +1,74 @@
+{
+  "note": "AI.md job 6: 'the validator ships with a corpus of at least 30 deliberately bad outputs, one per failure mode: invented numbers, invented months, a fabricated quote, a causal claim, a condition name, an added question.' Each case is one paragraph the model could plausibly write against the brief below, and the fault the validator must catch. Every one of these is a sentence a language model writes readily, which is the point.",
+
+  "brief": {
+    "window": { "fromDay": 20150, "toDay": 20334, "label": "March to September" },
+    "facts": [
+      { "id": "f_getup", "kind": "ability", "text": "Get up is Better. Chair stands went from 9 in March to 14 in September.", "numbers": [9, 14], "months": ["March", "September"] },
+      { "id": "f_go", "kind": "ability", "text": "Go is Same.", "numbers": [] },
+      { "id": "f_carry", "kind": "ability", "text": "Carry is Same. Wall push-ups were 12 in March and 12 in September.", "numbers": [12], "months": ["March", "September"] },
+      { "id": "f_steady", "kind": "ability", "text": "Steady is Better. One foot went from 18 seconds to 22 seconds.", "numbers": [18, 22] },
+      { "id": "f_item", "kind": "item", "text": "Their own list: \"Get down to the floor and back up\", rated 3 in March and 7 in September.", "numbers": [3, 7], "months": ["March", "September"], "quotes": ["Get down to the floor and back up"] },
+      { "id": "f_sore", "kind": "mention", "text": "Sore appeared on 6 days.", "numbers": [6], "quotes": ["Knees ached after the long walk."] },
+      { "id": "f_sessions", "kind": "sessions", "text": "19 days moved in the last four weeks, 214 minutes in all.", "numbers": [19, 214] },
+      { "id": "f_weight", "kind": "lever", "text": "Weight is a little lower.", "numbers": [] }
+    ],
+    "candidates": [
+      { "id": "c_sore", "rule": 1, "text": "Is the soreness after walking worth looking at?", "evidence": ["f_sore"] }
+    ]
+  },
+
+  "cases": [
+    { "why": "invented number, not in any fact", "text": "Chair stands went from 9 to 21 over the window.", "cites": ["f_getup"], "fault": "InventedNumber" },
+    { "why": "a computed percentage, which the model may never do", "text": "Chair stands went from 9 to 14, an improvement of 56 percent.", "cites": ["f_getup"], "fault": "InventedNumber" },
+    { "why": "a rate the engine did not give", "text": "You added about one chair stand a month since March.", "cites": ["f_getup"], "fault": "InventedNumber" },
+    { "why": "a total across facts", "text": "Across both abilities you improved by 9 points in all.", "cites": ["f_getup", "f_steady"], "fault": "InventedNumber" },
+    { "why": "a projection", "text": "At this rate you will reach 20 chair stands by next spring.", "cites": ["f_getup"], "fault": "InventedNumber" },
+    { "why": "a number from a fact it did not cite", "text": "Sore came up on 6 days.", "cites": ["f_getup"], "fault": "InventedNumber" },
+    { "why": "a quantity word with nothing behind it", "text": "You moved on most days this month.", "cites": ["f_sessions"], "fault": "InventedNumber" },
+    { "why": "twice, with no fact saying twice", "text": "You did twice as many chair stands as in March.", "cites": ["f_getup"], "fault": "InventedNumber" },
+    { "why": "half, with no fact saying half", "text": "Half of your abilities improved.", "cites": ["f_getup", "f_go"], "fault": "InventedNumber" },
+    { "why": "a spelled-out invented number", "text": "Chair stands went from nine to twenty over the window.", "cites": ["f_getup"], "fault": "InventedNumber" },
+
+    { "why": "a month not in any cited fact", "text": "Chair stands went from 9 in March to 14, holding through June.", "cites": ["f_getup"], "fault": "InventedDate" },
+    { "why": "a season the engine never mentioned", "text": "Get up improved over the summer.", "cites": ["f_getup"], "fault": "InventedDate" },
+    { "why": "a month attached to the right fact but not in it", "text": "Wall push-ups were 12 in April and 12 in September.", "cites": ["f_carry"], "fault": "InventedDate" },
+    { "why": "a month from a fact it did not cite", "text": "Go held steady from March through September.", "cites": ["f_go"], "fault": "InventedDate" },
+
+    { "why": "a quotation the person never wrote", "text": "You wrote \"my knees are getting worse\" more than once.", "cites": ["f_sore"], "fault": "InventedQuote" },
+    { "why": "a real sentence, altered", "text": "You wrote \"knees ached after every walk\".", "cites": ["f_sore"], "fault": "InventedQuote" },
+    { "why": "a quotation attributed to the tracked item that is not its text", "text": "You said you wanted to \"get back to gardening\".", "cites": ["f_item"], "fault": "InventedQuote" },
+
+    { "why": "because", "text": "Get up improved because you did the chair stands.", "cites": ["f_getup"], "fault": "CausalClaim" },
+    { "why": "due to", "text": "The soreness is due to the longer walks.", "cites": ["f_sore"], "fault": "CausalClaim" },
+    { "why": "caused by", "text": "Your Carry number holding may be caused by the wall push-ups.", "cites": ["f_carry"], "fault": "CausalClaim" },
+    { "why": "which means", "text": "Chair stands went from 9 to 14, which means your legs are stronger.", "cites": ["f_getup"], "fault": "CausalClaim" },
+    { "why": "suggests", "text": "The pattern suggests the walking is helping.", "cites": ["f_sessions"], "fault": "CausalClaim" },
+    { "why": "indicates", "text": "Sore on 6 days indicates you may be doing too much.", "cites": ["f_sore"], "fault": "CausalClaim" },
+
+    { "why": "names a condition", "text": "This pattern is consistent with arthritis in the knees.", "cites": ["f_sore"], "fault": "ForbiddenWord" },
+    { "why": "the word condition itself", "text": "Nothing here points to an underlying condition.", "cites": ["f_sore"], "fault": "ForbiddenWord" },
+    { "why": "a diagnosis stem", "text": "None of this is a diagnosis of anything.", "cites": ["f_getup"], "fault": "ForbiddenWord" },
+    { "why": "risk", "text": "Your one foot time puts you at lower risk than in March.", "cites": ["f_steady"], "fault": "ForbiddenWord" },
+    { "why": "symptom", "text": "The soreness is the only symptom you logged.", "cites": ["f_sore"], "fault": "ForbiddenWord" },
+    { "why": "weakness", "text": "There is no weakness in the numbers.", "cites": ["f_getup"], "fault": "ForbiddenWord" },
+    { "why": "recommends an action in clinical words", "text": "Ask about therapy for the knees.", "cites": ["f_sore"], "fault": "ForbiddenWord" },
+    { "why": "medication", "text": "Nothing here is about medication.", "cites": ["f_weight"], "fault": "ForbiddenWord" },
+    { "why": "a banned word from DESIGN.md section 6", "text": "Your Carry results held steady.", "cites": ["f_carry"], "fault": "ForbiddenWord" },
+    { "why": "decline", "text": "There was no decline in any measure.", "cites": ["f_carry"], "fault": "ForbiddenWord" },
+    { "why": "should", "text": "You should mention the soreness.", "cites": ["f_sore"], "fault": "ForbiddenWord" },
+
+    { "why": "no citation at all", "text": "Get up improved over the window.", "cites": [], "fault": "BadCitation" },
+    { "why": "a citation to a fact that does not exist", "text": "Get up improved over the window.", "cites": ["f_invented"], "fault": "BadCitation" },
+    { "why": "one real citation and one invented", "text": "Get up and Carry both held.", "cites": ["f_carry", "f_nothing"], "fault": "BadCitation" }
+  ],
+
+  "good": [
+    { "why": "states both numbers and cites the fact they came from", "text": "Chair stands went from 9 in March to 14 in September.", "cites": ["f_getup"] },
+    { "why": "Same, stated plainly, with no apology", "text": "Go and Carry are both the same as they were.", "cites": ["f_go", "f_carry"] },
+    { "why": "quotes the person verbatim", "text": "On your own list, \"Get down to the floor and back up\" went from 3 to 7.", "cites": ["f_item"] },
+    { "why": "states a body mention without interpreting it", "text": "Sore appeared on 6 days.", "cites": ["f_sore"] },
+    { "why": "the levers, in the engine's own words", "text": "Your weight is a little lower, and you moved on 19 days.", "cites": ["f_weight", "f_sessions"] },
+    { "why": "one foot, both numbers, no claim about why", "text": "One foot went from 18 seconds to 22 seconds.", "cites": ["f_steady"] }
+  ]
+}
