@@ -38,6 +38,13 @@ android {
             isMinifyEnabled = true
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+
+            // Until there is a real signing key, release builds are signed with
+            // the debug one so they can be installed and tested. This is a
+            // testing convenience and not a shipping configuration: a debug-signed
+            // build cannot go to Play, and the real keystore is an owner task on
+            // the BLOCKED list. Swapping this for the real config is one line.
+            signingConfig = signingConfigs.getByName("debug")
         }
     }
 

@@ -806,3 +806,31 @@ cautious side. It is the same rule as the measures, for the same reason.
 The result screen shows whatever was actually done. Skipping every measure and
 only re-rating your list used to produce a screen saying "Done" with nothing under
 it, which makes it look as though nothing happened.
+
+### The release build, and what R8 nearly broke
+
+The debug APK is 41.7 MB, almost all of it unminified DEX. The release build with
+R8 and resource shrinking is 7.5 MB, which is the number that matters: this app is
+for people who may be on a metered connection and an old phone.
+
+The keep rules are short and every one of them names what it protects. The one
+that would have hurt is SQLCipher: its JNI layer looks classes up by name from C,
+so R8 cannot see the reference, and getting it wrong is an `UnsatisfiedLinkError`
+on the first query, in release only, on somebody's actual phone. That is exactly
+the class of bug a debug-only test run never finds, so the release build was
+installed on the Pixel and driven end to end: the database opened with existing
+rows in it, the monthly check ran, the visit summary generated and exported as a
+PDF, the export zip was written, the tag grid saved, and a card opened.
+
+Release is signed with the debug key for now, so it installs over the debug build
+in place and keeps the data. That is a testing convenience and is marked as one in
+the build file: a debug-signed build cannot go to Play, and the real keystore is
+an owner task on the BLOCKED list.
+
+### `lintRelease` fails on an out-of-date Kotlin, and it is right
+
+It runs `NewerVersionAvailable`, which `lintDebug` does not. Kotlin 2.4.20 was an
+RC when the versions were pinned in Phase 0 and is now the stable release, so the
+pin is genuinely stale. Recorded rather than fixed in the same breath as a
+handover build, because a compiler upgrade is its own change with its own
+verification.
