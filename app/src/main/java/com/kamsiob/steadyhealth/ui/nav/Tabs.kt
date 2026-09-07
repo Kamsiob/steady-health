@@ -37,4 +37,7 @@ object Route {
     const val PATTERN = "pattern"
     const val ASK = "ask"
     const val CARD = "card"
+    const val CHECK = "check"
+    const val CHECK_MEASURE = "check-measure"
+    const val CHECK_DONE = "check-done"
 }

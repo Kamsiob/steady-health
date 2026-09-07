@@ -8,6 +8,7 @@ import com.kamsiob.steadyhealth.ai.Tags
 import com.kamsiob.steadyhealth.ai.WeekFilter
 import com.kamsiob.steadyhealth.ai.WeekWriter
 import com.kamsiob.steadyhealth.data.AbilityRepository
+import com.kamsiob.steadyhealth.data.CheckRepository
 import com.kamsiob.steadyhealth.data.DayEntry
 import com.kamsiob.steadyhealth.data.DayRepository
 import com.kamsiob.steadyhealth.data.MovementRepository
@@ -16,16 +17,17 @@ import com.kamsiob.steadyhealth.data.SteadyDatabase
 import com.kamsiob.steadyhealth.data.WeekRepository
 import com.kamsiob.steadyhealth.data.WeightRepository
 import com.kamsiob.steadyhealth.domain.AbilityDomain
-import com.kamsiob.steadyhealth.domain.AbilityState
 import com.kamsiob.steadyhealth.domain.DayRating
 import com.kamsiob.steadyhealth.domain.Exclusion
 import com.kamsiob.steadyhealth.domain.GettingAround
 import com.kamsiob.steadyhealth.domain.Ladder
 import com.kamsiob.steadyhealth.domain.TalkTest
 import com.kamsiob.steadyhealth.domain.Units
+import com.kamsiob.steadyhealth.engine.AbilityEngine
 import com.kamsiob.steadyhealth.engine.DoneSession
 import com.kamsiob.steadyhealth.engine.Envelope
 import com.kamsiob.steadyhealth.engine.Ladders
+import com.kamsiob.steadyhealth.engine.LifeSentences
 import com.kamsiob.steadyhealth.engine.PacingEngine
 import com.kamsiob.steadyhealth.engine.Progression
 import com.kamsiob.steadyhealth.engine.ProgressionEngine
@@ -78,6 +80,7 @@ class SteadyViewModel(application: Application) : AndroidViewModel(application) 
     internal val abilities by lazy { AbilityRepository(db) }
     internal val movement by lazy { MovementRepository(db) }
     internal val weeks by lazy { WeekRepository(db) }
+    internal val checks by lazy { CheckRepository(db) }
 
     private val _onboardingComplete = MutableStateFlow<Boolean?>(null)
     val onboardingComplete: StateFlow<Boolean?> = _onboardingComplete.asStateFlow()
@@ -304,17 +307,39 @@ class SteadyViewModel(application: Application) : AndroidViewModel(application) 
     private suspend fun abilityTiles(): List<AbilityTileState> {
         val context = getApplication<Application>()
         val items = abilities.items()
+        val measured = checks.latestValues()
         return AbilityDomain.entries.map { domain ->
-            val mine = items.filter { it.domain == domain.id }
             AbilityTileState(
                 domain = domain,
-                name = context.getString(nameFor(domain)),
                 // The four ids never change; only what they are called does.
-                // Until the first monthly check there is no measured sentence, so
-                // the tile carries the person's own words instead of an empty
-                // space or an invented claim.
-                lifeSentence = mine.firstOrNull()?.text.orEmpty(),
+                name = context.getString(nameFor(domain)),
+                lifeSentence = sentenceFor(
+                    domain,
+                    measured,
+                    items.firstOrNull { it.domain == domain.id }?.text,
+                ),
             )
+        }
+    }
+
+    /**
+     * What one tile says about a life.
+     *
+     * The measured sentence when there is one, because it describes something the
+     * person has actually done. Their own words until then, because a made-up
+     * sentence about somebody's life is worse than none and an empty tile says
+     * nothing at all.
+     */
+    private fun sentenceFor(
+        domain: AbilityDomain,
+        measured: Map<String, Double>,
+        theirWords: String?,
+    ): String {
+        val sentence = LifeSentences.forDomain(domain, measured)
+        return if (sentence != null) {
+            getApplication<Application>().getString(lifeStringOf(sentence.id))
+        } else {
+            theirWords.orEmpty()
         }
     }
 
@@ -671,15 +696,22 @@ class SteadyViewModel(application: Application) : AndroidViewModel(application) 
             abilities.latestRating(item.id)?.let { item to it.rating }
         }
 
+        val results = checks.results()
+        val measured = checks.latestValues()
+
         _abilities.value = AbilitiesUiState(
             abilities = AbilityDomain.entries.map { domain ->
                 AbilityRowState(
                     domain = domain,
                     name = context.getString(nameFor(domain)),
-                    lifeSentence = items.firstOrNull { it.domain == domain.id }?.text.orEmpty(),
-                    // Before the first check there is nothing measured to compare,
-                    // and Same is the honest answer rather than Better.
-                    state = AbilityState.Same,
+                    lifeSentence = sentenceFor(
+                        domain,
+                        measured,
+                        items.firstOrNull { it.domain == domain.id }?.text,
+                    ),
+                    // Before the first check there is nothing measured to compare
+                    // and the engine says Same, which is the honest answer.
+                    state = AbilityEngine.stateOf(domain, results),
                 )
             },
             items = ratings.map { (item, rating) ->

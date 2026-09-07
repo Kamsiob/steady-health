@@ -31,6 +31,9 @@ import com.kamsiob.steadyhealth.ui.onboarding.OnboardingFlow
 import com.kamsiob.steadyhealth.ui.screens.AbilitiesScreen
 import com.kamsiob.steadyhealth.ui.screens.AskScreen
 import com.kamsiob.steadyhealth.ui.screens.CardScreen
+import com.kamsiob.steadyhealth.ui.screens.CheckDoneScreen
+import com.kamsiob.steadyhealth.ui.screens.CheckIntroScreen
+import com.kamsiob.steadyhealth.ui.screens.CheckMeasureScreen
 import com.kamsiob.steadyhealth.ui.screens.GettingAroundScreen
 import com.kamsiob.steadyhealth.ui.screens.LeaveOutSettingsScreen
 import com.kamsiob.steadyhealth.ui.screens.MoveScreen
@@ -59,12 +62,13 @@ fun SteadyApp() {
     val viewModel: SteadyViewModel = viewModel()
     val askViewModel: AskViewModel = viewModel()
     val settingsViewModel: SettingsViewModel = viewModel()
+    val checkViewModel: CheckViewModel = viewModel()
     val onboarded by viewModel.onboardingComplete.collectAsStateWithLifecycle()
 
     when (onboarded) {
         null -> Box(Modifier.fillMaxSize().background(SteadyPalette.Ground))
         false -> OnboardingFlow(onFinished = viewModel::onboardingFinished)
-        true -> Tabs(viewModel, askViewModel, settingsViewModel)
+        true -> Tabs(viewModel, askViewModel, settingsViewModel, checkViewModel)
     }
 }
 
@@ -73,6 +77,7 @@ private fun Tabs(
     viewModel: SteadyViewModel,
     askViewModel: AskViewModel,
     settingsViewModel: SettingsViewModel,
+    checkViewModel: CheckViewModel,
 ) {
     val navController = rememberNavController()
     var tab by rememberSaveable { mutableStateOf(Tab.Today) }
@@ -129,13 +134,21 @@ private fun Tabs(
                             Tab.Abilities -> {
                                 val state by viewModel.abilitiesState.collectAsStateWithLifecycle()
                                 LaunchedEffect(Unit) { viewModel.refresh() }
-                                AbilitiesScreen(state = state, onAbility = {})
+                                AbilitiesScreen(
+                                    state = state,
+                                    onAbility = {},
+                                    onCheck = {
+                                        checkViewModel.open()
+                                        navController.navigate(Route.CHECK)
+                                    },
+                                )
                             }
                         }
                     }
 
                     dailyRoutes(viewModel, navController, back)
                     askRoutes(askViewModel, navController, back)
+                    checkRoutes(checkViewModel, navController, back)
                     settingsRoutes(settingsViewModel, navController, back)
 
                     composable(Route.WALK_DONE) {
@@ -258,6 +271,57 @@ private fun NavGraphBuilder.dailyRoutes(
  * Their own function and their own view model, because the cards are constants
  * and the search is a word match: nothing here touches the database.
  */
+/**
+ * The monthly check, from the offer to the result.
+ *
+ * A flow with a beginning and an end rather than a place, so it lives outside the
+ * tabs and pops back to where it started. Its view model holds the accelerometer,
+ * and leaving takes it with them.
+ */
+private fun NavGraphBuilder.checkRoutes(
+    viewModel: CheckViewModel,
+    navController: NavHostController,
+    back: () -> Unit,
+) {
+    composable(Route.CHECK) {
+        val state by viewModel.intro.collectAsStateWithLifecycle()
+        CheckIntroScreen(
+            state = state,
+            onStart = {
+                viewModel.start()
+                navController.navigate(Route.CHECK_MEASURE)
+            },
+            onLater = back,
+        )
+    }
+
+    composable(Route.CHECK_MEASURE) {
+        val state by viewModel.measure.collectAsStateWithLifecycle()
+        val finished by viewModel.finished.collectAsStateWithLifecycle()
+        LaunchedEffect(finished) {
+            if (finished) navController.navigate(Route.CHECK_DONE)
+        }
+        CheckMeasureScreen(
+            state = state,
+            onTap = viewModel::tap,
+            onStop = viewModel::stop,
+            onSkip = viewModel::skip,
+            onBack = { navController.popBackStack(Route.TABS, inclusive = false) },
+        )
+    }
+
+    composable(Route.CHECK_DONE) {
+        val state by viewModel.done.collectAsStateWithLifecycle()
+        CheckDoneScreen(
+            state = state,
+            onSave = {
+                viewModel.save { navController.popBackStack(Route.TABS, inclusive = false) }
+            },
+            onBack = { navController.popBackStack(Route.TABS, inclusive = false) },
+        )
+    }
+}
+
 private fun NavGraphBuilder.askRoutes(
     viewModel: AskViewModel,
     navController: NavHostController,

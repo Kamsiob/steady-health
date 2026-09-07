@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <!--
+      The monthly check, from grid screens 10 to 13. Ten minutes, a chair and a
+      wall. Results are life first and numbers second, and Same is a result.
+    -->
+    <string name="check_title">Monthly check</string>
+    <string name="check_step">%1$d of %2$d</string>
+    <string name="check_done">Done</string>
+
+    <string name="check_intro_title">A short check</string>
+    <string name="check_intro_lede">Ten minutes, a chair and a wall. It tells you what you can do now and what it was before.</string>
+    <string name="check_intro_safety">Sturdy chair or wall within reach. Stop if anything hurts. Skip this if you have had a fracture or surgery in the last three months.</string>
+    <string name="check_intro_start">Start</string>
+    <string name="check_intro_later">Not now</string>
+    <string name="check_intro_what">What it measures</string>
+
+    <string name="check_skip">Skip this one</string>
+    <string name="check_stop">Stop</string>
+    <string name="check_next">Next</string>
+    <string name="check_save">Save</string>
+    <string name="check_okay">Okay</string>
+    <string name="check_count_it">Count it</string>
+
+    <string name="check_by_motion">The phone is counting from its motion sensor.</string>
+    <string name="check_by_hand">Tap once each time.</string>
+    <string name="check_by_clock">Tap stop when you put your foot down.</string>
+
+    <!-- One line each, from LOGIC.md section 8 and research/03 Part 5. -->
+    <string name="measure_chair_stand_30">Chair stands</string>
+    <string name="measure_chair_stand_30_how">Phone in your pocket. Stand and sit as many times as you can in 30 seconds.</string>
+    <string name="measure_chair_stand_30_safe">Chair against a wall, arms crossed. Stop if anything hurts.</string>
+
+    <string name="measure_two_minute_step">Marching on the spot</string>
+    <string name="measure_two_minute_step_how">Phone in your pocket. March on the spot for two minutes, lifting your right knee to halfway up your thigh.</string>
+    <string name="measure_two_minute_step_safe">Near a counter you can touch. Stop whenever you like.</string>
+
+    <string name="measure_wall_push_ups">Wall push-ups</string>
+    <string name="measure_wall_push_ups_how">Hands on the wall at chest height. As many as you can in 30 seconds.</string>
+    <string name="measure_wall_push_ups_safe">Body in one line, breathe out as you push.</string>
+
+    <string name="measure_band_rows">Band rows</string>
+    <string name="measure_band_rows_how">Band round your feet or a table leg. As many as you can in 30 seconds.</string>
+    <string name="measure_band_rows_safe">Pull your elbows back, breathe out as you pull.</string>
+
+    <string name="measure_single_leg_stance">One foot</string>
+    <string name="measure_single_leg_stance_how">Hands on your hips, one foot off the ground. Tap stop when you put it down.</string>
+    <string name="measure_single_leg_stance_safe">Near a wall or counter, hand ready.</string>
+
+    <string name="measure_four_stage_balance">Four stances</string>
+    <string name="measure_four_stage_balance_how">Four stances, ten seconds each. Go as far as you can.</string>
+    <string name="measure_four_stage_balance_safe">Near a wall or counter, hand ready.</string>
+
+    <string name="measure_seated_reach">Reaching forward</string>
+    <string name="measure_seated_reach_how">Sitting tall, lean forward and come back up. As many as you can in 30 seconds.</string>
+    <string name="measure_seated_reach_safe">Brakes on. Stop if anything hurts.</string>
+
+    <string name="measure_seated_balance">Sitting unsupported</string>
+    <string name="measure_seated_balance_how">Sitting tall, hands off. Tap stop when you need to hold on.</string>
+    <string name="measure_seated_balance_safe">Brakes on, somebody nearby the first few times.</string>
+
+    <string name="measure_wheeling_two_minute">Two minutes wheeling</string>
+    <string name="measure_wheeling_two_minute_how">Push at a pace you could talk through, for two minutes. Tap once each push.</string>
+    <string name="measure_wheeling_two_minute_safe">A flat, clear stretch. Stop whenever you like.</string>
+
+    <string name="measure_sit_to_edge">Sitting up</string>
+    <string name="measure_sit_to_edge_how">Roll to your side and push up to sitting. As many as you can in a minute.</string>
+    <string name="measure_sit_to_edge_safe">Rest between. Stop if anything hurts.</string>
+
+    <string name="measure_slow_breaths">Slow breaths</string>
+    <string name="measure_slow_breaths_how">In through the nose, out slowly. Tap once each breath out, for a minute.</string>
+    <string name="measure_slow_breaths_safe">Never hold your breath.</string>
+
+    <string name="measure_grip_hold">Towel squeeze</string>
+    <string name="measure_grip_hold_how">Squeeze as hard as is comfortable and hold. Tap stop when you let go.</string>
+    <string name="measure_grip_hold_safe">Breathe normally the whole time.</string>
+
+    <string name="measure_ankle_pumps">Ankle pumps</string>
+    <string name="measure_ankle_pumps_how">Point and flex. As many as you can in 30 seconds. Tap once each side.</string>
+    <string name="measure_ankle_pumps_safe">Stop if you get any cramp.</string>
+
+    <!-- Units, for the count and for what changed. -->
+    <!-- What the running count is counting. One per measure, in its own words. -->
+    <plurals name="check_stands">
+        <item quantity="one">stand</item>
+        <item quantity="other">stands</item>
+    </plurals>
+    <plurals name="check_steps">
+        <item quantity="one">step</item>
+        <item quantity="other">steps</item>
+    </plurals>
+    <plurals name="check_push_ups">
+        <item quantity="one">push-up</item>
+        <item quantity="other">push-ups</item>
+    </plurals>
+    <plurals name="check_rows">
+        <item quantity="one">row</item>
+        <item quantity="other">rows</item>
+    </plurals>
+    <plurals name="check_pushes">
+        <item quantity="one">push</item>
+        <item quantity="other">pushes</item>
+    </plurals>
+    <plurals name="check_breaths">
+        <item quantity="one">breath</item>
+        <item quantity="other">breaths</item>
+    </plurals>
+    <plurals name="check_times">
+        <item quantity="one">time</item>
+        <item quantity="other">times</item>
+    </plurals>
+    <plurals name="check_seconds_left">
+        <item quantity="one">%1$d second left</item>
+        <item quantity="other">%1$d seconds left</item>
+    </plurals>
+    <plurals name="check_value_reps">
+        <item quantity="one">%1$d, from %2$d</item>
+        <item quantity="other">%1$d, from %2$d</item>
+    </plurals>
+    <string name="check_value_first">%1$s, the first time</string>
+    <string name="check_value_from">%1$s, from %2$s</string>
+    <string name="check_value_same">%1$s, same as last time</string>
+    <!--
+      "14 in 30 seconds". The second number is fixed by the measure and never
+      one, so a plural would give identical items and one more thing to get
+      wrong. The first number is the count and carries no word after it.
+    -->
+    <string name="check_in_seconds" tools:ignore="PluralsCandidate">%1$d in %2$d seconds</string>
+    <plurals name="check_secs">
+        <item quantity="one">%1$d second</item>
+        <item quantity="other">%1$d seconds</item>
+    </plurals>
+
+    <!-- Screen 12. -->
+    <string name="check_same_is_a_result">Same is a result.</string>
+    <string name="check_same_why">Holding a number for a year is something most people don\'t do.</string>
+    <string name="check_wanted">That\'s the thing you said you wanted.</string>
+
+    <!-- Screen 13, shown once per ability per six months, and never repeated. -->
+    <string name="quieter_note">Three months in one direction is worth a mention at your next appointment. Bring the page for your doctor; it\'s already made.</string>
+    <string name="quieter_held">Everything else held.</string>
+    <string name="quieter_one_thing">This is one thing, not the whole picture.</string>
+    <string name="quieter_open_summary">Open the page for your doctor</string>
+
+    <!-- The life sentences. The engine picks; nothing writes one. -->
+    <string name="life_get_up_low_chair">You can get out of a low chair without pushing off now.</string>
+    <string name="life_get_up_no_hands">You can stand up without using your hands now.</string>
+    <string name="life_get_up_floor">You can get up off the floor without your hands now.</string>
+    <string name="life_go_one_flight">You can do a flight of stairs without stopping now.</string>
+    <string name="life_go_no_stop">You can walk to the shops and back without a rest now.</string>
+    <string name="life_go_two_flights">You can do two flights without a stop now.</string>
+    <string name="life_carry_bags">You can carry the shopping in from the car now.</string>
+    <string name="life_carry_one_trip">You can carry the groceries in one trip now.</string>
+    <string name="life_carry_overhead">You can put things away on the top shelf now.</string>
+    <string name="life_steady_sock">You can put a sock on standing up now.</string>
+    <string name="life_steady_trousers">You can get dressed standing up now.</string>
+    <string name="life_steady_kerb">You can step off a kerb without thinking about it now.</string>
+    <string name="life_transfer_bed">You can move from the chair to the bed on your own now.</string>
+    <string name="life_transfer_alone">You can transfer without help now.</string>
+    <string name="life_wheel_block">You can get round the block on your own now.</string>
+    <string name="life_wheel_shops">You can get to the shops and back now.</string>
+    <string name="life_carry_lap">You can carry a full basket on your lap now.</string>
+    <string name="life_carry_shelf">You can reach the shelf and hold what is on it now.</string>
+    <string name="life_seated_reach_far">You can sit unsupported long enough to eat a meal now.</string>
+    <string name="life_bed_sit_up">You can sit up on the edge of the bed now.</string>
+    <string name="life_bed_edge_alone">You can get to the edge of the bed on your own now.</string>
+    <string name="life_bed_breaths">Your breathing is steady enough for ten slow ones now.</string>
+    <string name="life_bed_grip">You can hold a cup steadily now.</string>
+    <string name="life_bed_ankles">Your ankles move freely through the whole range now.</string>
+
+</resources>

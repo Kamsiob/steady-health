@@ -53,6 +53,7 @@ data class AbilitiesUiState(
 fun AbilitiesScreen(
     state: AbilitiesUiState,
     onAbility: (AbilityDomain) -> Unit,
+    onCheck: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     SteadyScreen(title = null, onBack = null, modifier = modifier) {
@@ -73,6 +74,12 @@ fun AbilitiesScreen(
                 glyph = { AbilityGlyph(ability.domain) },
             )
         }
+
+        ListItem(
+            heading = stringResource(R.string.check_title),
+            subtitle = stringResource(R.string.check_intro_lede),
+            onClick = onCheck,
+        )
 
         if (state.week.isNotEmpty()) {
             SectionTitle(stringResource(R.string.abilities_your_week))

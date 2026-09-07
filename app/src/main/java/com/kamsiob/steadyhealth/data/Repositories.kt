@@ -6,11 +6,13 @@ import com.kamsiob.steadyhealth.ai.TagReader
 import com.kamsiob.steadyhealth.ai.WeekBrief
 import com.kamsiob.steadyhealth.ai.WeekNote
 import com.kamsiob.steadyhealth.ai.WeightDirection
+import com.kamsiob.steadyhealth.data.entity.CheckEntity
 import com.kamsiob.steadyhealth.data.entity.CheckInEntity
 import com.kamsiob.steadyhealth.data.entity.CheckInTagEntity
 import com.kamsiob.steadyhealth.data.entity.ExclusionEntity
 import com.kamsiob.steadyhealth.data.entity.ItemRatingEntity
 import com.kamsiob.steadyhealth.data.entity.LadderStateEntity
+import com.kamsiob.steadyhealth.data.entity.MeasureResultEntity
 import com.kamsiob.steadyhealth.data.entity.NoticeEntity
 import com.kamsiob.steadyhealth.data.entity.PersonSynonymEntity
 import com.kamsiob.steadyhealth.data.entity.ReadinessEntity
@@ -39,6 +41,8 @@ import com.kamsiob.steadyhealth.domain.WeightSource
 import com.kamsiob.steadyhealth.engine.DoneSession
 import com.kamsiob.steadyhealth.engine.Envelope
 import com.kamsiob.steadyhealth.engine.Ladders
+import com.kamsiob.steadyhealth.engine.MeasureResult
+import com.kamsiob.steadyhealth.engine.Measures
 import com.kamsiob.steadyhealth.engine.PacingEngine
 import com.kamsiob.steadyhealth.engine.Reading
 import com.kamsiob.steadyhealth.engine.Smoothed
@@ -529,5 +533,62 @@ class WeekRepository(private val db: SteadyDatabase) {
         const val DAYS_IN_WEEK = 7
         const val SECONDS_PER_MINUTE = 60
         const val PARAGRAPH_BREAK = "\n\n"
+    }
+}
+
+/**
+ * The monthly check and everything it measured.
+ *
+ * Results are stored one row per measure per day, never as a check-shaped blob,
+ * so a measure taken outside a check (somebody who wanted to try one foot again)
+ * sits in the same history as one taken inside it.
+ */
+class CheckRepository(private val db: SteadyDatabase) {
+
+    suspend fun latest(): CheckEntity? = db.checks().latest()
+
+    suspend fun countSince(day: Long): Int = db.checks().countBetween(day, Long.MAX_VALUE)
+
+    suspend fun results(): List<MeasureResult> = db.checks().allMeasuresOnce()
+        .map { MeasureResult(it.measureId, it.epochDay, it.value) }
+
+    /** The most recent value of every measure, for the life sentence. */
+    suspend fun latestValues(): Map<String, Double> = db.checks().allMeasuresOnce()
+        .groupBy { it.measureId }
+        .mapValues { (_, rows) -> rows.maxBy { it.epochDay }.value }
+
+    suspend fun history(measureId: String): List<MeasureResult> =
+        db.checks().measureHistory(measureId).map { MeasureResult(it.measureId, it.epochDay, it.value) }
+
+    /**
+     * Write one finished check.
+     *
+     * A measure the person skipped is simply absent. There is no row meaning
+     * "did not do", because the app has no use for one and a table of things
+     * somebody did not manage is not what this is.
+     */
+    suspend fun save(
+        epochDay: Long,
+        at: Long,
+        way: GettingAround,
+        values: Map<String, Double>,
+    ) {
+        val checkId = db.checks().upsertCheck(
+            CheckEntity(epochDay = epochDay, completedAt = at, gettingAround = way.id),
+        )
+        values.forEach { (measureId, value) ->
+            val measure = Measures.byId(measureId) ?: return@forEach
+            db.checks().upsertMeasure(
+                MeasureResultEntity(
+                    checkId = checkId,
+                    measureId = measureId,
+                    domain = measure.domain.id,
+                    epochDay = epochDay,
+                    recordedAt = at,
+                    value = value,
+                    countedBy = measure.counted.name,
+                ),
+            )
+        }
     }
 }

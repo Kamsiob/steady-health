@@ -448,3 +448,72 @@ No sentence may put a restriction tag and a weight direction together. It is
 implemented as a post-filter over whatever produced the sentence, model or
 template, because a prompt instruction is a request and this is a guarantee. It
 is the one sentence this app exists not to say.
+
+## Phase 4
+
+### The check is four measures, not three
+
+Grid screen 12 shows three rows and MASTER_SPEC section 6.5 says "three or four".
+Four, because with three there is no measure of Go, and an ability that can never
+change is worse than a check that takes two minutes longer. The fourth is the
+two-minute step, and it is last in the order so that somebody who has had enough
+can skip it without missing the others.
+
+Every measure is skippable, and skipping leaves no row. There is no record
+anywhere meaning "did not do", because a table of things somebody did not manage
+is not what this is.
+
+### A measure with no published detectable change never decides anything
+
+LOGIC.md 3b computes Better, Same and Quieter from whether a measure moved beyond
+its detectable change. Most of the measures here have no published one: the chair
+stand does (2 to 3 repetitions, Rikli and Jones, and the cautious end is taken),
+and the four-stage balance does by construction, and the rest do not.
+
+So `Measure.detectableChange` is nullable, and a measure with none is recorded and
+shown and can never move an ability off Same. A test holds that: a wall push-up
+count falling from thirty to five across six checks still reports Same. The
+alternative is telling somebody their body is failing on the strength of a number
+nobody has established is meaningful, which is the single worst thing this app
+could do.
+
+### Quieter costs three consecutive checks
+
+One month is a bad morning, two is a coincidence, and the app says nothing about
+either. Three months of silence is the price of never telling somebody their body
+is going backwards because they were tired on a Tuesday, and it is worth paying.
+Every step of the run has to be beyond the measure's own detectable change, so a
+single steady month breaks it.
+
+### Counting is allowed to be low and is never allowed to be high
+
+`RepCounter` is deliberately conservative. Under-counting means somebody's number
+is a little low and they can count by hand instead. Over-counting means the app
+tells somebody they did fourteen stands when they did nine, which is a lie about
+their body and would poison every comparison after it. There is a test whose only
+job is that the count never exceeds the truth, across four rep counts and three
+cadences.
+
+The counter has no Android types in it, so all of that runs without a device. The
+traces are synthetic and that is stated in the test file rather than implied: they
+show the counter does what it is written to do, not that a Pixel in a pocket
+produces this shape.
+
+### The life sentence is a table, and an unmeasured tile keeps the person's words
+
+Twenty-four hand-written sentences keyed to a measure crossing a threshold, with
+the highest one reached being the one shown, so a sentence only ever describes
+something the person has actually done. Before the first check there is no
+sentence, and the tile carries their own words from setup instead. A made-up
+sentence about somebody's life is worse than none, and an empty tile says nothing
+at all.
+
+The thresholds are not norms and are compared to nobody. They are the points where
+a number stops being a number: fourteen chair stands is getting out of a low sofa
+without thinking about it.
+
+### The wheelchair check does not include a standing balance test
+
+Every stage of the four-stage balance test is standing. Replacing it with sitting
+unsupported is not a smaller version of the same thing; it is the right measure
+for the ability. Same reasoning as the ladders.
