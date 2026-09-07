@@ -22,6 +22,7 @@ import com.kamsiob.steadyhealth.engine.Measure
 import com.kamsiob.steadyhealth.engine.MeasureChange
 import com.kamsiob.steadyhealth.engine.MeasureUnit
 import com.kamsiob.steadyhealth.engine.Measures
+import com.kamsiob.steadyhealth.engine.WeightEngine
 import com.kamsiob.steadyhealth.ui.screens.AbilityDetailUiState
 import com.kamsiob.steadyhealth.ui.screens.MeasureRow
 import com.kamsiob.steadyhealth.ui.screens.TrackedItemState
@@ -215,20 +216,29 @@ class AbilityViewModel(application: Application) : AndroidViewModel(application)
             .distinct()
             .size
 
+        val showNumbers = profile.showNumbers()
+        // Worked out before the state is built rather than inside it, so that
+        // nothing here depends on the order named arguments happen to evaluate in.
+        val direction = directionWord(series)
+
         _weightPage.value = WeightPageUiState(
-            value = latest?.let { Convert.weightLabel(it.smoothedKg, units) }.orEmpty(),
-            unit = unitLabel(units),
-            explain = weightExplain(weight.forDay(today())?.rawKg, units, profile.showNumbers()),
+            value = if (showNumbers) {
+                latest?.let { Convert.weightLabel(it.smoothedKg, units) }.orEmpty()
+            } else {
+                direction
+            },
+            unit = if (showNumbers) unitLabel(units) else "",
+            explain = weightExplain(weight.forDay(today())?.rawKg, units, showNumbers, direction),
             morning = LocalTime.now().hour < EVENING_HOUR,
             sinceLabel = context.getString(R.string.weight_since),
-            since = if (lost > 0) {
+            since = if (lost > 0 && showNumbers) {
                 "${Convert.weightLabel(lost, units)} ${unitLabel(units)}"
             } else {
                 ""
             },
             daysLabel = context.getString(R.string.weight_days),
             days = "$moved",
-            asALever = if (lost > 0) {
+            asALever = if (lost > 0 && showNumbers) {
                 context.getString(
                     R.string.weight_as_lever,
                     "${Convert.weightLabel(lost, units)} ${unitLabel(units)}",
@@ -263,9 +273,38 @@ class AbilityViewModel(application: Application) : AndroidViewModel(application)
         if (units == Units.Imperial) R.string.unit_lb else R.string.unit_kg,
     )
 
-    private fun weightExplain(rawKg: Double?, units: Units, showNumbers: Boolean): String {
+    /** The direction, for somebody who asked not to see the figure. */
+    private fun directionWord(series: List<com.kamsiob.steadyhealth.engine.Smoothed>): String {
         val context = getApplication<Application>()
-        if (!showNumbers) return ""
+        val first = context.getString(R.string.direction_first)
+        val now = series.lastOrNull() ?: return first
+        val then = series.lastOrNull { it.epochDay <= now.epochDay - A_MONTH } ?: return first
+        return context.getString(
+            when {
+                now.smoothedKg < then.smoothedKg - WeightEngine.SAME_BAND_KG -> R.string.direction_lower
+                now.smoothedKg > then.smoothedKg + WeightEngine.SAME_BAND_KG -> R.string.direction_higher
+                else -> R.string.direction_same
+            },
+        )
+    }
+
+    private fun weightExplain(
+        rawKg: Double?,
+        units: Units,
+        showNumbers: Boolean,
+        comparedTo: String = "",
+    ): String {
+        val context = getApplication<Application>()
+        // "Nothing to compare yet" followed by "than a month ago" is two halves of
+        // a sentence that does not exist. The line under the word is only there
+        // when the word is a comparison.
+        if (!showNumbers) {
+            return if (comparedTo == context.getString(R.string.direction_first)) {
+                ""
+            } else {
+                context.getString(R.string.direction_since)
+            }
+        }
         if (rawKg == null) return context.getString(R.string.weight_first_week)
         return context.getString(
             R.string.weight_daily_line,
@@ -284,6 +323,7 @@ class AbilityViewModel(application: Application) : AndroidViewModel(application)
 
     private companion object {
         const val EVENING_HOUR = 18
+        const val A_MONTH = 30L
 
         /** Enough to show what the ability is, not the whole ladder. */
         const val MOST_FEEDS = 5

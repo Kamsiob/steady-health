@@ -379,6 +379,18 @@
     <string name="tag_family">Family</string>
 
     <!-- Your data. PRIVACY.md promises both of these in these words. -->
+    <!--
+      Numbers-off mode. DESIGN.md: every figure becomes a direction word. These
+      are the words, and there are only three of them on purpose: a fourth would
+      be a scale, and a scale is a number with the digits taken off.
+    -->
+    <string name="direction_lower">A little lower</string>
+    <string name="direction_same">About the same</string>
+    <string name="direction_higher">A little higher</string>
+    <string name="direction_since">than a month ago</string>
+    <string name="direction_first">Nothing to compare yet</string>
+    <string name="direction_spoken">Your weight, %1$s %2$s</string>
+
     <string name="data_title">Your data</string>
     <string name="data_row">Export or delete everything</string>
     <string name="data_export">Export everything</string>

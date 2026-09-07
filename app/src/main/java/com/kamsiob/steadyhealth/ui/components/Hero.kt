@@ -104,7 +104,15 @@ fun HeroNumber(value: String, unit: String?, modifier: Modifier = Modifier) {
         modifier = modifier,
         verticalAlignment = androidx.compose.ui.Alignment.Bottom,
     ) {
-        SteadyText(text = value, style = SteadyType.HeroNumber, color = SteadyPalette.White)
+        // In numbers-off mode the hero carries a direction word instead of a
+        // figure, and "A little lower" set at sixty-four point nine hundred wraps
+        // to three lines and reads as shouting. Words get the title size; numbers
+        // keep the hero size they were designed at.
+        SteadyText(
+            text = value,
+            style = if (value.any { it.isDigit() }) SteadyType.HeroNumber else SteadyType.ScreenTitleBig,
+            color = SteadyPalette.White,
+        )
         if (unit != null) {
             SteadyText(
                 text = " $unit",

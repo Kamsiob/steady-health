@@ -638,3 +638,37 @@ everything is one tap from taking a copy first.
 It is shown on screen and put in the export, and both have to say the same thing.
 Building it from two call sites is how they stop saying the same thing, so
 `SummaryPages.build` does it once and both use it.
+
+### Numbers off replaces the weight figure, and leaves the counts alone
+
+DESIGN.md says numbers-off replaces "every figure" app-wide, and the example it
+gives, the destination line it hides and the chart axis it removes are all weight.
+LOGIC.md section 10 extends it to the minutes in the Sunday note, and that is
+done too.
+
+What it does not do is replace a chair-stand count with a direction word. Fourteen
+stands, up from nine, is the thing this app exists to show, "a little more" cannot
+express it, and screen 12 of the grid shows those numbers with no numbers-off
+variant beside it. The switch exists so nobody has to look at their weight as a
+figure; it is not a switch for looking at less of your own capability.
+
+The hero drops to the title size when it is carrying a word rather than a figure,
+because "A little lower" set at sixty-four point nine hundred wraps to three lines
+and reads as shouting.
+
+### The accessibility floor is checked on the device, in the semantics tree
+
+A screen whose labels are right in the source and wrong in the tree is the failure
+worth catching, and it only exists once something has composed. Nine instrumented
+tests: every tile and card says what it is and what state it is in, nothing
+tappable is unlabelled, and Today still lays out with text at twice the size.
+
+The font scale is overridden inside the test rather than set on the phone.
+Changing a system setting to run a test leaves the owner's phone changed if the
+test crashes, and this app's rule is to touch nothing else on the phone, ever.
+
+An earlier attempt to audit this by reading uiautomator's dump concluded that
+every tile was unlabelled. It was reading the wrong node: Compose puts the merged
+label on one node and the click action shows on another in that dump. The
+semantics tree, which is what TalkBack actually reads, has them together, and
+`assertHasClickAction` on the labelled node proves it.

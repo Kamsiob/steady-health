@@ -37,6 +37,7 @@ import com.kamsiob.steadyhealth.engine.Step
 import com.kamsiob.steadyhealth.engine.StepMeasure
 import com.kamsiob.steadyhealth.engine.WayOfGettingAround
 import com.kamsiob.steadyhealth.engine.WaysOfGettingAround
+import com.kamsiob.steadyhealth.engine.WeightEngine
 import com.kamsiob.steadyhealth.ui.screens.AbilitiesUiState
 import com.kamsiob.steadyhealth.ui.screens.AbilityRowState
 import com.kamsiob.steadyhealth.ui.screens.AbilityTileState
@@ -235,6 +236,7 @@ class SteadyViewModel(application: Application) : AndroidViewModel(application) 
 
     private suspend fun refreshToday() {
         val context = getApplication<Application>()
+        refreshDirection()
         val today = today()
         val units = profile.units()
         val showNumbers = profile.showNumbers()
@@ -263,8 +265,12 @@ class SteadyViewModel(application: Application) : AndroidViewModel(application) 
             date = date.format(DateTimeFormatter.ofPattern("EEEE, MMMM d", Locale.getDefault())),
             greeting = context.getString(greetingFor(LocalTime.now())),
             abilities = abilityTiles(),
-            weightValue = latest?.takeIf { showNumbers && weighsIn }
-                ?.let { Convert.weightLabel(it.smoothedKg, units) },
+            // Numbers off does not mean nothing here. DESIGN.md replaces the
+            // figure with a direction word, so the block still says which way
+            // things are going, which is the part that was ever useful.
+            weightValue = latest?.takeIf { weighsIn }?.let {
+                if (showNumbers) Convert.weightLabel(it.smoothedKg, units) else directionWord()
+            },
             weightUnit = if (showNumbers) unitLabel(units) else null,
             weightExplain = weightExplain(weighedToday?.rawKg, units, showNumbers),
             morning = LocalTime.now().hour < EVENING_HOUR,
@@ -315,12 +321,50 @@ class SteadyViewModel(application: Application) : AndroidViewModel(application) 
 
     private fun weightExplain(rawKg: Double?, units: Units, showNumbers: Boolean): String {
         val context = getApplication<Application>()
-        if (!showNumbers) return ""
+        // "Nothing to compare yet" followed by "than a month ago" is two halves of
+        // a sentence that does not exist. The line under the word is only there
+        // when the word is a comparison.
+        if (!showNumbers) {
+            val word = direction
+            return if (word == context.getString(R.string.direction_first)) {
+                ""
+            } else {
+                context.getString(R.string.direction_since)
+            }
+        }
         if (rawKg == null) return context.getString(R.string.weight_first_week)
         return context.getString(
             R.string.weight_daily_line,
             "${Convert.weightLabel(rawKg, units)} ${unitLabel(units)}",
         )
+    }
+
+    /**
+     * Which way the smoothed weight has gone in the last month, as a word.
+     *
+     * The whole of numbers-off is this function and the places that call it. No
+     * figure reaches a screen, and the direction still does, because somebody who
+     * turned the numbers off did not ask to be told nothing.
+     */
+    private var direction: String = ""
+
+    private fun directionWord(): String = direction
+
+    private suspend fun refreshDirection() {
+        val context = getApplication<Application>()
+        val series = weight.series()
+        val now = series.lastOrNull()
+        val then = series.lastOrNull { it.epochDay <= (now?.epochDay ?: 0) - A_MONTH }
+        direction = when {
+            now == null || then == null -> context.getString(R.string.direction_first)
+            now.smoothedKg < then.smoothedKg - WeightEngine.SAME_BAND_KG ->
+                context.getString(R.string.direction_lower)
+
+            now.smoothedKg > then.smoothedKg + WeightEngine.SAME_BAND_KG ->
+                context.getString(R.string.direction_higher)
+
+            else -> context.getString(R.string.direction_same)
+        }
     }
 
     private fun unitLabel(units: Units): String = getApplication<Application>().getString(
@@ -840,6 +884,7 @@ class SteadyViewModel(application: Application) : AndroidViewModel(application) 
 
     private companion object {
         const val DAYS_IN_WEEK = 7
+        const val A_MONTH = 30L
 
         /** Anything above this is not an envelope any more. */
 
