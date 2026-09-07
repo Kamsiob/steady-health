@@ -71,9 +71,9 @@ the device. The ones worth knowing about:
 - The accessibility floor in the semantics tree, at normal and at twice the text
   size.
 
-**The very next concrete step:** Try it and see (grid 14 and 15), which is the
-only one of MASTER_SPEC's four visible AI features with nothing behind it. After
-that, the months path (grid 20) and import.
+**The very next concrete step:** the months path (grid 20), then import, then the
+camera counting wall push-ups. None of them is on the critical path for somebody
+testing the app; all of them are named in the specification.
 
 ### What is uncommitted or mid-flight
 
@@ -81,9 +81,10 @@ Nothing at the last commit. Check `git status` before assuming.
 
 ### What would break if somebody assumed it was finished
 
-- **Try it and see does not exist.** Grid 14 and 15, LOGIC.md 9b, AI.md job 4.
-  Nothing in the app offers a two-week test and nothing computes a pattern, so
-  the co-occurrence section of the visit-summary brief is always empty.
+- **Try it and see offers one variable**, when the strength set happens. The
+  other five in LOGIC.md 9b are in the enum and are not offered. Its patterns are
+  also not yet passed into the visit-summary brief, so the co-occurrence section
+  of the brief is still empty.
 - **The months path does not exist.** Grid 20. Vico is proven and unused.
 - **The model is not integrated.** No dependency, no INTERNET permission. The tag
   grid, the Sunday note, the cards and the visit summary all run without it, and
@@ -109,15 +110,15 @@ Nothing at the last commit. Check `git status` before assuming.
 
 ## 2. The next concrete steps, in order
 
-1. **Try it and see.** LOGIC.md 9b for the pattern rules, AI.md job 4 for the
-   wording, grid 14 and 15 for the screens. The engine finds the pattern and runs
-   the arithmetic; the honesty of "no difference" is enforced by the engine.
-   Never offered to anybody in pacing mode.
-2. **The months path**, grid 20, with the milestones renamed.
-3. **Import**, to match the export that exists.
-4. **The camera counting wall push-ups**, MediaPipe Pose, grid 11.
-5. **Health Connect.**
-6. **Phase 7**, hardening and release, plus `store-assets/` and `LAUNCH.md`.
+1. **The months path**, grid 20, with the milestones renamed. Vico is proven.
+2. **Import**, to match the export that exists.
+3. **Feeding Try it and see's patterns into the visit-summary brief**, which
+   LOGIC.md 13b's co-occurrence section asks for and which is a few lines now that
+   both halves exist.
+4. **The other five experiment variables**, which are table entries.
+5. **The camera counting wall push-ups**, MediaPipe Pose, grid 11.
+6. **Health Connect.**
+7. **Phase 7**, hardening and release, plus `store-assets/` and `LAUNCH.md`.
 
 The reader itself can be wired at any point: its validator, its fixtures and its
 fallbacks are all built, and every feature it touches already works without it. It

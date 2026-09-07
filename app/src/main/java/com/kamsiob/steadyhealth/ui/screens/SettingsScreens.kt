@@ -35,6 +35,7 @@ data class SettingsUiState(
     val exclusionsLabel: String = "",
     val pacing: Boolean = false,
     val pemLabel: String = "",
+    val tryItAndSee: Boolean = true,
     val remindersOn: Set<ReminderKind> = emptySet(),
     val remindersLeft: Int = 0,
     val remindersBlocked: Boolean = false,
@@ -59,6 +60,7 @@ data class SettingsActions(
     val onPacing: () -> Unit,
     val onData: () -> Unit,
     val onReminders: () -> Unit,
+    val onTryItAndSee: (Boolean) -> Unit,
 )
 
 /**
@@ -106,6 +108,13 @@ fun SettingsScreen(
             subtitle = stringResource(R.string.settings_show_numbers_sub),
             checked = state.showNumbers,
             onChange = actions.onShowNumbers,
+        )
+
+        SwitchRow(
+            label = stringResource(R.string.settings_try),
+            subtitle = stringResource(R.string.settings_try_sub),
+            checked = state.tryItAndSee && !state.pacing,
+            onChange = actions.onTryItAndSee,
         )
 
         ListItem(

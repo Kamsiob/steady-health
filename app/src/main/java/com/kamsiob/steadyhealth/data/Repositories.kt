@@ -11,6 +11,7 @@ import com.kamsiob.steadyhealth.data.entity.CheckEntity
 import com.kamsiob.steadyhealth.data.entity.CheckInEntity
 import com.kamsiob.steadyhealth.data.entity.CheckInTagEntity
 import com.kamsiob.steadyhealth.data.entity.ExclusionEntity
+import com.kamsiob.steadyhealth.data.entity.ExperimentEntity
 import com.kamsiob.steadyhealth.data.entity.ItemRatingEntity
 import com.kamsiob.steadyhealth.data.entity.LadderStateEntity
 import com.kamsiob.steadyhealth.data.entity.MeasureResultEntity
@@ -43,6 +44,8 @@ import com.kamsiob.steadyhealth.domain.WalkTolerance
 import com.kamsiob.steadyhealth.domain.WeightSource
 import com.kamsiob.steadyhealth.engine.DoneSession
 import com.kamsiob.steadyhealth.engine.Envelope
+import com.kamsiob.steadyhealth.engine.Experiment
+import com.kamsiob.steadyhealth.engine.ExperimentEngine
 import com.kamsiob.steadyhealth.engine.Gap
 import com.kamsiob.steadyhealth.engine.ItemHistory
 import com.kamsiob.steadyhealth.engine.Ladders
@@ -51,12 +54,17 @@ import com.kamsiob.steadyhealth.engine.Measures
 import com.kamsiob.steadyhealth.engine.Mention
 import com.kamsiob.steadyhealth.engine.MonthOfSessions
 import com.kamsiob.steadyhealth.engine.PacingEngine
+import com.kamsiob.steadyhealth.engine.Pattern
+import com.kamsiob.steadyhealth.engine.PatternMeasure
+import com.kamsiob.steadyhealth.engine.Patterns
 import com.kamsiob.steadyhealth.engine.Reading
 import com.kamsiob.steadyhealth.engine.ReminderKind
 import com.kamsiob.steadyhealth.engine.Reminders
 import com.kamsiob.steadyhealth.engine.Smoothed
+import com.kamsiob.steadyhealth.engine.Variable
 import com.kamsiob.steadyhealth.engine.VisitInputs
 import com.kamsiob.steadyhealth.engine.VisitSummaryEngine
+import com.kamsiob.steadyhealth.engine.WeekOfDays
 import com.kamsiob.steadyhealth.engine.WeightEngine
 import com.kamsiob.steadyhealth.export.Sheet
 import java.time.LocalDate
@@ -408,6 +416,16 @@ class ProfileRepository(private val db: SteadyDatabase) {
 
     suspend fun anyReminderOn(): Boolean = ReminderKind.entries.any { reminderOn(it) }
 
+    /** Try it and see. On by default, and never on for anybody in pacing mode. */
+    suspend fun tryItAndSee(): Boolean = get(TRY_IT)?.toBoolean() ?: true
+
+    suspend fun setTryItAndSee(value: Boolean) = put(TRY_IT, value.toString())
+
+    /** What a finished test settled, if it settled anything. */
+    suspend fun strengthInTheEvening(): Boolean = get(EVENING_SET).toBoolean()
+
+    suspend fun setStrengthInTheEvening(value: Boolean) = put(EVENING_SET, value.toString())
+
     suspend fun showNumbers(): Boolean = get(SHOW_NUMBERS)?.toBoolean() ?: true
 
     suspend fun setShowNumbers(value: Boolean) = put(SHOW_NUMBERS, value.toString())
@@ -455,6 +473,8 @@ class ProfileRepository(private val db: SteadyDatabase) {
         const val PEM = "pem"
         const val ANCHOR = "anchor"
         const val SHOW_NUMBERS = "show_numbers"
+        const val TRY_IT = "try_it_and_see"
+        const val EVENING_SET = "strength_in_the_evening"
         const val WEIGHS_IN = "weighs_in"
         const val PACING = "pacing"
         const val ENVELOPE_MINUTES = "envelope_minutes"
@@ -897,5 +917,133 @@ class ReminderRepository(private val db: SteadyDatabase) {
 
     private companion object {
         const val A_WEEK = 7L * 24 * 60 * 60 * 1000
+    }
+}
+
+/**
+ * Try it and see: the pattern that earns an offer, and the one test at a time.
+ *
+ * One at a time is a rule rather than a simplification. Two overlapping tests
+ * cannot be read, because whatever changed could have been either of them, and an
+ * app that ran both and reported on one would be making something up.
+ */
+class ExperimentRepository(private val db: SteadyDatabase) {
+
+    /** The running test, or null. Ended ones are kept and are not running. */
+    suspend fun running(): Experiment? = db.notes().experimentsOnce()
+        .lastOrNull { it.stoppedAt == null }
+        ?.let {
+            Experiment(
+                variable = Variable.entries.firstOrNull { v -> v.id == it.variable }
+                    ?: Variable.TimeOfDay,
+                conditionA = it.resultHeadline.orEmpty(),
+                conditionB = it.resultDetail.orEmpty(),
+                measureId = it.measureId,
+                startedOnDay = it.startedOnDay,
+            )
+        }
+
+    suspend fun start(experiment: Experiment) {
+        db.notes().upsertExperiment(
+            ExperimentEntity(
+                variable = experiment.variable.id,
+                measureId = experiment.measureId,
+                startedOnDay = experiment.startedOnDay,
+                switchOnDay = experiment.startedOnDay + ARM_DAYS,
+                endsOnDay = experiment.startedOnDay + 2 * ARM_DAYS,
+                stoppedAt = null,
+                // The two conditions, in the person's own words on the offer.
+                resultHeadline = experiment.conditionA,
+                resultDetail = experiment.conditionB,
+            ),
+        )
+    }
+
+    /** Ended, whichever way it went. Nothing anywhere records it as a failure. */
+    suspend fun finish(keep: Boolean) {
+        val row = db.notes().experimentsOnce().lastOrNull { it.stoppedAt == null } ?: return
+        db.notes().upsertExperiment(row.copy(stoppedAt = System.currentTimeMillis()))
+        if (!keep) ProfileRepository(db).setStrengthInTheEvening(true)
+    }
+
+    suspend fun results(): List<MeasureResult> = db.checks().allMeasuresOnce()
+        .map { MeasureResult(it.measureId, it.epochDay, it.value) }
+
+    suspend fun declineUntil(day: Long) = db.profile().put(SettingEntity(DECLINED, day.toString()))
+
+    /**
+     * A pattern worth offering a test about, or null.
+     *
+     * Everything the offer needs is checked here: six weeks of check-ins, the
+     * feature on, not in pacing mode, nothing already running, and not inside a
+     * fortnight of somebody saying not now.
+     */
+    suspend fun offerablePattern(today: Long): Pattern? {
+        val profile = ProfileRepository(db)
+        if (!ExperimentEngine.mayOffer(weeksOfCheckIns(), profile.pacing(), profile.tryItAndSee())) {
+            return null
+        }
+        if (running() != null) return null
+        val declined = db.profile().get(DECLINED)?.toLongOrNull()
+        if (declined != null && today < declined) return null
+
+        // Weight is never the thing a test is offered about, so patterns about it
+        // are computed and kept for the summary and are not offered here.
+        return Patterns.find(weeks()).firstOrNull { it.measure != PatternMeasure.WeightDirection }
+    }
+
+    private suspend fun weeksOfCheckIns(): Int {
+        val days = db.checkIns().allOnce().map { it.epochDay }
+        val first = days.minOrNull() ?: return 0
+        val last = days.maxOrNull() ?: return 0
+        return ((last - first) / DAYS_IN_WEEK).toInt() + 1
+    }
+
+    /** Every week of check-ins, reduced to the three things a pattern turns on. */
+    private suspend fun weeks(): List<WeekOfDays> {
+        val checkIns = db.checkIns().allOnce()
+        if (checkIns.isEmpty()) return emptyList()
+        val tags = db.checkIns().allTagsOnce().groupBy { it.checkInId }
+        val sessions = db.sessions().allOnce()
+        val weighIns = db.weighIns().allOnce()
+        val first = checkIns.minOf { it.epochDay }
+
+        return checkIns
+            .groupBy { (it.epochDay - first) / DAYS_IN_WEEK }
+            .map { (week, days) ->
+                val start = first + week * DAYS_IN_WEEK
+                val range = start until start + DAYS_IN_WEEK
+                val onThreeDays = days
+                    .flatMap { day -> tags[day.id].orEmpty().map { it.tag to day.epochDay } }
+                    .groupBy({ it.first }, { it.second })
+                    .filterValues { it.distinct().size >= Patterns.DAYS_IN_A_WEEK_WITH }
+                    .keys
+                val inWeek = weighIns.filter { it.epochDay in range }.sortedBy { it.epochDay }
+                WeekOfDays(
+                    weekStartDay = start,
+                    tagsOnThreeDays = onThreeDays,
+                    sleepAverageHours = days.mapNotNull { it.sleepHalfHours }
+                        .takeIf { it.isNotEmpty() }
+                        ?.average()
+                        ?.div(2),
+                    daysMoved = sessions
+                        .filter { it.epochDay in range }
+                        .filter { it.durationSeconds >= Ladders.COUNTS_AS_A_SESSION_SECONDS }
+                        .map { it.epochDay }
+                        .distinct()
+                        .size,
+                    weightChangeKg = if (inWeek.size >= 2) {
+                        inWeek.last().smoothedKg - inWeek.first().smoothedKg
+                    } else {
+                        null
+                    },
+                )
+            }
+    }
+
+    private companion object {
+        const val ARM_DAYS = Experiment.WEEKS_PER_ARM * Experiment.DAYS_IN_WEEK
+        const val DAYS_IN_WEEK = 7
+        const val DECLINED = "try_declined_until"
     }
 }

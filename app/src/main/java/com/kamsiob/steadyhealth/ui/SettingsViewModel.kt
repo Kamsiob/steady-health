@@ -93,6 +93,8 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
             },
             pacing = pacing,
             pemLabel = context.getString(labelFor(_pattern.value)),
+            // Off, and not offered, for anybody in pacing mode. LOGIC.md 9b.
+            tryItAndSee = profile.tryItAndSee() && !pacing,
             remindersOn = on,
             remindersLeft = reminders.leftThisWeek(System.currentTimeMillis()),
             remindersBlocked = on.isNotEmpty() && !Reminding.allowed(context),
@@ -173,6 +175,11 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         } else {
             ReminderWorker.stop(context)
         }
+        refreshSettings()
+    }
+
+    fun setTryItAndSee(on: Boolean) = viewModelScope.launch {
+        profile.setTryItAndSee(on)
         refreshSettings()
     }
 

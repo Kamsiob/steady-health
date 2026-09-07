@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!--
+      Try it and see, from grid screens 14 and 15. The engine finds the pattern
+      and runs the arithmetic; these are the words around the numbers it worked
+      out, and none of them can be true or false on their own.
+    -->
+    <string name="try_action">Try it</string>
+    <string name="try_noticed">Something the app noticed</string>
+    <plurals name="try_from_your_words">
+        <item quantity="one">One week, from your own words.</item>
+        <item quantity="other">%1$d weeks, from your own words.</item>
+    </plurals>
+    <string name="try_question">Want to try evenings for two weeks?</string>
+    <string name="try_what_happens">The app measures your chair stands, then tells you straight, including if there was no difference. One change, two weeks, your own body.</string>
+    <string name="try_stop">You can stop any time. There is no wrong answer here.</string>
+    <string name="try_start">Try it for two weeks</string>
+    <string name="try_not_now">Not now</string>
+
+    <!-- The observation, one sentence per thing the engine can compare. -->
+    <string name="pattern_sleep_worse">You slept less on the weeks %1$s came up, %2$s of them.</string>
+    <string name="pattern_sleep_better">You slept better on the weeks %1$s came up, %2$s of them.</string>
+    <string name="pattern_moved_less">You moved on fewer days in the weeks %1$s came up, %2$s of them.</string>
+    <string name="pattern_moved_more">You moved on more days in the weeks %1$s came up, %2$s of them.</string>
+
+    <!-- Screen 15. Both numbers side by side, and one honest sentence. -->
+    <string name="try_result">Result</string>
+    <string name="try_result_title_a">%1$s, for you.</string>
+    <string name="try_result_none">No difference either way.</string>
+    <plurals name="try_arm_label">
+        <item quantity="one">%1$s, %2$d week</item>
+        <item quantity="other">%1$s, %2$d weeks</item>
+    </plurals>
+    <string name="try_reading_winner">%1$s came out ahead, by enough to be a real difference rather than a good fortnight. If you would like, the app suggests %2$s from now on.</string>
+    <string name="try_reading_none">The two fortnights came out within the range this measure moves in anyway. That is a real answer, and it means you can do it whichever way suits you.</string>
+    <string name="try_keep">Keep it as it was</string>
+    <string name="try_suggest">%1$s from now on</string>
+    <string name="try_unfinished">Not enough was recorded in one of the two weeks to read anything from it. Nothing is lost; you can start another whenever you like.</string>
+
+    <!-- Settings. -->
+    <string name="settings_try">Try it and see</string>
+    <string name="settings_try_sub">Offers a two-week test now and then</string>
+
+    <string name="condition_mornings">Mornings</string>
+    <string name="condition_evenings">Evenings</string>
+
+</resources>

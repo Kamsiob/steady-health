@@ -453,6 +453,40 @@ internal fun safetyOf(measure: Measure) = when (measure.id) {
     else -> R.string.measure_ankle_pumps_safe
 }
 
+/**
+ * The short form of one life sentence, for a tile.
+ *
+ * Telegraphic, the way grid screens 5 and 8 write them. A full sentence in a tile
+ * gets an ellipsis through the middle of it and says less than either version.
+ */
+@Suppress("CyclomaticComplexMethod") // A table of constants, not a decision.
+internal fun shortLifeStringOf(id: String) = when (id) {
+    "get_up_low_chair" -> R.string.short_get_up_low_chair
+    "get_up_no_hands" -> R.string.short_get_up_no_hands
+    "get_up_floor" -> R.string.short_get_up_floor
+    "go_one_flight" -> R.string.short_go_one_flight
+    "go_no_stop" -> R.string.short_go_no_stop
+    "go_two_flights" -> R.string.short_go_two_flights
+    "carry_bags" -> R.string.short_carry_bags
+    "carry_one_trip" -> R.string.short_carry_one_trip
+    "carry_overhead" -> R.string.short_carry_overhead
+    "steady_sock" -> R.string.short_steady_sock
+    "steady_trousers" -> R.string.short_steady_trousers
+    "steady_kerb" -> R.string.short_steady_kerb
+    "transfer_bed" -> R.string.short_transfer_bed
+    "transfer_alone" -> R.string.short_transfer_alone
+    "wheel_block" -> R.string.short_wheel_block
+    "wheel_shops" -> R.string.short_wheel_shops
+    "carry_lap" -> R.string.short_carry_lap
+    "carry_shelf" -> R.string.short_carry_shelf
+    "seated_reach_far" -> R.string.short_seated_reach_far
+    "bed_sit_up" -> R.string.short_bed_sit_up
+    "bed_edge_alone" -> R.string.short_bed_edge_alone
+    "bed_breaths" -> R.string.short_bed_breaths
+    "bed_grip" -> R.string.short_bed_grip
+    else -> R.string.short_bed_ankles
+}
+
 /** The hand-written sentence for one life-sentence id. */
 @Suppress("CyclomaticComplexMethod") // A table of constants, not a decision.
 internal fun lifeStringOf(id: String) = when (id) {

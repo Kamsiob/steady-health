@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -81,7 +82,13 @@ fun AbilityTile(
         .joinToString(", ")
     Box(
         modifier = modifier
-            .height(TILE_HEIGHT)
+            // A minimum rather than a fixed height. Two of these sit side by
+            // side and a Row makes them match, so they stay equal; what changes
+            // is that a two-line sentence gets its second line instead of an
+            // ellipsis through the middle of the person's own words, and text at
+            // twice the size has somewhere to go.
+            .heightIn(min = TILE_HEIGHT)
+            .fillMaxHeight()
             .clip(SteadyShapes.Card)
             .background(tint)
             .then(

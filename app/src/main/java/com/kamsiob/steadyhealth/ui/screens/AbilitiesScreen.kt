@@ -57,7 +57,10 @@ fun AbilitiesScreen(
     onAbility: (AbilityDomain) -> Unit,
     onCheck: () -> Unit,
     onSummary: () -> Unit,
+    onTry: () -> Unit,
     modifier: Modifier = Modifier,
+    tryOffer: Boolean = false,
+    tryResult: Boolean = false,
 ) {
     SteadyScreen(title = null, onBack = null, modifier = modifier) {
         SteadyText(
@@ -75,6 +78,20 @@ fun AbilitiesScreen(
                 stateLabel = stringResource(labelFor(ability.state)),
                 onClick = { onAbility(ability.domain) },
                 glyph = { AbilityGlyph(ability.domain) },
+            )
+        }
+
+        // Only when there is something to say. Never announced, never badged: an
+        // app that nags somebody about an optional experiment has misunderstood
+        // what the experiment is for.
+        if (tryOffer || tryResult) {
+            ListItem(
+                heading = stringResource(
+                    if (tryResult) R.string.try_result else R.string.try_action,
+                ),
+                subtitle = stringResource(R.string.settings_try_sub),
+                next = true,
+                onClick = onTry,
             )
         }
 

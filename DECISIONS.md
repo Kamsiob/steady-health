@@ -750,3 +750,40 @@ Lint then caught the part that would have failed in the store: an app bundle
 splits language resources by default and fetches the rest through Play Core on
 demand. This app has to work offline from the moment it is installed, so the
 split is off and every language ships inside it.
+
+### Try it and see offers one variable in version 1
+
+LOGIC.md 9b permits six: time of day, order of exercises, which exercise, walk
+before or after, indoor or outdoor, and rest between sets. Version 1 offers the
+first, which is the one grid screen 14 draws, and the enum holds all six so
+adding another is a table entry rather than a design.
+
+One honest test beats six half-thought ones, and the interesting work here was
+never the number of variables. It was the three rules about not finding things: a
+restriction tag can never produce a pattern, a difference inside the measure's own
+noise has no winner, and nobody in pacing mode is ever offered any of it.
+
+That last one is not a convenience. For a post-exertional pattern, deliberately
+varying what you do for a fortnight to see what happens is the thing that causes
+harm, so it is not a decision the person has to make while unwell.
+
+The offer row on Abilities appears only when there is something to offer or
+something to report, and is never badged. An app that nags somebody about an
+optional experiment has misunderstood what the experiment is for.
+
+### The tiles carry the short form of a life sentence
+
+Grid screens 5 and 8 write these telegraphically: "Floor without hands", "Two
+flights without a stop", "Groceries in one trip". The full sentences, which are
+right on the check result and on the ability page, get an ellipsis put through
+the middle of them in a tile, and a truncated sentence about somebody's life says
+less than either version.
+
+So there are two forms of each, and the tile takes the short one. A tile with
+nothing measured and nothing on the person's own list says what the ability is
+instead of standing empty, which also teaches somebody what Carry means here
+without a page about it.
+
+The tiles are a minimum height rather than a fixed one, and the two in a row match
+each other, so a two-line sentence takes its neighbour up with it. That is also
+what stops them breaking at twice the text size.

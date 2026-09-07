@@ -5,8 +5,10 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
@@ -202,7 +204,10 @@ fun TodayScreen(
 private fun AbilityGrid(abilities: List<AbilityTileState>, onAbility: (AbilityDomain) -> Unit) {
     abilities.chunked(2).forEach { pair ->
         Row(
-            modifier = Modifier.fillMaxWidth(),
+            // The two in a row match each other's height, so a tile whose
+            // sentence needs two lines takes its neighbour up with it rather
+            // than putting an ellipsis through somebody's own words.
+            modifier = Modifier.fillMaxWidth().height(IntrinsicSize.Min),
             horizontalArrangement = Arrangement.spacedBy(SteadySpacing.ListGap),
         ) {
             pair.forEach { ability ->

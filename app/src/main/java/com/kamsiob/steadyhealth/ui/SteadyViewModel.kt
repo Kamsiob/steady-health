@@ -402,11 +402,14 @@ class SteadyViewModel(application: Application) : AndroidViewModel(application) 
         measured: Map<String, Double>,
         theirWords: String?,
     ): String {
+        val context = getApplication<Application>()
         val sentence = LifeSentences.forDomain(domain, measured)
-        return if (sentence != null) {
-            getApplication<Application>().getString(lifeStringOf(sentence.id))
-        } else {
-            theirWords.orEmpty()
+        return when {
+            sentence != null -> context.getString(shortLifeStringOf(sentence.id))
+            !theirWords.isNullOrBlank() -> theirWords
+            // Nothing measured and nothing on their list. Say what the ability is
+            // rather than leaving a tile with a word and an empty half.
+            else -> context.getString(AbilityWords.plain(way.way, domain))
         }
     }
 

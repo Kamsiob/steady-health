@@ -145,6 +145,56 @@
     <string name="quieter_one_thing">This is one thing, not the whole picture.</string>
     <string name="quieter_open_summary">Open the page for your doctor</string>
 
+    <!--
+      The short form, for the tiles and the ability rows.
+
+      Grid screens 5 and 8 write these telegraphically: "Floor without hands",
+      "Two flights without a stop", "Groceries in one trip", "One foot, 22
+      seconds". A full sentence does not fit in a tile and gets an ellipsis put
+      through the middle of it, which is worse than either version.
+    -->
+    <string name="short_get_up_low_chair">Out of a low chair</string>
+    <string name="short_get_up_no_hands">Standing up, no hands</string>
+    <string name="short_get_up_floor">Floor, no hands</string>
+    <string name="short_go_one_flight">One flight, no stop</string>
+    <string name="short_go_no_stop">To the shops and back</string>
+    <string name="short_go_two_flights">Two flights, no stop</string>
+    <string name="short_carry_bags">Shopping in from the car</string>
+    <string name="short_carry_one_trip">Groceries in one trip</string>
+    <string name="short_carry_overhead">Up to the top shelf</string>
+    <string name="short_steady_sock">A sock, standing up</string>
+    <string name="short_steady_trousers">Dressed, standing up</string>
+    <string name="short_steady_kerb">Off a kerb, no thought</string>
+    <string name="short_transfer_bed">Chair to bed, on my own</string>
+    <string name="short_transfer_alone">Transfers, no help</string>
+    <string name="short_wheel_block">Round the block</string>
+    <string name="short_wheel_shops">To the shops and back</string>
+    <string name="short_carry_lap">A full basket on my lap</string>
+    <string name="short_carry_shelf">The shelf, and what is on it</string>
+    <string name="short_seated_reach_far">Sitting up through a meal</string>
+    <string name="short_bed_sit_up">Sitting up in bed</string>
+    <string name="short_bed_edge_alone">To the edge, on my own</string>
+    <string name="short_bed_breaths">Ten slow breaths</string>
+    <string name="short_bed_grip">A cup, held steady</string>
+    <string name="short_bed_ankles">Ankles, full range</string>
+
+    <!--
+      What an ability is, for a tile with nothing measured and nothing on the
+      person's own list yet. Better than an empty tile, and it teaches somebody
+      what the four words mean without a page about it.
+    -->
+    <string name="ability_plain_get_up">Getting out of a chair</string>
+    <string name="ability_plain_go">Walking, stairs, distance</string>
+    <string name="ability_plain_carry">Lifting and holding</string>
+    <string name="ability_plain_steady">Balance on your feet</string>
+    <string name="ability_plain_transfer">Moving from one seat to another</string>
+    <string name="ability_plain_wheel">Distance, at your own pace</string>
+    <string name="ability_plain_seated">Sitting unsupported</string>
+    <string name="ability_plain_bed_up">Sitting up</string>
+    <string name="ability_plain_breathe">Breathing, slow and steady</string>
+    <string name="ability_plain_grip">Holding on</string>
+    <string name="ability_plain_ankles">Ankles and feet</string>
+
     <!-- The life sentences. The engine picks; nothing writes one. -->
     <string name="life_get_up_low_chair">You can get out of a low chair without pushing off now.</string>
     <string name="life_get_up_no_hands">You can stand up without using your hands now.</string>

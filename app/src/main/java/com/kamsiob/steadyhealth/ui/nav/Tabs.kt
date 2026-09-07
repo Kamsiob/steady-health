@@ -51,4 +51,6 @@ object Route {
     const val SUMMARY = "summary"
     const val DATA = "data"
     const val REMINDERS = "reminders"
+    const val TRY_OFFER = "try-offer"
+    const val TRY_RESULT = "try-result"
 }

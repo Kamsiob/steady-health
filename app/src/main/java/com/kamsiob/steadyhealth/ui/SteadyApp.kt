@@ -52,6 +52,8 @@ import com.kamsiob.steadyhealth.ui.screens.SettingsActions
 import com.kamsiob.steadyhealth.ui.screens.SettingsScreen
 import com.kamsiob.steadyhealth.ui.screens.SummaryScreen
 import com.kamsiob.steadyhealth.ui.screens.TodayScreen
+import com.kamsiob.steadyhealth.ui.screens.TryOfferScreen
+import com.kamsiob.steadyhealth.ui.screens.TryResultScreen
 import com.kamsiob.steadyhealth.ui.screens.WalkDoneScreen
 import com.kamsiob.steadyhealth.ui.screens.WalkingScreen
 import com.kamsiob.steadyhealth.ui.screens.WeighInScreen
@@ -74,6 +76,7 @@ fun SteadyApp() {
     val checkViewModel: CheckViewModel = viewModel()
     val abilityViewModel: AbilityViewModel = viewModel()
     val summaryViewModel: SummaryViewModel = viewModel()
+    val tryViewModel: TryViewModel = viewModel()
     val onboarded by viewModel.onboardingComplete.collectAsStateWithLifecycle()
 
     when (onboarded) {
@@ -86,6 +89,7 @@ fun SteadyApp() {
             checkViewModel,
             abilityViewModel,
             summaryViewModel,
+            tryViewModel,
         )
     }
 }
@@ -98,6 +102,7 @@ private fun Tabs(
     checkViewModel: CheckViewModel,
     abilityViewModel: AbilityViewModel,
     summaryViewModel: SummaryViewModel,
+    tryViewModel: TryViewModel,
 ) {
     val navController = rememberNavController()
     var tab by rememberSaveable { mutableStateOf(Tab.Today) }
@@ -111,69 +116,18 @@ private fun Tabs(
             Box(modifier = Modifier.fillMaxWidth().weight(1f)) {
                 NavHost(navController = navController, startDestination = Route.TABS) {
                     composable(Route.TABS) {
-                        when (tab) {
-                            Tab.Today -> {
-                                val state by viewModel.today.collectAsStateWithLifecycle()
-                                LaunchedEffect(Unit) { viewModel.refresh() }
-                                TodayScreen(
-                                    state = state,
-                                    onAbility = {
-                                        abilityViewModel.open(it)
-                                        navController.navigate(Route.ABILITY)
-                                    },
-                                    onWeighIn = {
-                                        viewModel.openWeighIn()
-                                        navController.navigate(Route.WEIGH_IN)
-                                    },
-                                    onSayHow = {
-                                        viewModel.openSayHow()
-                                        navController.navigate(Route.SAY_HOW)
-                                    },
-                                    onMove = { tab = Tab.Move },
-                                    onAsk = {
-                                        askViewModel.openAsk()
-                                        navController.navigate(Route.ASK)
-                                    },
-                                    onSettings = {
-                                        settingsViewModel.openSettings()
-                                        navController.navigate(Route.SETTINGS)
-                                    },
-                                    onNotice = viewModel::dismissNotice,
-                                )
-                            }
-
-                            Tab.Move -> {
-                                val state by viewModel.move.collectAsStateWithLifecycle()
-                                LaunchedEffect(Unit) { viewModel.refresh() }
-                                MoveScreen(
-                                    state = state,
-                                    onGo = {
-                                        viewModel.startWalk()
-                                        navController.navigate(Route.WALKING)
-                                    },
-                                )
-                            }
-
-                            Tab.Abilities -> {
-                                val state by viewModel.abilitiesState.collectAsStateWithLifecycle()
-                                LaunchedEffect(Unit) { viewModel.refresh() }
-                                AbilitiesScreen(
-                                    state = state,
-                                    onSummary = {
-                                        summaryViewModel.open()
-                                        navController.navigate(Route.SUMMARY)
-                                    },
-                                    onAbility = {
-                                        abilityViewModel.open(it)
-                                        navController.navigate(Route.ABILITY)
-                                    },
-                                    onCheck = {
-                                        checkViewModel.open()
-                                        navController.navigate(Route.CHECK)
-                                    },
-                                )
-                            }
-                        }
+                        TabBody(
+                            tab = tab,
+                            onTab = { tab = it },
+                            viewModel = viewModel,
+                            askViewModel = askViewModel,
+                            settingsViewModel = settingsViewModel,
+                            checkViewModel = checkViewModel,
+                            abilityViewModel = abilityViewModel,
+                            summaryViewModel = summaryViewModel,
+                            tryViewModel = tryViewModel,
+                            navController = navController,
+                        )
                     }
 
                     dailyRoutes(viewModel, navController, back)
@@ -184,6 +138,7 @@ private fun Tabs(
                     }
                     abilityRoutes(abilityViewModel, navController, back)
                     summaryRoutes(summaryViewModel, back)
+                    tryRoutes(tryViewModel, back)
                     settingsRoutes(
                         viewModel = settingsViewModel,
                         navController = navController,
@@ -335,6 +290,144 @@ private fun NavGraphBuilder.dailyRoutes(
  * The visit summary. Never a fourth tab, and reached from the places DESIGN.md
  * names: the Abilities tab, an ability page, and one row in settings.
  */
+/**
+ * Try it and see. Grid screens 14 and 15.
+ *
+ * Reached from a row on Abilities that only appears when the engine has something
+ * to offer or something to report. It is never announced and never badged.
+ */
+/**
+ * Whichever of the three tabs is showing.
+ *
+ * Its own composable because there are three of them and each needs a handful of
+ * view models, and inlining all of that made the one function that holds the app
+ * longer than any screen in it.
+ */
+@Composable
+@Suppress("LongParameterList") // Three tabs, seven view models, one place.
+private fun TabBody(
+    tab: Tab,
+    onTab: (Tab) -> Unit,
+    viewModel: SteadyViewModel,
+    askViewModel: AskViewModel,
+    settingsViewModel: SettingsViewModel,
+    checkViewModel: CheckViewModel,
+    abilityViewModel: AbilityViewModel,
+    summaryViewModel: SummaryViewModel,
+    tryViewModel: TryViewModel,
+    navController: NavHostController,
+) {
+    when (tab) {
+        Tab.Today -> {
+            val state by viewModel.today.collectAsStateWithLifecycle()
+            LaunchedEffect(Unit) { viewModel.refresh() }
+            TodayScreen(
+                state = state,
+                onAbility = {
+                    abilityViewModel.open(it)
+                    navController.navigate(Route.ABILITY)
+                },
+                onWeighIn = {
+                    viewModel.openWeighIn()
+                    navController.navigate(Route.WEIGH_IN)
+                },
+                onSayHow = {
+                    viewModel.openSayHow()
+                    navController.navigate(Route.SAY_HOW)
+                },
+                onMove = { onTab(Tab.Move) },
+                onAsk = {
+                    askViewModel.openAsk()
+                    navController.navigate(Route.ASK)
+                },
+                onSettings = {
+                    settingsViewModel.openSettings()
+                    navController.navigate(Route.SETTINGS)
+                },
+                onNotice = viewModel::dismissNotice,
+            )
+        }
+
+        Tab.Move -> {
+            val state by viewModel.move.collectAsStateWithLifecycle()
+            LaunchedEffect(Unit) { viewModel.refresh() }
+            MoveScreen(
+                state = state,
+                onGo = {
+                    viewModel.startWalk()
+                    navController.navigate(Route.WALKING)
+                },
+            )
+        }
+
+        Tab.Abilities -> {
+            val state by viewModel.abilitiesState.collectAsStateWithLifecycle()
+            LaunchedEffect(Unit) { viewModel.refresh() }
+            val tryOffer by tryViewModel.offer.collectAsStateWithLifecycle()
+            val tryResult by tryViewModel.result.collectAsStateWithLifecycle()
+            LaunchedEffect(Unit) { tryViewModel.refresh() }
+            AbilitiesScreen(
+                state = state,
+                tryOffer = tryOffer != null,
+                tryResult = tryResult != null,
+                onTry = {
+                    navController.navigate(
+                        if (tryResult != null) Route.TRY_RESULT else Route.TRY_OFFER,
+                    )
+                },
+                onSummary = {
+                    summaryViewModel.open()
+                    navController.navigate(Route.SUMMARY)
+                },
+                onAbility = {
+                    abilityViewModel.open(it)
+                    navController.navigate(Route.ABILITY)
+                },
+                onCheck = {
+                    checkViewModel.open()
+                    navController.navigate(Route.CHECK)
+                },
+            )
+        }
+    }
+}
+
+private fun NavGraphBuilder.tryRoutes(viewModel: TryViewModel, back: () -> Unit) {
+    composable(Route.TRY_OFFER) {
+        val state by viewModel.offer.collectAsStateWithLifecycle()
+        state?.let {
+            TryOfferScreen(
+                state = it,
+                onStart = {
+                    viewModel.start()
+                    back()
+                },
+                onNotNow = {
+                    viewModel.notNow()
+                    back()
+                },
+            )
+        }
+    }
+
+    composable(Route.TRY_RESULT) {
+        val state by viewModel.result.collectAsStateWithLifecycle()
+        state?.let {
+            TryResultScreen(
+                state = it,
+                onSuggest = {
+                    viewModel.finish(keep = false)
+                    back()
+                },
+                onKeep = {
+                    viewModel.finish(keep = true)
+                    back()
+                },
+            )
+        }
+    }
+}
+
 private fun NavGraphBuilder.summaryRoutes(viewModel: SummaryViewModel, back: () -> Unit) {
     composable(Route.SUMMARY) {
         val state by viewModel.state.collectAsStateWithLifecycle()
@@ -484,6 +577,7 @@ private fun NavGraphBuilder.settingsRoutes(
                 onPacing = { navController.navigate(Route.PACING) },
                 onData = { navController.navigate(Route.DATA) },
                 onReminders = { navController.navigate(Route.REMINDERS) },
+                onTryItAndSee = viewModel::setTryItAndSee,
             ),
             onBack = back,
         )
