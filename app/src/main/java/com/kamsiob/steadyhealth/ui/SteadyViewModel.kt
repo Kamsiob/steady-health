@@ -73,14 +73,26 @@ import java.util.Locale
  */
 class SteadyViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val db by lazy { SteadyDatabase.get(application) }
-    internal val profile by lazy { ProfileRepository(db) }
-    internal val weight by lazy { WeightRepository(db) }
-    internal val days by lazy { DayRepository(db) }
-    internal val abilities by lazy { AbilityRepository(db) }
-    internal val movement by lazy { MovementRepository(db) }
-    internal val weeks by lazy { WeekRepository(db) }
-    internal val checks by lazy { CheckRepository(db) }
+    /**
+     * The database, resolved on every use rather than held.
+     *
+     * Deleting everything closes the database and destroys its key, and anything
+     * holding the old instance then throws "Database is closed" on its next
+     * write. That happened on the phone, on the first screen of setup, right
+     * after somebody had deleted everything, which is the worst possible moment
+     * for this app to crash.
+     *
+     * The repositories are stateless wrappers, so resolving them per call costs
+     * an object allocation and removes the whole class of bug.
+     */
+    private val db get() = SteadyDatabase.get(getApplication())
+    internal val profile get() = ProfileRepository(db)
+    internal val weight get() = WeightRepository(db)
+    internal val days get() = DayRepository(db)
+    internal val abilities get() = AbilityRepository(db)
+    internal val movement get() = MovementRepository(db)
+    internal val weeks get() = WeekRepository(db)
+    internal val checks get() = CheckRepository(db)
 
     private val _onboardingComplete = MutableStateFlow<Boolean?>(null)
     val onboardingComplete: StateFlow<Boolean?> = _onboardingComplete.asStateFlow()
@@ -138,6 +150,17 @@ class SteadyViewModel(application: Application) : AndroidViewModel(application) 
             _onboardingComplete.value = done
             if (done) refresh()
         }
+    }
+
+    /**
+     * Everything was deleted, so the app is new again.
+     *
+     * Not a restart and not a crash: the database is gone, so setup is genuinely
+     * where this person now is, and pretending otherwise would leave every screen
+     * reading from something that is not there.
+     */
+    fun startAgain() {
+        _onboardingComplete.value = false
     }
 
     fun onboardingFinished() = viewModelScope.launch {

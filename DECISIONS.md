@@ -601,3 +601,40 @@ no reason. So the page is drawn onto a `PdfDocument` canvas.
 It leaves through a `FileProvider` that exposes exactly one cache directory and
 nothing else, so a mistake in a share intent cannot hand somebody the database.
 Nothing is transmitted, and the app has no network permission with which to.
+
+## Phase 6
+
+### The database is resolved on every use, not held
+
+Deleting everything closes the database and destroys its key, and every view
+model was holding the old instance in a `lazy`. The next write threw "Database is
+closed", which on the phone meant a crash on the first screen of setup,
+immediately after somebody had deleted everything. That is the worst possible
+moment for this app to crash, and it was found by actually pressing the button
+rather than by reasoning about it.
+
+The repositories are stateless wrappers, so resolving them per call costs one
+object allocation and removes the whole class of bug.
+
+### The export is CSV and PDF in a zip, not a format only this app reads
+
+PRIVACY.md promises "ordinary files: spreadsheets, your photos, and a one-page
+summary". An export somebody cannot open is not an export, so it is five CSVs and
+the summary PDF, and the CSV writer is tested against sentences containing a
+comma, a quotation mark, a newline, Arabic and Chinese. The person's own
+sentences are the part of that file nobody else could reproduce.
+
+### Deleting asks once, and "Keep it" is the primary button
+
+There is no undo and the screen does not pretend there might be. The safer answer
+is the one under your thumb, and the destructive one is the ghost button, which is
+the opposite of the usual arrangement and the right way round here.
+
+The summary is on the same screen, above both, so somebody about to delete
+everything is one tap from taking a copy first.
+
+### The visit summary is built in one place
+
+It is shown on screen and put in the export, and both have to say the same thing.
+Building it from two call sites is how they stop saying the same thing, so
+`SummaryPages.build` does it once and both use it.

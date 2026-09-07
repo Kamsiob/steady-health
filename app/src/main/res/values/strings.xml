@@ -378,6 +378,20 @@
     <string name="tag_social">Social</string>
     <string name="tag_family">Family</string>
 
+    <!-- Your data. PRIVACY.md promises both of these in these words. -->
+    <string name="data_title">Your data</string>
+    <string name="data_row">Export or delete everything</string>
+    <string name="data_export">Export everything</string>
+    <string name="data_export_why">Spreadsheets and a one-page summary, in a zip you can open in anything. Nothing is sent anywhere; you choose where it goes.</string>
+    <string name="data_summary_row">Summary</string>
+    <string name="data_summary_why">Read it, or export a page for your appointment.</string>
+    <string name="data_delete">Delete everything</string>
+    <string name="data_delete_why">Immediately and completely. There is no copy anywhere else, so there is nothing else to delete and nothing to get back.</string>
+    <string name="data_delete_confirm">Yes, delete everything</string>
+    <string name="data_delete_cancel">Keep it</string>
+    <string name="data_delete_title">Delete everything?</string>
+    <string name="data_deleted">It is gone. The app will start again from the beginning.</string>
+
     <string name="notice_ok">Got it</string>
 
     <!-- Settings, grid screen 22. -->

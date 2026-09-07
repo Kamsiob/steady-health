@@ -42,11 +42,23 @@ import java.time.ZoneId
  */
 class OnboardingViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val db by lazy { SteadyDatabase.get(application) }
-    private val profile by lazy { ProfileRepository(db) }
-    private val weight by lazy { WeightRepository(db) }
-    private val abilities by lazy { AbilityRepository(db) }
-    private val movement by lazy { MovementRepository(db) }
+    /**
+     * The database, resolved on every use rather than held.
+     *
+     * Deleting everything closes the database and destroys its key, and anything
+     * holding the old instance then throws "Database is closed" on its next
+     * write. That happened on the phone, on the first screen of setup, right
+     * after somebody had deleted everything, which is the worst possible moment
+     * for this app to crash.
+     *
+     * The repositories are stateless wrappers, so resolving them per call costs
+     * an object allocation and removes the whole class of bug.
+     */
+    private val db get() = SteadyDatabase.get(getApplication())
+    private val profile get() = ProfileRepository(db)
+    private val weight get() = WeightRepository(db)
+    private val abilities get() = AbilityRepository(db)
+    private val movement get() = MovementRepository(db)
 
     private val _state = MutableStateFlow(OnboardingState())
     val state: StateFlow<OnboardingState> = _state.asStateFlow()

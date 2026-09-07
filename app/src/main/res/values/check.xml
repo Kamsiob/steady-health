@@ -138,6 +138,8 @@
     <string name="check_wanted">That\'s the thing you said you wanted.</string>
 
     <!-- Screen 13, shown once per ability per six months, and never repeated. -->
+    <string name="quieter_sentence">Your %1$s has gone one way for three checks.</string>
+    <string name="quieter_nothing_else">Nothing else has been measured enough times to say.</string>
     <string name="quieter_note">Three months in one direction is worth a mention at your next appointment. Bring the page for your doctor; it\'s already made.</string>
     <string name="quieter_held">Everything else held.</string>
     <string name="quieter_one_thing">This is one thing, not the whole picture.</string>

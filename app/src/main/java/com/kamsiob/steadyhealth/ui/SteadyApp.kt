@@ -35,12 +35,14 @@ import com.kamsiob.steadyhealth.ui.screens.CardScreen
 import com.kamsiob.steadyhealth.ui.screens.CheckDoneScreen
 import com.kamsiob.steadyhealth.ui.screens.CheckIntroScreen
 import com.kamsiob.steadyhealth.ui.screens.CheckMeasureScreen
+import com.kamsiob.steadyhealth.ui.screens.DataScreen
 import com.kamsiob.steadyhealth.ui.screens.GettingAroundScreen
 import com.kamsiob.steadyhealth.ui.screens.LeaveOutSettingsScreen
 import com.kamsiob.steadyhealth.ui.screens.MoveScreen
 import com.kamsiob.steadyhealth.ui.screens.OfferScreen
 import com.kamsiob.steadyhealth.ui.screens.PacingScreen
 import com.kamsiob.steadyhealth.ui.screens.PatternScreen
+import com.kamsiob.steadyhealth.ui.screens.QuieterScreen
 import com.kamsiob.steadyhealth.ui.screens.SayHowScreen
 import com.kamsiob.steadyhealth.ui.screens.SettingsActions
 import com.kamsiob.steadyhealth.ui.screens.SettingsScreen
@@ -172,10 +174,25 @@ private fun Tabs(
 
                     dailyRoutes(viewModel, navController, back)
                     askRoutes(askViewModel, navController, back)
-                    checkRoutes(checkViewModel, navController, back)
+                    checkRoutes(checkViewModel, navController, back) {
+                        summaryViewModel.open()
+                        navController.navigate(Route.SUMMARY)
+                    }
                     abilityRoutes(abilityViewModel, navController, back)
                     summaryRoutes(summaryViewModel, back)
-                    settingsRoutes(settingsViewModel, navController, back)
+                    settingsRoutes(
+                        viewModel = settingsViewModel,
+                        navController = navController,
+                        back = back,
+                        onSummary = {
+                            summaryViewModel.open()
+                            navController.navigate(Route.SUMMARY)
+                        },
+                        onDeleted = {
+                            navController.popBackStack(Route.TABS, inclusive = false)
+                            viewModel.startAgain()
+                        },
+                    )
 
                     composable(Route.WALK_DONE) {
                         val state by viewModel.walkDone.collectAsStateWithLifecycle()
@@ -354,6 +371,7 @@ private fun NavGraphBuilder.checkRoutes(
     viewModel: CheckViewModel,
     navController: NavHostController,
     back: () -> Unit,
+    onSummary: () -> Unit,
 ) {
     composable(Route.CHECK) {
         val state by viewModel.intro.collectAsStateWithLifecycle()
@@ -387,10 +405,33 @@ private fun NavGraphBuilder.checkRoutes(
         CheckDoneScreen(
             state = state,
             onSave = {
-                viewModel.save { navController.popBackStack(Route.TABS, inclusive = false) }
+                viewModel.save { quieter ->
+                    if (quieter) {
+                        navController.navigate(Route.QUIETER)
+                    } else {
+                        navController.popBackStack(Route.TABS, inclusive = false)
+                    }
+                }
             },
             onBack = { navController.popBackStack(Route.TABS, inclusive = false) },
         )
+    }
+
+    composable(Route.QUIETER) {
+        val state by viewModel.quieter.collectAsStateWithLifecycle()
+        state?.let {
+            QuieterScreen(
+                state = it,
+                onSummary = {
+                    viewModel.dismissQuieter()
+                    onSummary()
+                },
+                onOkay = {
+                    viewModel.dismissQuieter()
+                    navController.popBackStack(Route.TABS, inclusive = false)
+                },
+            )
+        }
     }
 }
 
@@ -422,6 +463,8 @@ private fun NavGraphBuilder.settingsRoutes(
     viewModel: SettingsViewModel,
     navController: NavHostController,
     back: () -> Unit,
+    onSummary: () -> Unit,
+    onDeleted: () -> Unit,
 ) {
     composable(Route.SETTINGS) {
         val state by viewModel.settings.collectAsStateWithLifecycle()
@@ -435,6 +478,7 @@ private fun NavGraphBuilder.settingsRoutes(
                 onExclusions = { navController.navigate(Route.LEAVE_OUT) },
                 onPattern = { navController.navigate(Route.PATTERN) },
                 onPacing = { navController.navigate(Route.PACING) },
+                onData = { navController.navigate(Route.DATA) },
             ),
             onBack = back,
         )
@@ -473,6 +517,22 @@ private fun NavGraphBuilder.settingsRoutes(
                 back()
             },
             onBack = back,
+        )
+    }
+
+    composable(Route.DATA) {
+        val confirming by viewModel.confirmingDelete.collectAsStateWithLifecycle()
+        DataScreen(
+            onExport = viewModel::exportEverything,
+            onSummary = onSummary,
+            onDelete = viewModel::askToDelete,
+            onBack = {
+                viewModel.keepEverything()
+                back()
+            },
+            confirming = confirming,
+            onConfirm = { viewModel.deleteEverything(onDeleted) },
+            onCancel = viewModel::keepEverything,
         )
     }
 

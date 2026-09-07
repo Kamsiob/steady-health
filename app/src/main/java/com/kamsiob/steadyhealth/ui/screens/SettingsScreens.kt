@@ -15,6 +15,7 @@ import com.kamsiob.steadyhealth.ui.components.ListItem
 import com.kamsiob.steadyhealth.ui.components.NoteBlock
 import com.kamsiob.steadyhealth.ui.components.Paragraph
 import com.kamsiob.steadyhealth.ui.components.PrimaryButton
+import com.kamsiob.steadyhealth.ui.components.SecondaryButton
 import com.kamsiob.steadyhealth.ui.components.SectionTitle
 import com.kamsiob.steadyhealth.ui.components.SteadyScreen
 import com.kamsiob.steadyhealth.ui.components.Stepper
@@ -51,6 +52,7 @@ data class SettingsActions(
     val onExclusions: () -> Unit,
     val onPattern: () -> Unit,
     val onPacing: () -> Unit,
+    val onData: () -> Unit,
 )
 
 /**
@@ -110,6 +112,12 @@ fun SettingsScreen(
             heading = stringResource(R.string.settings_pattern),
             subtitle = state.pemLabel,
             onClick = actions.onPattern,
+        )
+
+        ListItem(
+            heading = stringResource(R.string.data_title),
+            subtitle = stringResource(R.string.data_row),
+            onClick = actions.onData,
         )
 
         if (state.pacing) {
@@ -200,6 +208,70 @@ fun PatternScreen(
         }
 
         Paragraph(stringResource(R.string.start_pem_why))
+    }
+}
+
+/**
+ * Your data: everything out, and everything gone.
+ *
+ * The two are on one screen because they are the same promise from two sides, and
+ * because somebody who is about to delete everything should be one tap from
+ * taking a copy first.
+ *
+ * Deleting asks once and says plainly what it means. There is no undo and the
+ * screen does not pretend there might be.
+ */
+@Composable
+fun DataScreen(
+    onExport: () -> Unit,
+    onSummary: () -> Unit,
+    onDelete: () -> Unit,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+    confirming: Boolean = false,
+    onConfirm: () -> Unit = {},
+    onCancel: () -> Unit = {},
+) {
+    SteadyScreen(
+        title = stringResource(R.string.data_title),
+        onBack = onBack,
+        modifier = modifier,
+        footer = {
+            if (confirming) {
+                PrimaryButton(
+                    label = stringResource(R.string.data_delete_cancel),
+                    onClick = onCancel,
+                )
+                SecondaryButton(
+                    label = stringResource(R.string.data_delete_confirm),
+                    onClick = onConfirm,
+                )
+            }
+        },
+    ) {
+        if (confirming) {
+            SectionTitle(stringResource(R.string.data_delete_title))
+            NoteBlock(stringResource(R.string.data_delete_why))
+            return@SteadyScreen
+        }
+
+        ListItem(
+            heading = stringResource(R.string.data_summary_row),
+            subtitle = stringResource(R.string.data_summary_why),
+            onClick = onSummary,
+        )
+
+        ListItem(
+            heading = stringResource(R.string.data_export),
+            subtitle = stringResource(R.string.data_export_why),
+            onClick = onExport,
+        )
+
+        ListItem(
+            heading = stringResource(R.string.data_delete),
+            subtitle = stringResource(R.string.data_delete_why),
+            onClick = onDelete,
+        )
     }
 }
 

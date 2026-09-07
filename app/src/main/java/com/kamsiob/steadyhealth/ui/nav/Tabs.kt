@@ -45,7 +45,9 @@ object Route {
     const val CHECK = "check"
     const val CHECK_MEASURE = "check-measure"
     const val CHECK_DONE = "check-done"
+    const val QUIETER = "quieter"
     const val ABILITY = "ability"
     const val WEIGHT = "weight"
     const val SUMMARY = "summary"
+    const val DATA = "data"
 }

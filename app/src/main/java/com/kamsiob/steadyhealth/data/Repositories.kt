@@ -55,6 +55,7 @@ import com.kamsiob.steadyhealth.engine.Smoothed
 import com.kamsiob.steadyhealth.engine.VisitInputs
 import com.kamsiob.steadyhealth.engine.VisitSummaryEngine
 import com.kamsiob.steadyhealth.engine.WeightEngine
+import com.kamsiob.steadyhealth.export.Sheet
 import java.time.LocalDate
 
 /**
@@ -423,6 +424,9 @@ class ProfileRepository(private val db: SteadyDatabase) {
 
     suspend fun hasShown(noticeId: String): Boolean = db.notices().get(noticeId) != null
 
+    /** When a notice was shown, for the ones that may come round again. */
+    suspend fun shownOn(noticeId: String): Long? = db.notices().get(noticeId)?.shownAt
+
     companion object {
         const val ONBOARDED = "onboarding_complete"
         const val GETTING_AROUND = "getting_around"
@@ -749,5 +753,117 @@ class VisitRepository(private val db: SteadyDatabase) {
         const val SECONDS_PER_MINUTE = 60
         const val THREE = 3
         const val FOUR_WEEKS = 28L
+    }
+}
+
+/**
+ * Everything out, and everything gone.
+ *
+ * PRIVACY.md promises both in those words: ordinary files anyone can open, and
+ * deletion that is immediate and complete with no copy anywhere else. Both
+ * promises are kept here, and the second one is the harder of the two to keep
+ * honestly.
+ */
+class DataRepository(private val db: SteadyDatabase) {
+
+    /** Every table, as a spreadsheet somebody can open in anything. */
+    suspend fun sheets(): List<Sheet> = listOf(
+        Sheet(
+            name = "weigh-ins",
+            rows = listOf(listOf("date", "weight_kg", "smoothed_kg", "source")) +
+                db.weighIns().allOnce().map {
+                    listOf(
+                        date(it.epochDay),
+                        it.rawKg.toString(),
+                        it.smoothedKg.toString(),
+                        it.source,
+                    )
+                },
+        ),
+        Sheet(
+            name = "days",
+            rows = listOf(listOf("date", "what_you_said", "sleep_hours", "how_it_went", "tags")) +
+                daysWithTags(),
+        ),
+        Sheet(
+            name = "sessions",
+            rows = listOf(listOf("date", "kind", "step", "minutes", "could_you_talk")) +
+                db.sessions().allOnce().map {
+                    listOf(
+                        date(it.epochDay),
+                        it.ladder,
+                        it.stepIndex.toString(),
+                        (it.durationSeconds / SECONDS_PER_MINUTE).toString(),
+                        it.talkTest.orEmpty(),
+                    )
+                },
+        ),
+        Sheet(
+            name = "checks",
+            rows = listOf(listOf("date", "measure", "ability", "value")) +
+                db.checks().allMeasuresOnce().map {
+                    listOf(date(it.epochDay), it.measureId, it.domain, it.value.toString())
+                },
+        ),
+        Sheet(
+            name = "your-list",
+            rows = listOf(listOf("date", "what_you_wanted", "ability", "rating")) +
+                itemRatings(),
+        ),
+    )
+
+    private suspend fun daysWithTags(): List<List<String>> {
+        val tags = db.checkIns().allTagsOnce().groupBy { it.checkInId }
+        return db.checkIns().allOnce().map { day ->
+            listOf(
+                date(day.epochDay),
+                day.sentence,
+                day.sleepHalfHours?.let { (it / 2.0).toString() }.orEmpty(),
+                day.dayRating.orEmpty(),
+                tags[day.id].orEmpty().joinToString(" ") { it.tag },
+            )
+        }
+    }
+
+    private suspend fun itemRatings(): List<List<String>> =
+        db.abilities().itemsOnce().flatMap { item ->
+            db.abilities().ratingsFor(item.id).map { rating ->
+                listOf(date(rating.epochDay), item.text, item.domain, rating.rating.toString())
+            }
+        }
+
+    /**
+     * Delete everything, immediately.
+     *
+     * Every table, then the database file and its key. PRIVACY.md says there is no
+     * copy anywhere else to delete, and that sentence is only true if this leaves
+     * nothing: not an empty database, not an unused key in the Keystore, not a
+     * stray write-ahead log.
+     */
+    suspend fun deleteEverything(context: android.content.Context) {
+        db.weighIns().deleteAll()
+        db.checkIns().deleteAll()
+        db.checkIns().deleteAllTags()
+        db.synonyms().deleteAll()
+        db.sessions().deleteAll()
+        db.ladders().deleteAllStates()
+        db.ladders().deleteAllNames()
+        db.abilities().deleteAllItems()
+        db.abilities().deleteAllRatings()
+        db.checks().deleteAllChecks()
+        db.checks().deleteAllMeasures()
+        db.notes().deleteAllNotes()
+        db.notes().deleteAllPatterns()
+        db.notices().deleteAll()
+        db.profile().deleteAllSettings()
+        db.profile().clearExclusions()
+        db.profile().clearReadiness()
+        SteadyDatabase.destroy(context)
+    }
+
+    private fun date(epochDay: Long): String = LocalDate.ofEpochDay(epochDay).toString()
+
+    private companion object {
+        const val SECONDS_PER_MINUTE = 60
     }
 }

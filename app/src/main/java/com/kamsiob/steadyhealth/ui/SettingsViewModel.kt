@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.kamsiob.steadyhealth.R
+import com.kamsiob.steadyhealth.data.DataRepository
 import com.kamsiob.steadyhealth.data.ProfileRepository
 import com.kamsiob.steadyhealth.data.SteadyDatabase
 import com.kamsiob.steadyhealth.domain.Exclusion
@@ -12,6 +13,10 @@ import com.kamsiob.steadyhealth.domain.PemAnswer
 import com.kamsiob.steadyhealth.engine.Envelope
 import com.kamsiob.steadyhealth.engine.PacingEngine
 import com.kamsiob.steadyhealth.engine.WaysOfGettingAround
+import com.kamsiob.steadyhealth.export.DataExport
+import com.kamsiob.steadyhealth.export.Share
+import com.kamsiob.steadyhealth.export.SummaryPages
+import com.kamsiob.steadyhealth.export.SummaryPdf
 import com.kamsiob.steadyhealth.ui.screens.SettingsUiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -29,8 +34,21 @@ import kotlinx.coroutines.launch
  */
 class SettingsViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val db by lazy { SteadyDatabase.get(application) }
-    private val profile by lazy { ProfileRepository(db) }
+    /**
+     * The database, resolved on every use rather than held.
+     *
+     * Deleting everything closes the database and destroys its key, and anything
+     * holding the old instance then throws "Database is closed" on its next
+     * write. That happened on the phone, on the first screen of setup, right
+     * after somebody had deleted everything, which is the worst possible moment
+     * for this app to crash.
+     *
+     * The repositories are stateless wrappers, so resolving them per call costs
+     * an object allocation and removes the whole class of bug.
+     */
+    private val db get() = SteadyDatabase.get(getApplication())
+    private val profile get() = ProfileRepository(db)
+    private val data get() = DataRepository(db)
 
     private val _settings = MutableStateFlow(SettingsUiState())
     val settings: StateFlow<SettingsUiState> = _settings.asStateFlow()
@@ -119,6 +137,62 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         profile.setEnvelope(value)
         envelope = value
         refreshSettings()
+    }
+
+    private val _confirmingDelete = MutableStateFlow(false)
+
+    /** True while the delete screen is asking. It asks once and only once. */
+    val confirmingDelete: StateFlow<Boolean> = _confirmingDelete.asStateFlow()
+
+    fun askToDelete() {
+        _confirmingDelete.value = true
+    }
+
+    fun keepEverything() {
+        _confirmingDelete.value = false
+    }
+
+    /**
+     * Everything out, as ordinary files.
+     *
+     * PRIVACY.md: spreadsheets and a one-page summary, in a zip anyone can open.
+     * Nothing is sent anywhere; the person picks where it goes from the share
+     * sheet, and the app has no network permission with which to do otherwise.
+     */
+    fun exportEverything() = viewModelScope.launch {
+        val context = getApplication<Application>()
+        // PRIVACY.md promises spreadsheets and a one-page summary, so the summary
+        // goes in the zip. It is built by the same pipeline the screen uses, from
+        // the same place, so the two cannot drift apart.
+        val summary = SummaryPdf.write(
+            context = context,
+            page = SummaryPages.build(context, db),
+            name = "summary.pdf",
+        )
+        val file = DataExport.write(
+            context = context,
+            sheets = data.sheets(),
+            extras = listOf(summary),
+            name = "steady-health-export.zip",
+        )
+        Share.file(
+            context = context,
+            file = file,
+            mimeType = "application/zip",
+            title = context.getString(R.string.data_export),
+        )
+    }
+
+    /**
+     * Everything gone, immediately.
+     *
+     * Every table, then the database file and its key. The app restarts at the
+     * beginning because there is genuinely nothing left for it to open.
+     */
+    fun deleteEverything(onDone: () -> Unit) = viewModelScope.launch {
+        data.deleteEverything(getApplication())
+        _confirmingDelete.value = false
+        onDone()
     }
 
     /** Leaving pacing mode. The person's decision, and nothing else's. */

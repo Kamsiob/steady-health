@@ -15,7 +15,7 @@ import com.kamsiob.steadyhealth.domain.AbilityState
 import com.kamsiob.steadyhealth.engine.Measures
 import com.kamsiob.steadyhealth.engine.VisitSummaryEngine
 import com.kamsiob.steadyhealth.export.Share
-import com.kamsiob.steadyhealth.export.SummaryPage
+import com.kamsiob.steadyhealth.export.SummaryPages
 import com.kamsiob.steadyhealth.export.SummaryPdf
 import com.kamsiob.steadyhealth.ui.screens.SummaryNumber
 import com.kamsiob.steadyhealth.ui.screens.SummaryUiState
@@ -44,8 +44,20 @@ import java.util.Locale
  */
 class SummaryViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val db by lazy { SteadyDatabase.get(application) }
-    private val visits by lazy { VisitRepository(db) }
+    /**
+     * The database, resolved on every use rather than held.
+     *
+     * Deleting everything closes the database and destroys its key, and anything
+     * holding the old instance then throws "Database is closed" on its next
+     * write. That happened on the phone, on the first screen of setup, right
+     * after somebody had deleted everything, which is the worst possible moment
+     * for this app to crash.
+     *
+     * The repositories are stateless wrappers, so resolving them per call costs
+     * an object allocation and removes the whole class of bug.
+     */
+    private val db get() = SteadyDatabase.get(getApplication())
+    private val visits get() = VisitRepository(db)
 
     private val _state = MutableStateFlow(SummaryUiState())
     val state: StateFlow<SummaryUiState> = _state.asStateFlow()
@@ -68,21 +80,11 @@ class SummaryViewModel(application: Application) : AndroidViewModel(application)
      */
     fun export() = viewModelScope.launch {
         val context = getApplication<Application>()
-        val current = _state.value
-        val page = SummaryPage(
-            title = context.getString(R.string.summary_title),
-            window = current.provenance,
-            paragraphs = current.paragraphs.ifEmpty {
-                listOf(context.getString(R.string.summary_fallback))
-            },
-            questionsHeading = context.getString(R.string.summary_questions),
-            questions = current.questions,
-            numbersHeading = context.getString(R.string.summary_numbers),
-            numbers = current.numbers.map { it.name to it.value },
-            notTracked = context.getString(R.string.summary_not_tracked),
-            provenance = current.provenance,
+        val file = SummaryPdf.write(
+            context = context,
+            page = SummaryPages.build(context, db),
+            name = "steady-health-summary.pdf",
         )
-        val file = SummaryPdf.write(context, page, "steady-health-summary.pdf")
         Share.file(
             context = context,
             file = file,

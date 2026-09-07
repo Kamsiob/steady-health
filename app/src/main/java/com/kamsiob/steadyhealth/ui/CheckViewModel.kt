@@ -9,7 +9,9 @@ import com.kamsiob.steadyhealth.data.AbilityRepository
 import com.kamsiob.steadyhealth.data.CheckRepository
 import com.kamsiob.steadyhealth.data.ProfileRepository
 import com.kamsiob.steadyhealth.data.SteadyDatabase
+import com.kamsiob.steadyhealth.domain.AbilityDomain
 import com.kamsiob.steadyhealth.domain.AbilityState
+import com.kamsiob.steadyhealth.engine.AbilityEngine
 import com.kamsiob.steadyhealth.engine.HowCounted
 import com.kamsiob.steadyhealth.engine.LifeSentences
 import com.kamsiob.steadyhealth.engine.Measure
@@ -21,6 +23,7 @@ import com.kamsiob.steadyhealth.ui.screens.CheckDoneUiState
 import com.kamsiob.steadyhealth.ui.screens.CheckIntroUiState
 import com.kamsiob.steadyhealth.ui.screens.CheckMeasureUiState
 import com.kamsiob.steadyhealth.ui.screens.CheckResultRow
+import com.kamsiob.steadyhealth.ui.screens.QuieterUiState
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -44,10 +47,22 @@ import java.time.ZoneId
  */
 class CheckViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val db by lazy { SteadyDatabase.get(application) }
-    private val profile by lazy { ProfileRepository(db) }
-    private val checks by lazy { CheckRepository(db) }
-    private val abilities by lazy { AbilityRepository(db) }
+    /**
+     * The database, resolved on every use rather than held.
+     *
+     * Deleting everything closes the database and destroys its key, and anything
+     * holding the old instance then throws "Database is closed" on its next
+     * write. That happened on the phone, on the first screen of setup, right
+     * after somebody had deleted everything, which is the worst possible moment
+     * for this app to crash.
+     *
+     * The repositories are stateless wrappers, so resolving them per call costs
+     * an object allocation and removes the whole class of bug.
+     */
+    private val db get() = SteadyDatabase.get(getApplication())
+    private val profile get() = ProfileRepository(db)
+    private val checks get() = CheckRepository(db)
+    private val abilities get() = AbilityRepository(db)
     private val motion by lazy { Motion(application) }
 
     private val _intro = MutableStateFlow(CheckIntroUiState())
@@ -58,6 +73,11 @@ class CheckViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _done = MutableStateFlow(CheckDoneUiState())
     val done: StateFlow<CheckDoneUiState> = _done.asStateFlow()
+
+    private val _quieter = MutableStateFlow<QuieterUiState?>(null)
+
+    /** Non-null when an ability has gone one way for three checks and may say so. */
+    val quieter: StateFlow<QuieterUiState?> = _quieter.asStateFlow()
 
     /** True when the last measure has been taken and the result is ready. */
     private val _finished = MutableStateFlow(false)
@@ -217,14 +237,65 @@ class CheckViewModel(application: Application) : AndroidViewModel(application) {
         _finished.value = true
     }
 
-    fun save(onSaved: () -> Unit) = viewModelScope.launch {
+    /**
+     * Save the check, then decide whether anything needs saying about it.
+     *
+     * The Quieter screen is the only thing in this app that tells somebody a
+     * number went the other way, and LOGIC.md 3b holds it to once per ability per
+     * six months. That is enforced here, against a notice row, rather than by the
+     * screen remembering.
+     */
+    fun save(onSaved: (Boolean) -> Unit) = viewModelScope.launch {
+        val today = today()
         checks.save(
-            epochDay = today(),
+            epochDay = today,
             at = System.currentTimeMillis(),
             way = profile.gettingAround(),
             values = taken,
         )
-        onSaved()
+        onSaved(quieterToSay(today))
+    }
+
+    private suspend fun quieterToSay(today: Long): Boolean {
+        val results = checks.results()
+        val domain = AbilityDomain.entries.firstOrNull {
+            AbilityEngine.quieterRun(it, results) && sayableAgain(it, today)
+        } ?: return false
+
+        val changes = AbilityEngine.lastChanges(domain, results)
+        val going = changes.firstOrNull { it.quieter } ?: return false
+        val history = results
+            .filter { it.measureId == going.measure.id }
+            .sortedBy { it.epochDay }
+            .takeLast(AbilityEngine.CHECKS_BEFORE_QUIETER + 1)
+
+        profile.showOnce("$QUIETER_NOTICE:${domain.id}", System.currentTimeMillis())
+        _quieter.value = QuieterUiState(
+            ability = string(nameFor(domain)),
+            sentence = string(R.string.quieter_sentence, string(nameOf(going.measure)).lowercase()),
+            numbers = history.joinToString(", ") { it.value.toInt().toString() } + ".",
+            held = AbilityEngine.whatHeld(domain, results)
+                .joinToString(", ") { string(nameOf(it)) }
+                .ifBlank { string(R.string.quieter_nothing_else) },
+        )
+        return true
+    }
+
+    /**
+     * True when this ability has not had its say in six months.
+     *
+     * The notice row is keyed by ability only, so the check is against how long
+     * ago it was written. LOGIC.md 3b: once per domain per six months, and never
+     * repeated.
+     */
+    private suspend fun sayableAgain(domain: AbilityDomain, today: Long): Boolean {
+        val shown = profile.shownOn("$QUIETER_NOTICE:${domain.id}") ?: return true
+        val days = (System.currentTimeMillis() - shown) / MILLIS_PER_DAY
+        return days >= AbilityEngine.QUIETER_SILENCE_DAYS && today > 0
+    }
+
+    fun dismissQuieter() {
+        _quieter.value = null
     }
 
     /**
@@ -314,8 +385,17 @@ class CheckViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun today(): Long = LocalDate.now(ZoneId.systemDefault()).toEpochDay()
 
+    private fun nameFor(domain: AbilityDomain) = when (domain) {
+        AbilityDomain.GetUp -> R.string.ability_get_up
+        AbilityDomain.Go -> R.string.ability_go
+        AbilityDomain.Carry -> R.string.ability_carry
+        AbilityDomain.Steady -> R.string.ability_steady
+    }
+
     private companion object {
         const val A_SECOND = 1000L
+        const val MILLIS_PER_DAY = 86_400_000L
+        const val QUIETER_NOTICE = "quieter"
     }
 }
 
