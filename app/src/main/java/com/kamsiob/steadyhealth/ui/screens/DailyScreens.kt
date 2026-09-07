@@ -15,6 +15,7 @@ import com.kamsiob.steadyhealth.domain.Units
 import com.kamsiob.steadyhealth.ui.components.Dial
 import com.kamsiob.steadyhealth.ui.components.Paragraph
 import com.kamsiob.steadyhealth.ui.components.PrimaryButton
+import com.kamsiob.steadyhealth.ui.components.SecondaryButton
 import com.kamsiob.steadyhealth.ui.components.SectionTitle
 import com.kamsiob.steadyhealth.ui.components.SteadyScreen
 import com.kamsiob.steadyhealth.ui.components.Stepper
@@ -224,6 +225,37 @@ fun WalkDoneScreen(
             selectedFill = SteadyPalette.GreenL,
             selectedOutline = SteadyPalette.Green,
         )
+    }
+}
+
+/** What the offer screen draws. Grid screen 12. */
+data class OfferUiState(val walkName: String = "", val instruction: String = "")
+
+/**
+ * A longer walk is ready.
+ *
+ * Offered, never assigned, which is why both answers are buttons of equal weight
+ * and why the second one is "Not yet" rather than a dismissal. Saying not yet
+ * costs nothing and suppresses the offer for a fortnight.
+ */
+@Composable
+fun OfferScreen(
+    state: OfferUiState,
+    onAccept: () -> Unit,
+    onNotYet: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    SteadyScreen(
+        title = stringResource(R.string.offer_title),
+        onBack = onNotYet,
+        modifier = modifier,
+        footer = {
+            PrimaryButton(label = stringResource(R.string.offer_yes), onClick = onAccept)
+            SecondaryButton(label = stringResource(R.string.offer_no), onClick = onNotYet)
+        },
+    ) {
+        SectionTitle(stringResource(R.string.offer_line, state.walkName))
+        Paragraph(state.instruction)
     }
 }
 

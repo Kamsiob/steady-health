@@ -19,6 +19,7 @@ import com.kamsiob.steadyhealth.domain.Exclusion
 import com.kamsiob.steadyhealth.domain.FloorAccess
 import com.kamsiob.steadyhealth.domain.GettingAround
 import com.kamsiob.steadyhealth.domain.Ladder
+import com.kamsiob.steadyhealth.domain.NextDayFeel
 import com.kamsiob.steadyhealth.domain.PemAnswer
 import com.kamsiob.steadyhealth.domain.ReadinessFlag
 import com.kamsiob.steadyhealth.domain.Stairs
@@ -26,6 +27,7 @@ import com.kamsiob.steadyhealth.domain.TalkTest
 import com.kamsiob.steadyhealth.domain.Units
 import com.kamsiob.steadyhealth.domain.WalkTolerance
 import com.kamsiob.steadyhealth.domain.WeightSource
+import com.kamsiob.steadyhealth.engine.DoneSession
 import com.kamsiob.steadyhealth.engine.Reading
 import com.kamsiob.steadyhealth.engine.Smoothed
 import com.kamsiob.steadyhealth.engine.WeightEngine
@@ -189,6 +191,28 @@ class MovementRepository(private val db: SteadyDatabase) {
         db.sessions().between(from, to)
 
     suspend fun latest(): SessionEntity? = db.sessions().latest()
+
+    /** Every session on one ladder, in the shape the progression rules take. */
+    suspend fun doneSessions(ladder: Ladder): List<DoneSession> =
+        db.sessions().allOnce()
+            .filter { it.ladder == ladder.id }
+            .map {
+                DoneSession(
+                    epochDay = it.epochDay,
+                    stepIndex = it.stepIndex,
+                    durationSeconds = it.durationSeconds,
+                    talkTest = it.talkTest?.let(TalkTest::fromId),
+                    nextDayFeel = it.nextDayFeel?.let(NextDayFeel::fromId),
+                )
+            }
+
+    suspend fun declineOffer(ladder: Ladder, until: Long) {
+        db.ladders().upsertState(state(ladder).copy(offerDeclinedUntilDay = until))
+    }
+
+    suspend fun recordOffered(ladder: Ladder, day: Long) {
+        db.ladders().upsertState(state(ladder).copy(lastOfferedDay = day))
+    }
 }
 
 /** The person's own list, and their ratings of it. */

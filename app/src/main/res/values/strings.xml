@@ -230,6 +230,12 @@
     <string name="talk_just">Just about</string>
     <string name="talk_no">No</string>
     <string name="walk_done_save">Save</string>
+    <string name="offer_title">A longer walk is ready</string>
+    <string name="offer_line">%1$s is ready when you are.</string>
+    <string name="offer_yes">Try the longer one</string>
+    <string name="offer_no">Not yet</string>
+    <string name="sore_rule">If you\'re sore tomorrow, the app will suggest an easier walk. That\'s normal.</string>
+    <string name="stepped_back">Your next walk is a shorter one for now.</string>
 
     <!-- ===================== Move ===================== -->
     <string name="move_what_you_want">What you said you want</string>

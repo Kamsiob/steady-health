@@ -29,4 +29,5 @@ object Route {
     const val SAY_HOW = "say-how"
     const val WALKING = "walking"
     const val WALK_DONE = "walk-done"
+    const val OFFER = "offer"
 }

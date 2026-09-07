@@ -18,11 +18,14 @@ import com.kamsiob.steadyhealth.domain.Ladder
 import com.kamsiob.steadyhealth.domain.TalkTest
 import com.kamsiob.steadyhealth.domain.Units
 import com.kamsiob.steadyhealth.engine.Ladders
+import com.kamsiob.steadyhealth.engine.Progression
+import com.kamsiob.steadyhealth.engine.ProgressionEngine
 import com.kamsiob.steadyhealth.ui.screens.AbilitiesUiState
 import com.kamsiob.steadyhealth.ui.screens.AbilityRowState
 import com.kamsiob.steadyhealth.ui.screens.AbilityTileState
 import com.kamsiob.steadyhealth.ui.screens.MoveItem
 import com.kamsiob.steadyhealth.ui.screens.MoveUiState
+import com.kamsiob.steadyhealth.ui.screens.OfferUiState
 import com.kamsiob.steadyhealth.ui.screens.SayHowUiState
 import com.kamsiob.steadyhealth.ui.screens.TodayUiState
 import com.kamsiob.steadyhealth.ui.screens.TrackedItemState
@@ -79,6 +82,11 @@ class SteadyViewModel(application: Application) : AndroidViewModel(application) 
 
     private val _walkDone = MutableStateFlow(WalkDoneUiState())
     val walkDone: StateFlow<WalkDoneUiState> = _walkDone.asStateFlow()
+
+    private val _offer = MutableStateFlow<OfferUiState?>(null)
+
+    /** Non-null when the engine decided a longer walk is ready. Offered, never assigned. */
+    val offer: StateFlow<OfferUiState?> = _offer.asStateFlow()
 
     private val _abilities = MutableStateFlow(AbilitiesUiState())
     val abilitiesState: StateFlow<AbilitiesUiState> = _abilities.asStateFlow()
@@ -289,10 +297,59 @@ class SteadyViewModel(application: Application) : AndroidViewModel(application) 
 
     fun setTalkTest(answer: TalkTest) = _walkDone.update { it.copy(talkTest = answer) }
 
+    /**
+     * Save the talk test, then ask the engine what happens next.
+     *
+     * This is the one place progression runs, after the answer that decides it.
+     * A step back is applied immediately, because it is a decision about safety
+     * and there is nothing to accept. An offer is only ever shown.
+     */
     fun saveWalkDone() = viewModelScope.launch {
         val answer = _walkDone.value.talkTest ?: return@launch
         walkSessionId?.let { movement.setTalkTest(it, answer) }
+
+        val state = movement.state(Ladder.Walking)
+        val decision = ProgressionEngine.decide(
+            currentStepIndex = state.currentStepIndex,
+            sessions = movement.doneSessions(Ladder.Walking),
+            stepAmounts = Ladders.walking.map { it.amount },
+            today = today(),
+            offerDeclinedUntilDay = state.offerDeclinedUntilDay,
+        )
+
+        when (decision) {
+            is Progression.StepBack -> movement.moveTo(Ladder.Walking, decision.toStepIndex)
+            is Progression.Offer -> {
+                movement.recordOffered(Ladder.Walking, today())
+                val step = Ladders.walking[decision.toStepIndex]
+                _offer.value = OfferUiState(
+                    walkName = movement.nameFor(Ladder.Walking, decision.toStepIndex) ?: step.name,
+                    instruction = step.instruction,
+                )
+            }
+            Progression.Stay -> Unit
+        }
+
+        refreshToday()
         refreshMove()
+    }
+
+    /** They said yes. The step moves and the offer is gone. */
+    fun acceptOffer() = viewModelScope.launch {
+        val state = movement.state(Ladder.Walking)
+        movement.moveTo(Ladder.Walking, state.currentStepIndex + 1)
+        _offer.value = null
+        refreshToday()
+        refreshMove()
+    }
+
+    /** They said not yet, which costs nothing and is not asked again for a fortnight. */
+    fun declineOffer() = viewModelScope.launch {
+        movement.declineOffer(
+            Ladder.Walking,
+            today() + ProgressionEngine.OFFER_DECLINED_DAYS,
+        )
+        _offer.value = null
     }
 
     // --- Abilities -----------------------------------------------------------
