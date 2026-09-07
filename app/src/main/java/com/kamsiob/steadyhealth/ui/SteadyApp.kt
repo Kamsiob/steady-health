@@ -29,6 +29,8 @@ import com.kamsiob.steadyhealth.ui.nav.Route
 import com.kamsiob.steadyhealth.ui.nav.Tab
 import com.kamsiob.steadyhealth.ui.onboarding.OnboardingFlow
 import com.kamsiob.steadyhealth.ui.screens.AbilitiesScreen
+import com.kamsiob.steadyhealth.ui.screens.AskScreen
+import com.kamsiob.steadyhealth.ui.screens.CardScreen
 import com.kamsiob.steadyhealth.ui.screens.GettingAroundScreen
 import com.kamsiob.steadyhealth.ui.screens.LeaveOutSettingsScreen
 import com.kamsiob.steadyhealth.ui.screens.MoveScreen
@@ -55,17 +57,23 @@ import kotlinx.coroutines.delay
 @Composable
 fun SteadyApp() {
     val viewModel: SteadyViewModel = viewModel()
+    val askViewModel: AskViewModel = viewModel()
+    val settingsViewModel: SettingsViewModel = viewModel()
     val onboarded by viewModel.onboardingComplete.collectAsStateWithLifecycle()
 
     when (onboarded) {
         null -> Box(Modifier.fillMaxSize().background(SteadyPalette.Ground))
         false -> OnboardingFlow(onFinished = viewModel::onboardingFinished)
-        true -> Tabs(viewModel)
+        true -> Tabs(viewModel, askViewModel, settingsViewModel)
     }
 }
 
 @Composable
-private fun Tabs(viewModel: SteadyViewModel) {
+private fun Tabs(
+    viewModel: SteadyViewModel,
+    askViewModel: AskViewModel,
+    settingsViewModel: SettingsViewModel,
+) {
     val navController = rememberNavController()
     var tab by rememberSaveable { mutableStateOf(Tab.Today) }
     val back: () -> Unit = { navController.popBackStack() }
@@ -94,9 +102,12 @@ private fun Tabs(viewModel: SteadyViewModel) {
                                         navController.navigate(Route.SAY_HOW)
                                     },
                                     onMove = { tab = Tab.Move },
-                                    onAsk = {},
+                                    onAsk = {
+                                        askViewModel.openAsk()
+                                        navController.navigate(Route.ASK)
+                                    },
                                     onSettings = {
-                                        viewModel.openSettings()
+                                        settingsViewModel.openSettings()
                                         navController.navigate(Route.SETTINGS)
                                     },
                                     onNotice = viewModel::dismissNotice,
@@ -105,6 +116,7 @@ private fun Tabs(viewModel: SteadyViewModel) {
 
                             Tab.Move -> {
                                 val state by viewModel.move.collectAsStateWithLifecycle()
+                                LaunchedEffect(Unit) { viewModel.refresh() }
                                 MoveScreen(
                                     state = state,
                                     onGo = {
@@ -116,13 +128,15 @@ private fun Tabs(viewModel: SteadyViewModel) {
 
                             Tab.Abilities -> {
                                 val state by viewModel.abilitiesState.collectAsStateWithLifecycle()
+                                LaunchedEffect(Unit) { viewModel.refresh() }
                                 AbilitiesScreen(state = state, onAbility = {})
                             }
                         }
                     }
 
                     dailyRoutes(viewModel, navController, back)
-                    settingsRoutes(viewModel, navController, back)
+                    askRoutes(askViewModel, navController, back)
+                    settingsRoutes(settingsViewModel, navController, back)
 
                     composable(Route.WALK_DONE) {
                         val state by viewModel.walkDone.collectAsStateWithLifecycle()
@@ -203,6 +217,7 @@ private fun NavGraphBuilder.dailyRoutes(
             onSentence = viewModel::setSentence,
             onSleep = viewModel::setSleep,
             onRating = viewModel::setDayRating,
+            onTag = viewModel::toggleTag,
             onSave = {
                 viewModel.saveDay()
                 back()
@@ -237,8 +252,38 @@ private fun NavGraphBuilder.dailyRoutes(
     }
 }
 
+/**
+ * Ask a question and one card.
+ *
+ * Their own function and their own view model, because the cards are constants
+ * and the search is a word match: nothing here touches the database.
+ */
+private fun NavGraphBuilder.askRoutes(
+    viewModel: AskViewModel,
+    navController: NavHostController,
+    back: () -> Unit,
+) {
+    composable(Route.ASK) {
+        val state by viewModel.ask.collectAsStateWithLifecycle()
+        AskScreen(
+            state = state,
+            onQuestion = viewModel::setQuestion,
+            onCard = {
+                viewModel.openCard(it)
+                navController.navigate(Route.CARD)
+            },
+            onBack = back,
+        )
+    }
+
+    composable(Route.CARD) {
+        val state by viewModel.card.collectAsStateWithLifecycle()
+        CardScreen(state = state, onBack = back)
+    }
+}
+
 private fun NavGraphBuilder.settingsRoutes(
-    viewModel: SteadyViewModel,
+    viewModel: SettingsViewModel,
     navController: NavHostController,
     back: () -> Unit,
 ) {

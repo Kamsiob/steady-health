@@ -31,6 +31,14 @@ data class AbilitiesUiState(
     val abilities: List<AbilityRowState> = emptyList(),
     val items: List<TrackedItemState> = emptyList(),
     val waiting: Boolean = true,
+
+    /**
+     * The Sunday write-up, when there is a week worth reading back.
+     *
+     * It lives on this tab rather than on Today because it is read-back, and
+     * read-back is what this tab is for. Today is for today.
+     */
+    val week: List<String> = emptyList(),
 )
 
 /**
@@ -64,6 +72,11 @@ fun AbilitiesScreen(
                 onClick = { onAbility(ability.domain) },
                 glyph = { AbilityGlyph(ability.domain) },
             )
+        }
+
+        if (state.week.isNotEmpty()) {
+            SectionTitle(stringResource(R.string.abilities_your_week))
+            state.week.forEach { paragraph -> Paragraph(paragraph) }
         }
 
         if (state.items.isNotEmpty()) {

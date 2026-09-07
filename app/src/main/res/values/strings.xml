@@ -313,6 +313,54 @@
     <string name="feel_same">About the same</string>
     <string name="feel_tired">Tired</string>
 
+    <!-- Ask a question. The cards themselves are in cards.xml. -->
+    <string name="abilities_your_week">Your week</string>
+    <string name="ask_title">Ask a question</string>
+    <string name="say_tags">Anything else about today?</string>
+    <string name="say_tags_reader">Here\'s what I picked up. From what you said. Tap anything that\'s wrong, or add one.</string>
+    <string name="ask_placeholder">What would you like to know?</string>
+    <string name="ask_everything">Everything here</string>
+    <string name="ask_closest">The closest ones</string>
+    <string name="card_source">Source: %1$s</string>
+    <string name="ask_nothing_fits">There isn\'t a card for that yet. These are the nearest ones.</string>
+
+
+    <!--
+      The twenty-four, from AI.md job 2. Fixed, and no tag is a judgement:
+      there is no word here for a bad day, and there is nowhere to add one.
+    -->
+    <string name="tag_group_food">Food</string>
+    <string name="tag_group_sleep">Sleep</string>
+    <string name="tag_group_mood">Mood</string>
+    <string name="tag_group_movement">Movement</string>
+    <string name="tag_group_body">Body</string>
+    <string name="tag_group_life">Life</string>
+
+    <string name="tag_ate_out">Ate out</string>
+    <string name="tag_cooked">Cooked</string>
+    <string name="tag_ate_light">Ate light</string>
+    <string name="tag_ate_a_lot">Ate a lot</string>
+    <string name="tag_late_night">Late night</string>
+    <string name="tag_snacked">Snacked</string>
+    <string name="tag_slept_well">Slept well</string>
+    <string name="tag_slept_badly">Slept badly</string>
+    <string name="tag_short_sleep">Short sleep</string>
+    <string name="tag_rested">Rested</string>
+    <string name="tag_stressed">Stressed</string>
+    <string name="tag_calm">Calm</string>
+    <string name="tag_low">Low</string>
+    <string name="tag_good">Good</string>
+    <string name="tag_walked">Walked</string>
+    <string name="tag_active">Active</string>
+    <string name="tag_sat_a_lot">Sat a lot</string>
+    <string name="tag_sore">Sore</string>
+    <string name="tag_pain">Pain</string>
+    <string name="tag_unwell">Unwell</string>
+    <string name="tag_busy">Busy</string>
+    <string name="tag_travel">Travel</string>
+    <string name="tag_social">Social</string>
+    <string name="tag_family">Family</string>
+
     <string name="notice_ok">Got it</string>
 
     <!-- Settings, grid screen 22. -->

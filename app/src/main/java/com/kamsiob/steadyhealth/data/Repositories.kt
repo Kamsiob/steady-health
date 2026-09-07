@@ -1,15 +1,24 @@
 package com.kamsiob.steadyhealth.data
 
+import com.kamsiob.steadyhealth.ai.Synonym
+import com.kamsiob.steadyhealth.ai.TagCount
+import com.kamsiob.steadyhealth.ai.TagReader
+import com.kamsiob.steadyhealth.ai.WeekBrief
+import com.kamsiob.steadyhealth.ai.WeekNote
+import com.kamsiob.steadyhealth.ai.WeightDirection
 import com.kamsiob.steadyhealth.data.entity.CheckInEntity
+import com.kamsiob.steadyhealth.data.entity.CheckInTagEntity
 import com.kamsiob.steadyhealth.data.entity.ExclusionEntity
 import com.kamsiob.steadyhealth.data.entity.ItemRatingEntity
 import com.kamsiob.steadyhealth.data.entity.LadderStateEntity
 import com.kamsiob.steadyhealth.data.entity.NoticeEntity
+import com.kamsiob.steadyhealth.data.entity.PersonSynonymEntity
 import com.kamsiob.steadyhealth.data.entity.ReadinessEntity
 import com.kamsiob.steadyhealth.data.entity.SessionEntity
 import com.kamsiob.steadyhealth.data.entity.SettingEntity
 import com.kamsiob.steadyhealth.data.entity.StepNameEntity
 import com.kamsiob.steadyhealth.data.entity.TrackedItemEntity
+import com.kamsiob.steadyhealth.data.entity.WeeklyNoteEntity
 import com.kamsiob.steadyhealth.data.entity.WeighInEntity
 import com.kamsiob.steadyhealth.domain.AbilityDomain
 import com.kamsiob.steadyhealth.domain.Anchor
@@ -29,6 +38,7 @@ import com.kamsiob.steadyhealth.domain.WalkTolerance
 import com.kamsiob.steadyhealth.domain.WeightSource
 import com.kamsiob.steadyhealth.engine.DoneSession
 import com.kamsiob.steadyhealth.engine.Envelope
+import com.kamsiob.steadyhealth.engine.Ladders
 import com.kamsiob.steadyhealth.engine.PacingEngine
 import com.kamsiob.steadyhealth.engine.Reading
 import com.kamsiob.steadyhealth.engine.Smoothed
@@ -127,6 +137,42 @@ class DayRepository(private val db: SteadyDatabase) {
     }
 
     suspend fun count(): Int = db.checkIns().count()
+
+    /**
+     * The tags on one day.
+     *
+     * Stored against the check-in rather than the day, because a day with no
+     * sentence has no tags either: the tags are about what somebody said.
+     */
+    suspend fun tagsFor(epochDay: Long): List<String> =
+        db.checkIns().forDay(epochDay)?.let { row ->
+            db.checkIns().tagsFor(row.id).map { it.tag }
+        }.orEmpty()
+
+    suspend fun setTags(epochDay: Long, tags: List<String>, fromReader: Set<String> = emptySet()) {
+        val row = db.checkIns().forDay(epochDay) ?: return
+        db.checkIns().clearTags(row.id)
+        db.checkIns().insertTags(
+            tags.map { CheckInTagEntity(checkInId = row.id, tag = it, fromReader = it in fromReader) },
+        )
+    }
+
+    /** Every tag ever chosen, with the day it was on. For the week and the patterns. */
+    suspend fun tagDays(): List<Pair<Long, String>> {
+        val days = db.checkIns().allOnce().associate { it.id to it.epochDay }
+        return db.checkIns().allTagsOnce().mapNotNull { tag ->
+            days[tag.checkInId]?.let { it to tag.tag }
+        }
+    }
+
+    /** What the person has taught the app one of their own phrases means. */
+    suspend fun synonyms(): List<Synonym> =
+        db.synonyms().all().map { Synonym(it.phrase, it.tag) }
+
+    suspend fun learn(phrase: String, tag: String, at: Long) {
+        if (!TagReader.learnable(phrase)) return
+        db.synonyms().upsert(PersonSynonymEntity(phrase.trim().lowercase(), tag, at))
+    }
 }
 
 /** Sessions and where the person is on each ladder. */
@@ -383,5 +429,105 @@ class ProfileRepository(private val db: SteadyDatabase) {
         const val ENVELOPE_MINUTES = "envelope_minutes"
         const val ENVELOPE_DAYS = "envelope_days"
         const val ENVELOPE_START = "envelope_start_minutes"
+    }
+}
+
+/**
+ * The Sunday write-up, and everything it is allowed to know.
+ *
+ * The brief is assembled here, from rows, and handed to [WeekWriter] or to the
+ * model as a value. Neither of them can reach past it: the weight arrives as a
+ * direction word rather than a number, and the restriction tags are filtered on
+ * the way out rather than trusted to be ignored.
+ */
+class WeekRepository(private val db: SteadyDatabase) {
+
+    /**
+     * Assemble the week that starts on [weekStartDay].
+     *
+     * Returns null when there is nothing at all, so the caller can say nothing
+     * rather than say something about a week that did not happen.
+     */
+    @Suppress("LongParameterList")
+    suspend fun brief(
+        weekStartDay: Long,
+        walkName: String,
+        whatTheyWant: String,
+        showNumbers: Boolean,
+        stepOffered: Boolean,
+    ): WeekBrief {
+        val last = weekStartDay + DAYS_IN_WEEK - 1
+        val sessions = db.sessions().between(weekStartDay, last)
+        val counted = sessions.filter { it.durationSeconds >= Ladders.COUNTS_AS_A_SESSION_SECONDS }
+        val checkIns = db.checkIns().allOnce().filter { it.epochDay in weekStartDay..last }
+        val tagsByDay = tagCounts(weekStartDay, last)
+
+        return WeekBrief(
+            daysMoved = counted.map { it.epochDay }.distinct().size,
+            minutes = if (showNumbers) counted.sumOf { it.durationSeconds } / SECONDS_PER_MINUTE else null,
+            tags = tagsByDay,
+            dayRatings = checkIns.mapNotNull { it.dayRating?.let(DayRating::fromId) },
+            sleepAverageHours = checkIns.mapNotNull { it.sleepHalfHours }
+                .takeIf { it.isNotEmpty() }
+                ?.average()
+                ?.div(2),
+            walkName = walkName,
+            stepOffered = stepOffered,
+            talkResults = sessions.mapNotNull { it.talkTest?.let(TalkTest::fromId) },
+            weightDirection = direction(weekStartDay, last),
+            whatTheyWant = whatTheyWant,
+        )
+    }
+
+    private suspend fun tagCounts(from: Long, to: Long): List<TagCount> {
+        val days = db.checkIns().allOnce()
+            .filter { it.epochDay in from..to }
+            .associate { it.id to it.epochDay }
+        return db.checkIns().allTagsOnce()
+            .filter { it.checkInId in days.keys }
+            .groupBy { it.tag }
+            .map { (tag, rows) -> TagCount(tag, rows.mapNotNull { days[it.checkInId] }.distinct().size) }
+            .sortedByDescending { it.days }
+    }
+
+    /**
+     * Which way the smoothed weight went, as a word.
+     *
+     * The number never leaves this function. LOGIC.md section 10 is explicit that
+     * the model is not passed one, and the simplest way to guarantee that is for
+     * the brief to have nowhere to put it.
+     */
+    private suspend fun direction(from: Long, to: Long): WeightDirection? {
+        val readings = db.weighIns().allOnce().filter { it.epochDay in from..to }
+        val first = readings.minByOrNull { it.epochDay } ?: return null
+        val last = readings.maxByOrNull { it.epochDay } ?: return null
+        if (first.epochDay == last.epochDay) return null
+        val change = last.smoothedKg - first.smoothedKg
+        return when {
+            change < -WeightEngine.SAME_BAND_KG -> WeightDirection.ALittleLower
+            change > WeightEngine.SAME_BAND_KG -> WeightDirection.ALittleHigher
+            else -> WeightDirection.AboutTheSame
+        }
+    }
+
+    suspend fun saved(weekStartDay: Long): WeekNote? = db.notes().note(weekStartDay)?.let {
+        WeekNote(it.paragraphs.split(PARAGRAPH_BREAK).filter(String::isNotBlank), it.byModel)
+    }
+
+    suspend fun save(weekStartDay: Long, note: WeekNote, at: Long) {
+        db.notes().upsertNote(
+            WeeklyNoteEntity(
+                weekStartDay = weekStartDay,
+                writtenAt = at,
+                paragraphs = note.paragraphs.joinToString(PARAGRAPH_BREAK),
+                byModel = note.fromModel,
+            ),
+        )
+    }
+
+    private companion object {
+        const val DAYS_IN_WEEK = 7
+        const val SECONDS_PER_MINUTE = 60
+        const val PARAGRAPH_BREAK = "\n\n"
     }
 }

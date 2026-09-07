@@ -4,12 +4,16 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.kamsiob.steadyhealth.R
+import com.kamsiob.steadyhealth.ai.Tags
+import com.kamsiob.steadyhealth.ai.WeekFilter
+import com.kamsiob.steadyhealth.ai.WeekWriter
 import com.kamsiob.steadyhealth.data.AbilityRepository
 import com.kamsiob.steadyhealth.data.DayEntry
 import com.kamsiob.steadyhealth.data.DayRepository
 import com.kamsiob.steadyhealth.data.MovementRepository
 import com.kamsiob.steadyhealth.data.ProfileRepository
 import com.kamsiob.steadyhealth.data.SteadyDatabase
+import com.kamsiob.steadyhealth.data.WeekRepository
 import com.kamsiob.steadyhealth.data.WeightRepository
 import com.kamsiob.steadyhealth.domain.AbilityDomain
 import com.kamsiob.steadyhealth.domain.AbilityState
@@ -17,7 +21,6 @@ import com.kamsiob.steadyhealth.domain.DayRating
 import com.kamsiob.steadyhealth.domain.Exclusion
 import com.kamsiob.steadyhealth.domain.GettingAround
 import com.kamsiob.steadyhealth.domain.Ladder
-import com.kamsiob.steadyhealth.domain.PemAnswer
 import com.kamsiob.steadyhealth.domain.TalkTest
 import com.kamsiob.steadyhealth.domain.Units
 import com.kamsiob.steadyhealth.engine.DoneSession
@@ -39,7 +42,7 @@ import com.kamsiob.steadyhealth.ui.screens.MoveItem
 import com.kamsiob.steadyhealth.ui.screens.MoveUiState
 import com.kamsiob.steadyhealth.ui.screens.OfferUiState
 import com.kamsiob.steadyhealth.ui.screens.SayHowUiState
-import com.kamsiob.steadyhealth.ui.screens.SettingsUiState
+import com.kamsiob.steadyhealth.ui.screens.TagSection
 import com.kamsiob.steadyhealth.ui.screens.TodayUiState
 import com.kamsiob.steadyhealth.ui.screens.TrackedItemState
 import com.kamsiob.steadyhealth.ui.screens.WalkDoneUiState
@@ -74,6 +77,7 @@ class SteadyViewModel(application: Application) : AndroidViewModel(application) 
     internal val days by lazy { DayRepository(db) }
     internal val abilities by lazy { AbilityRepository(db) }
     internal val movement by lazy { MovementRepository(db) }
+    internal val weeks by lazy { WeekRepository(db) }
 
     private val _onboardingComplete = MutableStateFlow<Boolean?>(null)
     val onboardingComplete: StateFlow<Boolean?> = _onboardingComplete.asStateFlow()
@@ -105,14 +109,6 @@ class SteadyViewModel(application: Application) : AndroidViewModel(application) 
 
     /** One sentence the app owes the person, shown once and then gone. */
     val notice: StateFlow<String?> = _notice.asStateFlow()
-
-    private val _settings = MutableStateFlow(SettingsUiState())
-    val settings: StateFlow<SettingsUiState> = _settings.asStateFlow()
-
-    private val _pattern = MutableStateFlow<PemAnswer?>(null)
-
-    /** The pattern question's current answer, for the settings screen. */
-    val pattern: StateFlow<PemAnswer?> = _pattern.asStateFlow()
 
     private val _abilities = MutableStateFlow(AbilitiesUiState())
     val abilitiesState: StateFlow<AbilitiesUiState> = _abilities.asStateFlow()
@@ -343,11 +339,38 @@ class SteadyViewModel(application: Application) : AndroidViewModel(application) 
 
     fun openSayHow() = viewModelScope.launch {
         val existing = days.forDay(today())
+        chosenTags = days.tagsFor(today()).toSet()
+        suggestedTags = emptySet()
         _sayHow.value = SayHowUiState(
             sentence = existing?.sentence.orEmpty(),
             sleepHalfHours = existing?.sleepHalfHours ?: DEFAULT_SLEEP_HALF_HOURS,
             dayRating = existing?.dayRating,
+            tags = tagSections(),
+            fromReader = false,
         )
+    }
+
+    /**
+     * The grid, in its six groups.
+     *
+     * Without the reader installed this is how tags get chosen, so it is not a
+     * confirmation step behind a suggestion; it is the feature. AI.md: "without
+     * the model, tags are chosen from the grid by hand."
+     */
+    private fun tagSections(): List<TagSection> =
+        TagLabels.sections(getApplication(), chosen = chosenTags, suggested = suggestedTags)
+
+    /**
+     * Tap a tag.
+     *
+     * Turning off something the reader suggested is a correction, and AI.md says
+     * corrections are how the mapping improves without the vocabulary growing. It
+     * is stored when the day is saved, against the words that were on screen.
+     */
+    fun toggleTag(id: String) {
+        if (id !in Tags.ids) return
+        chosenTags = if (id in chosenTags) chosenTags - id else chosenTags + id
+        _sayHow.update { it.copy(tags = tagSections()) }
     }
 
     fun setSentence(text: String) = _sayHow.update { it.copy(sentence = text) }
@@ -355,6 +378,9 @@ class SteadyViewModel(application: Application) : AndroidViewModel(application) 
     fun setSleep(halfHours: Int) = _sayHow.update { it.copy(sleepHalfHours = halfHours) }
 
     fun setDayRating(rating: DayRating) = _sayHow.update { it.copy(dayRating = rating) }
+
+    private var chosenTags: Set<String> = emptySet()
+    private var suggestedTags: Set<String> = emptySet()
 
     fun saveDay() = viewModelScope.launch {
         val said = _sayHow.value
@@ -368,6 +394,7 @@ class SteadyViewModel(application: Application) : AndroidViewModel(application) 
             ),
             at = System.currentTimeMillis(),
         )
+        days.setTags(today(), chosenTags.toList(), suggestedTags)
         refreshToday()
     }
 
@@ -635,143 +662,6 @@ class SteadyViewModel(application: Application) : AndroidViewModel(application) 
         _offer.value = null
     }
 
-    // --- Settings ------------------------------------------------------------
-
-    fun openSettings() = viewModelScope.launch { refreshSettings() }
-
-    private suspend fun refreshSettings() {
-        val context = getApplication<Application>()
-        val chosen = profile.exclusions()
-        _pattern.value = profile.pem()
-        _settings.value = SettingsUiState(
-            gettingAround = way.way,
-            gettingAroundLabel = context.getString(labelFor(way.way)),
-            withTherapist = profile.withTherapist(),
-            weighsIn = profile.weighsIn(),
-            showNumbers = profile.showNumbers(),
-            units = profile.units(),
-            exclusions = chosen,
-            exclusionsLabel = if (chosen.isEmpty()) {
-                context.getString(R.string.settings_leave_out_none)
-            } else {
-                chosen.joinToString(", ") { context.getString(labelFor(it)) }
-            },
-            pacing = pacing,
-            pemLabel = context.getString(labelFor(_pattern.value)),
-            envelopeMinutes = envelope.minutes,
-            envelopeDays = envelope.daysPerWeek,
-        )
-    }
-
-    /**
-     * Change how somebody gets around, after setup.
-     *
-     * Everything they have done stays where it is: sessions carry the ladder they
-     * were done on, so a walk from before a wheelchair is still a walk. What
-     * changes is what the app offers from here.
-     */
-    fun setGettingAround(value: GettingAround) = viewModelScope.launch {
-        profile.setGettingAround(value)
-        profile.setWeighsIn(WaysOfGettingAround.forWay(value).weighsIn)
-        refreshAll()
-    }
-
-    fun setTherapist(value: Boolean) = viewModelScope.launch {
-        profile.setWithTherapist(value)
-        refreshSettings()
-    }
-
-    fun setWeighsIn(value: Boolean) = viewModelScope.launch {
-        profile.setWeighsIn(value)
-        refreshSettings()
-        refreshToday()
-    }
-
-    fun setShowNumbers(value: Boolean) = viewModelScope.launch {
-        profile.setShowNumbers(value)
-        refreshSettings()
-        refreshToday()
-    }
-
-    fun toggleExclusion(value: Exclusion) = viewModelScope.launch {
-        val next = if (value in exclusions) exclusions - value else exclusions + value
-        profile.setExclusions(next, System.currentTimeMillis())
-        refreshAll()
-    }
-
-    fun setEnvelopeMinutes(value: Int) = viewModelScope.launch {
-        setEnvelope(envelope.copy(minutes = value.coerceIn(PacingEngine.FLOOR_MINUTES, MAX_ENVELOPE_MINUTES)))
-    }
-
-    fun setEnvelopeDays(value: Int) = viewModelScope.launch {
-        setEnvelope(envelope.copy(daysPerWeek = value.coerceIn(1, DAYS_IN_WEEK)))
-    }
-
-    private suspend fun setEnvelope(value: Envelope) {
-        profile.setEnvelope(value)
-        envelope = value
-        refreshSettings()
-        refreshMove()
-    }
-
-    /** Leaving pacing mode. The person's decision, and nothing else's. */
-    fun stopPacing() = viewModelScope.launch {
-        profile.setPacing(false)
-        pacing = false
-        refreshAll()
-    }
-
-    private suspend fun refreshAll() {
-        loadProfile()
-        refreshSettings()
-        refreshToday()
-        refreshMove()
-        refreshAbilities()
-    }
-
-    private fun labelFor(value: PemAnswer?) = when (value) {
-        PemAnswer.Yes -> R.string.start_pem_yes
-        PemAnswer.Sometimes -> R.string.start_pem_sometimes
-        else -> R.string.start_pem_no
-    }
-
-    /**
-     * The pattern question, answered again.
-     *
-     * Yes turns pacing mode on, because LOGIC.md section 7 makes it a trigger.
-     * Changing the answer back does not turn pacing mode off: leaving is its own
-     * decision, made on its own screen, and the app does not make it for anybody.
-     */
-    fun setPattern(value: PemAnswer) = viewModelScope.launch {
-        profile.setPem(value)
-        if (value == PemAnswer.Yes && !pacing) {
-            profile.setPacing(true)
-            profile.setEnvelope(envelope)
-        }
-        refreshAll()
-    }
-
-    private fun labelFor(value: GettingAround) = when (value) {
-        GettingAround.OnFeet -> R.string.around_on_feet
-        GettingAround.Walker -> R.string.around_walker
-        GettingAround.Wheelchair -> R.string.around_wheelchair
-        GettingAround.InBed -> R.string.around_in_bed
-    }
-
-    fun labelFor(value: Exclusion) = when (value) {
-        Exclusion.Pushing -> R.string.leave_out_pushing
-        Exclusion.StomachStrain -> R.string.leave_out_stomach
-        Exclusion.GettingOnTheFloor -> R.string.leave_out_floor
-        Exclusion.Impact -> R.string.leave_out_impact
-        Exclusion.DeepKneeBending -> R.string.leave_out_knee
-        Exclusion.LiftingOverhead -> R.string.leave_out_overhead
-        Exclusion.TwistingBack -> R.string.leave_out_twisting
-        Exclusion.DeepForwardBending -> R.string.leave_out_forward
-        Exclusion.ArchingBack -> R.string.leave_out_arching
-        Exclusion.LyingFlat -> R.string.leave_out_lying
-        Exclusion.BreathHolding -> R.string.leave_out_breath
-    }
-
     // --- Abilities -----------------------------------------------------------
 
     private suspend fun refreshAbilities() {
@@ -800,7 +690,35 @@ class SteadyViewModel(application: Application) : AndroidViewModel(application) 
                 )
             },
             waiting = true,
+            week = weekNote(),
         )
+    }
+
+    /**
+     * The Sunday write-up for the week just gone.
+     *
+     * Written once and stored, so it does not quietly change under somebody who
+     * read it yesterday. Without the reader installed the engine fills a template,
+     * which is what most people will see, so it is written the same way and held
+     * to the same rules.
+     */
+    private suspend fun weekNote(): List<String> {
+        val monday = LocalDate.now(ZoneId.systemDefault()).with(DayOfWeek.MONDAY).toEpochDay()
+        weeks.saved(monday)?.let { return it.paragraphs }
+
+        val step = movement.state(primaryLadder).currentStepIndex
+        val brief = weeks.brief(
+            weekStartDay = monday,
+            walkName = nextThingName(step),
+            whatTheyWant = abilities.items().firstOrNull()?.text.orEmpty(),
+            showNumbers = profile.showNumbers(),
+            stepOffered = movement.state(primaryLadder).lastOfferedDay != null,
+        )
+        if (brief.nothingHappened) return emptyList()
+
+        val note = WeekFilter.clean(WeekWriter.write(brief))
+        weeks.save(monday, note, System.currentTimeMillis())
+        return note.paragraphs
     }
 
     /** "8 times", "1 minute", "10 seconds": the amount in the words for its measure. */
@@ -869,7 +787,7 @@ class SteadyViewModel(application: Application) : AndroidViewModel(application) 
         const val DAYS_IN_WEEK = 7
 
         /** Anything above this is not an envelope any more. */
-        const val MAX_ENVELOPE_MINUTES = 120
+
         const val NOON = 12
         const val EVENING_HOUR = 18
         const val DEFAULT_KG = 80.0

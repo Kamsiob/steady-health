@@ -35,4 +35,6 @@ object Route {
     const val LEAVE_OUT = "leave-out"
     const val PACING = "pacing"
     const val PATTERN = "pattern"
+    const val ASK = "ask"
+    const val CARD = "card"
 }

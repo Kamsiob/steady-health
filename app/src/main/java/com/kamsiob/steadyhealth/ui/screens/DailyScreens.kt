@@ -1,5 +1,7 @@
 package com.kamsiob.steadyhealth.ui.screens
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -20,6 +22,7 @@ import com.kamsiob.steadyhealth.ui.components.SecondaryButton
 import com.kamsiob.steadyhealth.ui.components.SectionTitle
 import com.kamsiob.steadyhealth.ui.components.SteadyScreen
 import com.kamsiob.steadyhealth.ui.components.Stepper
+import com.kamsiob.steadyhealth.ui.components.TagPill
 import com.kamsiob.steadyhealth.ui.components.TextEntry
 import com.kamsiob.steadyhealth.ui.components.ThreeUpChoice
 import com.kamsiob.steadyhealth.ui.theme.SteadyPalette
@@ -79,10 +82,25 @@ fun WeighInScreen(
 }
 
 /** What say-how-today-went draws. */
+/** One tag as the grid draws it: its id, its word, and its two states. */
+data class TagChip(
+    val id: String,
+    val label: String,
+    val chosen: Boolean,
+    /** The reader proposed it and the person has not agreed yet. */
+    val suggested: Boolean = false,
+)
+
+/** One group of tags, with its heading. */
+data class TagSection(val heading: String, val chips: List<TagChip>)
+
 data class SayHowUiState(
     val sentence: String = "",
     val sleepHalfHours: Int = 14,
     val dayRating: DayRating? = null,
+    val tags: List<TagSection> = emptyList(),
+    /** True when the reader proposed something, which changes what the app says. */
+    val fromReader: Boolean = false,
 )
 
 /**
@@ -98,6 +116,7 @@ fun SayHowScreen(
     onSentence: (String) -> Unit,
     onSleep: (Int) -> Unit,
     onRating: (DayRating) -> Unit,
+    onTag: (String) -> Unit,
     onSave: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
@@ -135,6 +154,31 @@ fun SayHowScreen(
             selectedIndex = state.dayRating?.ordinal,
             onSelect = { onRating(DayRating.entries[it]) },
         )
+
+        if (state.tags.isNotEmpty()) {
+            SectionTitle(stringResource(R.string.say_tags))
+            if (state.fromReader) Paragraph(stringResource(R.string.say_tags_reader))
+            state.tags.forEach { section ->
+                SteadyText(
+                    text = section.heading,
+                    style = SteadyType.Caption,
+                    color = SteadyPalette.Ink3Text,
+                )
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(SteadySpacing.ListGap),
+                    verticalArrangement = Arrangement.spacedBy(SteadySpacing.ListGap),
+                ) {
+                    section.chips.forEach { chip ->
+                        TagPill(
+                            label = chip.label,
+                            selected = chip.chosen,
+                            suggested = chip.suggested,
+                            onClick = { onTag(chip.id) },
+                        )
+                    }
+                }
+            }
+        }
     }
 }
 

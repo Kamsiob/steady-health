@@ -383,3 +383,68 @@ Every step's name and instruction is a Kotlin string, which cannot be translated
 This was already true of the walking ladder and is now true of three more. It is
 a real gap and it belongs to Phase 6, which is where the four languages are.
 Recorded here so it is not discovered there.
+
+## Phase 3
+
+### The on-device model path, verified at build time
+
+The brief says to check rather than trust the documents, so: Gemma 4 E4B ships as
+`gemma-4-E4B-it-litert-lm.litertlm`, 3.66 GB, Apache-2.0. The Android path is
+LiteRT-LM, `com.google.ai.edge.litertlm:litertlm-android`, 0.17.0 as of today,
+with `Engine`, `EngineConfig` and `Conversation` as the entry points and
+`initialize()` taking up to ten seconds. MediaPipe's `.task` format is now the
+legacy path and is not the one to build on. Nothing about constrained decoding is
+documented, which is why the tag validator in TagReader is a validator and not a
+prompt instruction.
+
+### The no-model path is the app, not a fallback
+
+AI.md makes the model an optional 3.66 GB download, off by default. That means
+for most people the deterministic path is the whole feature, so it was built
+first and built properly: the tag grid is how tags are chosen, the Sunday note is
+hand-written sentences chosen by conditions, and Ask a question is a word search
+over thirteen hand-written cards. None of it is a placeholder waiting to be
+replaced.
+
+Building it first also gives the model something to be checked against. Every
+rule the model output has to pass, the template output passes too, and the same
+tests hold both.
+
+### The cards come out of CONTENT.md rather than being retyped
+
+CONTENT.md is final copy and ships as written, so the strings were generated from
+it into cards.xml and the voice test now reads that file as well as strings.xml.
+Three sentences would not pass rule 1 as written and were changed: "not the
+score" became "not the point" (the same fix as the settings row), "Your
+prescriber's tools" became "Your doctor's tools", and nothing else.
+
+Four uses of a banned word are pinned exceptions with reasons, in a map the voice
+test enforces both ways: it fails if one of them appears anywhere else, and it
+fails if one of them stops being needed. Two are the names of things, a research
+method in a citation and the Patient-Specific Functional Scale. The other two are
+card 7, whose subject is the thing the app does not do; a card called "Why there
+are no calories here" cannot be written without the word, and banning it there
+would leave somebody without the explanation the ban exists to give them.
+
+### The Sunday write-up lives on Abilities
+
+It is not in the grid. DESIGN.md section 8 says to build from the rules and match
+the nearest sibling, and the nearest sibling is the Abilities tab: read-back is
+what that tab is for, and Today is for today. Written once and stored, so it does
+not quietly change under somebody who read it yesterday.
+
+### Three view models, not one
+
+`SteadyViewModel` had grown past the point where anybody could hold it, so Ask a
+question and Settings moved out. Both splits are real rather than cosmetic: Ask
+touches no repository at all, and Settings only writes. Nothing has to reach
+across, because Today, Move and Abilities each read the profile again when they
+come back into view, which is also what makes changing how you get around safe
+from a screen that knows nothing about them.
+
+### The restriction rule is a filter, not an instruction
+
+No sentence may put a restriction tag and a weight direction together. It is
+implemented as a post-filter over whatever produced the sentence, model or
+template, because a prompt instruction is a request and this is a guarantee. It
+is the one sentence this app exists not to say.

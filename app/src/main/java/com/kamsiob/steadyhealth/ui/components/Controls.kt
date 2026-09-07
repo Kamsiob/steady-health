@@ -239,6 +239,50 @@ fun SwitchRow(
     }
 }
 
+/**
+ * One tag in the vocabulary grid.
+ *
+ * DESIGN.md section 3 gives it its own look, separate from the choice pill:
+ * white with a sand outline, orange with white text when it is on, and at 55%
+ * opacity when the reader suggested it and the person has not agreed yet. That
+ * last state is the whole honesty of the feature. A suggestion that looks like a
+ * fact is a suggestion nobody checks.
+ */
+@Composable
+fun TagPill(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    suggested: Boolean = false,
+) {
+    val fill = if (selected) SteadyPalette.OrangeD else SteadyPalette.White
+    val words = if (selected) SteadyPalette.White else SteadyPalette.Navy
+    val fade = if (!selected && suggested) SUGGESTED else 1f
+    Box(
+        modifier = modifier
+            .clip(SteadyShapes.Round)
+            .background(fill)
+            .border(SteadySpacing.Outline, SteadyPalette.Sand, SteadyShapes.Round)
+            .selectable(selected = selected, role = Role.Checkbox, onClick = onClick)
+            .heightIn(min = SteadySpacing.TapTarget)
+            .padding(horizontal = TAG_SIDE, vertical = TAG_TOP)
+            .semantics { stateDescription = if (selected) "on" else "off" },
+        contentAlignment = Alignment.Center,
+    ) {
+        SteadyText(
+            text = label,
+            style = SteadyType.CardTitle,
+            color = words.copy(alpha = fade),
+        )
+    }
+}
+
+/** DESIGN.md section 3: suggested but not yet agreed to. */
+private const val SUGGESTED = 0.55f
+private val TAG_SIDE = 14.dp
+private val TAG_TOP = 8.dp
+
 /** A plain text link, for the rows DESIGN.md draws as words rather than as cards. */
 @Composable
 fun TextLink(label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {

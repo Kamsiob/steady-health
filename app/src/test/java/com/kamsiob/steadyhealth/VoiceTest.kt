@@ -1,6 +1,7 @@
 package com.kamsiob.steadyhealth
 
 import com.google.common.truth.Truth.assertThat
+import com.google.common.truth.Truth.assertWithMessage
 import org.junit.Test
 import java.io.File
 
@@ -20,14 +21,45 @@ import java.io.File
  */
 class VoiceTest {
 
-    private val strings: Map<String, String> by lazy { readStrings("strings.xml") }
+    /**
+     * Every string the app can show, from every file it keeps them in.
+     *
+     * The cards live in their own file because they are long-form copy from
+     * CONTENT.md rather than interface labels, and reading only strings.xml would
+     * have left the longest text in the app unchecked.
+     */
+    private val strings: Map<String, String> by lazy {
+        readStrings("strings.xml") + readStrings("cards.xml")
+    }
 
     @Test
     fun noStringUsesAWordTheAppDoesNotHave() {
         val offences = strings.flatMap { (name, value) ->
-            BANNED.filter { it.matches(value) }.map { "$name uses \"${it.word}\": $value" }
+            BANNED
+                .filter { it.matches(value) }
+                .filterNot { name in ALLOWED_ANYWAY[it.word].orEmpty() }
+                .map { "$name uses \"${it.word}\": $value" }
         }
         assertThat(offences).isEmpty()
+    }
+
+    @Test
+    fun everyBannedWordExceptionIsExactlyWhereItIsSupposedToBe() {
+        // Pinned both ways. A string named here that has stopped using the word is
+        // an exception nobody needs any more, and leaving it standing is how a
+        // list of exceptions turns into a list of excuses.
+        ALLOWED_ANYWAY.forEach { (word, names) ->
+            val banned = Banned(word)
+            names.forEach { name ->
+                val value = strings[name]
+                assertWithMessage("$name is listed as an exception for \"$word\"")
+                    .that(value)
+                    .isNotNull()
+                assertWithMessage("$name still needs its exception for \"$word\"")
+                    .that(banned.matches(value.orEmpty()))
+                    .isTrue()
+            }
+        }
     }
 
     @Test
@@ -60,7 +92,7 @@ class VoiceTest {
                 hasCase &&
                     letters.length >= SHOUT &&
                     letters == letters.uppercase() &&
-                    PROPER_NAMES.none { value.contains(it) }
+                    PROPER_NAMES.keys.none { value.contains(it) }
             }
         }
         assertThat(offences.keys).isEmpty()
@@ -69,9 +101,12 @@ class VoiceTest {
     @Test
     fun theProperNameExceptionIsExactlyWhereItIsSupposedToBe() {
         // Pinned, so the exception cannot spread into ordinary copy.
-        val using = strings.filterValues { value -> PROPER_NAMES.any { value.contains(it) } }.keys
-
-        assertThat(using).containsExactly("readiness_link", "readiness_attribution")
+        PROPER_NAMES.forEach { (name, allowed) ->
+            val using = strings.filterValues { it.contains(name) }.keys
+            assertWithMessage("\"$name\" appears only where it is allowed to")
+                .that(using)
+                .containsExactlyElementsIn(allowed)
+        }
     }
 
     @Test
@@ -129,7 +164,39 @@ class VoiceTest {
          * Names that are legitimately capitalised, and the only ones. COMPLIANCE.md
          * requires the questionnaire to be named and attributed exactly.
          */
-        val PROPER_NAMES = listOf("PAR-Q+")
+        val PROPER_NAMES: Map<String, Set<String>> = mapOf(
+            // COMPLIANCE.md requires the questionnaire to be named and attributed
+            // exactly.
+            "PAR-Q+" to setOf("readiness_link", "readiness_attribution"),
+            // The names of two trials and a journal, in the one-line sources
+            // CONTENT.md puts at the end of every card so the reader can look
+            // them up. Changing their case would make them harder to find, which
+            // is the opposite of why they are there.
+            "STEP-1" to setOf("card_muscle_meds_source"),
+            "SURMOUNT-1" to setOf("card_muscle_meds_source"),
+            "JMIR" to setOf("card_smoothed_source"),
+        )
+
+        /**
+         * The only places a banned word may appear, by word and by string.
+         *
+         * Rule 1 of the brief admits no exception for the app's own voice, and
+         * none of these is the app's own voice. Two are the names of things:
+         * a research method in a citation, and the questionnaire physical
+         * therapists use by name. The third is a card whose whole subject is the
+         * thing the app does not do, and a card called "Why there are no
+         * calories here" cannot be written without the word. Banning it there
+         * would leave the person without the explanation the ban exists to give
+         * them.
+         *
+         * Every entry is pinned to the exact string that may use it, and the
+         * test above fails if one of them stops needing it.
+         */
+        val ALLOWED_ANYWAY: Map<String, Set<String>> = mapOf(
+            "calorie" to setOf("card_fasting_source", "card_no_calories_body"),
+            "calories" to setOf("card_no_calories_title"),
+            "patient" to setOf("card_what_you_want_source"),
+        )
         const val TEN = 10
 
         /** DESIGN.md section 6, restated, with the words the capability frame added. */

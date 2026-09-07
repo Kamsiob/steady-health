@@ -1,0 +1,55 @@
+{
+  "note": "AI.md job 2. Each case is one check-in sentence, the tags the reader must produce, and the tags it must never produce for that sentence. The must-not lists are the ones that matter: they are what a keen classifier gets wrong, and every one of them is checkable without the model.",
+  "cases": [
+    { "text": "Grabbed takeout on the way home.", "must": ["ate_out"], "mustNot": ["cooked"] },
+    { "text": "Ordered in, too tired to cook.", "must": ["ate_out"], "mustNot": ["cooked"] },
+    { "text": "Ate at the diner with Jean.", "must": ["ate_out", "social"], "mustNot": ["cooked"] },
+    { "text": "Made a proper dinner for once.", "must": ["cooked"], "mustNot": ["ate_out"] },
+    { "text": "Cooked a big pot of soup.", "must": ["cooked"], "mustNot": ["ate_out", "ate_a_lot"] },
+    { "text": "Didn't feel like much, just soup.", "must": ["ate_light"], "mustNot": ["ate_a_lot"] },
+    { "text": "Ate more than I meant to at lunch.", "must": ["ate_a_lot"], "mustNot": ["ate_light"] },
+    { "text": "Picking all evening.", "must": ["snacked"], "mustNot": ["cooked"] },
+    { "text": "Eating late again.", "must": ["late_night"], "mustNot": ["slept_well"] },
+
+    { "text": "Slept right through for once.", "must": ["slept_well"], "mustNot": ["slept_badly", "short_sleep"] },
+    { "text": "Up half the night.", "must": ["slept_badly"], "mustNot": ["slept_well", "rested"] },
+    { "text": "Only got about five hours.", "must": ["short_sleep"], "mustNot": ["slept_well"] },
+    { "text": "Took it easy all afternoon.", "must": ["rested"], "mustNot": ["active", "busy"] },
+    { "text": "Woke up every couple of hours.", "must": ["slept_badly"], "mustNot": ["slept_well"] },
+
+    { "text": "Work was a lot today.", "must": ["stressed", "busy"], "mustNot": ["calm", "good"] },
+    { "text": "Nice quiet day, felt settled.", "must": ["calm"], "mustNot": ["stressed"] },
+    { "text": "Bit flat, not sure why.", "must": ["low"], "mustNot": ["good"] },
+    { "text": "Good day. Everything went right.", "must": ["good"], "mustNot": ["low"] },
+    { "text": "Wasn't stressed for once.", "must": ["calm"], "mustNot": ["stressed"] },
+
+    { "text": "Walked to the shops and back.", "must": ["walked"], "mustNot": ["sat_a_lot"] },
+    { "text": "On my feet all day.", "must": ["active"], "mustNot": ["sat_a_lot"] },
+    { "text": "Sat at the desk from nine till six.", "must": ["sat_a_lot"], "mustNot": ["active", "walked"] },
+    { "text": "Didn't walk today.", "must": [], "mustNot": ["walked", "active"] },
+    { "text": "No time for a walk.", "must": ["busy"], "mustNot": ["walked"] },
+
+    { "text": "Legs are sore from yesterday.", "must": ["sore"], "mustNot": ["pain", "unwell"] },
+    { "text": "Back is really hurting.", "must": ["pain"], "mustNot": ["sore"] },
+    { "text": "Coming down with something.", "must": ["unwell"], "mustNot": ["sore", "pain"] },
+    { "text": "Not sore at all today.", "must": [], "mustNot": ["sore", "pain"] },
+
+    { "text": "Long drive to see the family.", "must": ["travel", "family"], "mustNot": ["sat_a_lot"] },
+    { "text": "Grandkids over all afternoon.", "must": ["family"], "mustNot": ["stressed"] },
+    { "text": "Out with friends in the evening.", "must": ["social"], "mustNot": ["family"] },
+    { "text": "Away for work, hotel food.", "must": ["travel", "ate_out"], "mustNot": ["cooked"] },
+    { "text": "Busy from the moment I got up.", "must": ["busy"], "mustNot": ["rested"] },
+
+    { "text": "Overate at dinner and felt awful.", "must": ["ate_a_lot"], "mustNot": ["cheated", "binged", "bad_day"] },
+    { "text": "Total cheat day.", "must": ["ate_a_lot"], "mustNot": ["cheated", "cheat_day"] },
+    { "text": "Was so bad today.", "must": [], "mustNot": ["bad_day", "fail", "cheated"] },
+    { "text": "", "must": [], "mustNot": [] }
+  ],
+  "synonyms": [
+    { "phrase": "grabbed takeout", "tag": "ate_out" },
+    { "phrase": "ordered in", "tag": "ate_out" },
+    { "phrase": "ate at the diner", "tag": "ate_out" },
+    { "phrase": "the caff", "tag": "ate_out" },
+    { "phrase": "chippy", "tag": "ate_out" }
+  ]
+}
