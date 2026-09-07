@@ -51,6 +51,26 @@ Seeded September 6, 2026 from the design and research process. Claude Code appen
   an hour to change.
 - **"Stop here, that counts" against the two minute rule.** See Phase 1 below. If
   a short session should tick the daily card, say so and it is a one line change.
+- **The three translations.** The app ships in English. `locales_config.xml`
+  declares Spanish, Chinese and Arabic and there are no `values-es`, `values-zh`
+  or `values-ar` folders behind them. The switching mechanism is built and
+  tested, and the picker on the welcome screen shows only the languages that have
+  real strings, so today it shows nothing and it comes back on its own the moment
+  a folder lands. Nothing else has to change.
+
+  What is needed: about 260 strings in `values/strings.xml`, `values/cards.xml`,
+  `values/check.xml` and `values/summary.xml`, translated by somebody who speaks
+  the language, and the thirteen long-form cards in CONTENT.md among them. This
+  is not a job for machine translation: every string has to pass the friend test
+  in its own language and avoid that language's equivalents of the banned list,
+  and the audience includes people who are frightened of what an app might say
+  about them. Arabic also needs somebody to look at the app in RTL on a phone.
+
+  Two things that are already done and do not need redoing: the language split is
+  disabled in the bundle so every language ships inside the app and works
+  offline, and per-app language switching is wired through the platform's own
+  setting on Android 13 and up.
+
 - **Confirm the Play target API requirement** before release. The build uses
   compileSdk 37 and targetSdk 36 on a device running Android 17. Google's floor
   moves on a schedule and the Play Console is the only place to read it.
@@ -709,3 +729,24 @@ through adb instead and leaves everything where it was.
 
 Both are the template's rule about data-affecting tests, learned the hard way on
 the owner's own device.
+
+### The language picker shows only the languages the app can speak
+
+It stored a choice and never applied it, which meant tapping Español on the first
+screen did nothing at all. Somebody who taps their own language and sees English
+concludes the app is broken, not that it is unfinished, and they are not wrong to.
+
+So the picker asks the resources which languages actually have strings behind
+them and shows only those. Today that is English alone and the row does not
+appear. It comes back on its own when a `values-es` folder lands, and nothing has
+to be changed for that to happen.
+
+Switching goes through the platform's own per-app language setting rather than
+through appcompat, which would mean adding a whole legacy UI toolkit for one
+call. That means it works from Android 13 up and below it the app follows the
+phone, which is stated in the code rather than papered over.
+
+Lint then caught the part that would have failed in the store: an app bundle
+splits language resources by default and fetches the rest through Play Core on
+demand. This app has to work offline from the moment it is installed, so the
+split is off and every language ships inside it.

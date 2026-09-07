@@ -41,6 +41,19 @@ android {
         }
     }
 
+    bundle {
+        // Every language ships inside the app.
+        //
+        // By default a bundle splits language resources and Play fetches the rest
+        // on demand, which needs Play Core, a network connection, and a store
+        // this app does not depend on. Steady Health has to work offline from the
+        // moment it is installed, and somebody switching to their own language on
+        // a plane should not find English.
+        language {
+            enableSplit = false
+        }
+    }
+
     buildFeatures {
         compose = true
         buildConfig = true

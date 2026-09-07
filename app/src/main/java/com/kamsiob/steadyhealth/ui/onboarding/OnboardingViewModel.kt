@@ -20,6 +20,7 @@ import com.kamsiob.steadyhealth.domain.Stairs
 import com.kamsiob.steadyhealth.domain.Units
 import com.kamsiob.steadyhealth.domain.WalkTolerance
 import com.kamsiob.steadyhealth.engine.PacingEngine
+import com.kamsiob.steadyhealth.ui.Language
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -63,7 +64,17 @@ class OnboardingViewModel(application: Application) : AndroidViewModel(applicati
     private val _state = MutableStateFlow(OnboardingState())
     val state: StateFlow<OnboardingState> = _state.asStateFlow()
 
-    fun setLanguage(tag: String) = _state.update { it.copy(language = tag) }
+    /**
+     * Switch the app's language, now, rather than storing a preference for later.
+     *
+     * Per-app locales, so the system remembers it and the system settings show
+     * it, and so the rest of setup is in the language somebody just picked
+     * instead of the one after it.
+     */
+    fun setLanguage(tag: String) {
+        _state.update { it.copy(language = tag) }
+        Language.set(getApplication(), tag)
+    }
 
     fun setGettingAround(value: GettingAround) = _state.update { it.copy(gettingAround = value) }
 

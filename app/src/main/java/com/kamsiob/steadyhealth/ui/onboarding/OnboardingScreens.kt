@@ -17,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -32,6 +33,7 @@ import com.kamsiob.steadyhealth.domain.ReadinessFlag
 import com.kamsiob.steadyhealth.domain.Stairs
 import com.kamsiob.steadyhealth.domain.Units
 import com.kamsiob.steadyhealth.domain.WalkTolerance
+import com.kamsiob.steadyhealth.ui.Language
 import com.kamsiob.steadyhealth.ui.components.Dial
 import com.kamsiob.steadyhealth.ui.components.Hero
 import com.kamsiob.steadyhealth.ui.components.HeroExplain
@@ -92,14 +94,20 @@ fun WelcomeScreen(state: OnboardingState, onLanguage: (String) -> Unit, onNext: 
             HeroExplain(stringResource(R.string.welcome_line))
         }
 
-        Row(horizontalArrangement = Arrangement.spacedBy(SteadySpacing.ListGap)) {
-            listOf(
-                "en" to stringResource(R.string.language_english),
-                "es" to stringResource(R.string.language_spanish),
-                "zh" to stringResource(R.string.language_chinese),
-                "ar" to stringResource(R.string.language_arabic),
-            ).forEach { (tag, label) ->
-                Pill(label = label, selected = state.language == tag, onClick = { onLanguage(tag) })
+        // Only the languages this build actually speaks. A pill that switches to
+        // a language the app then shows in English is a broken app rather than an
+        // unfinished one, and somebody tapping their own language deserves better
+        // than that. The row comes back on its own when a translation lands.
+        val languages = Language.available(LocalContext.current)
+        if (languages.size > 1) {
+            Row(horizontalArrangement = Arrangement.spacedBy(SteadySpacing.ListGap)) {
+                languages.forEach { tag ->
+                    Pill(
+                        label = stringResource(languageName(tag)),
+                        selected = state.language == tag,
+                        onClick = { onLanguage(tag) },
+                    )
+                }
             }
         }
     }
@@ -712,3 +720,11 @@ fun FirstPointCard(modifier: Modifier = Modifier) {
 
 private val GLYPH = 52.dp
 private val WELCOME_HERO = 420.dp
+
+/** The name of one language, in that language. */
+private fun languageName(tag: String) = when (tag) {
+    "es" -> R.string.language_spanish
+    "zh" -> R.string.language_chinese
+    "ar" -> R.string.language_arabic
+    else -> R.string.language_english
+}
