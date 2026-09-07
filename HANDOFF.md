@@ -7,8 +7,9 @@ it cannot see the reasoning for, or breaking something it does not understand.
 Read this in full. Then DECISIONS.md. Then MASTER_SPEC.md and DESIGN.md. Then
 `git log`.
 
-**Last updated:** 2026-09-06, after Phase 3. Phases 0 to 3 are done and were
-driven on the Pixel 8 rather than asserted.
+**Last updated:** 2026-09-06, after Phase 6's data, reminder and accessibility
+work. Phases 0 to 5 are done, Phase 6 is most of the way, and all of it was driven
+on the Pixel 8 rather than asserted.
 
 ---
 
@@ -21,12 +22,16 @@ starting point. The repository history was rewritten: the root commit is
 `dd4c3bd` and nothing before it is reachable. Details in DECISIONS.md under "The
 reset".
 
-**Phases 0 to 3 are done and verified on the phone. Phases 4 to 7 have not
-started.**
+**Phases 0 to 5 are done and verified on the phone. Phase 6 is most of the way.
+Phase 7 has not started.**
 
-What runs on the phone right now: setup, all four versions of the app, the daily
-three, walks with the talk test and the offer, settings, the tag grid, the Sunday
-write-up and Ask a question.
+What runs on the phone right now: setup; all four versions of the app; the daily
+three; walks with the talk test and the offer; the monthly check with the phone
+counting chair stands from its motion sensor; the four abilities with measured
+life sentences and Better, Same or Quieter; the ability and weight pages; the tag
+grid; the Sunday write-up; Ask a question; the visit summary with its validator
+and a PDF export; settings with seven working rows; reminders with the two-a-week
+ceiling; numbers-off; and export and delete.
 
 What is proven rather than assumed:
 
@@ -39,28 +44,36 @@ What is proven rather than assumed:
 - Every shipped string passes the banned word list, the dash rule and the
   no-shouting rule. Unit test, reading the real resource file.
 
-Driven on the Pixel 8, not asserted: setup; a weigh-in; a check-in with tags that
-survive a save and a reopen; two qualifying walks producing the offer, accepting
-it, and the next walk reading four minutes; switching to a wheelchair and to the
-bed version and back from settings; a bed session with its three parts and "How do
-you feel" in place of the talk test; turning pacing mode on from the pattern
-question and off from its own screen; asking a question and reading a card.
+Driven on the Pixel 8, not asserted: setup, twice, including once immediately
+after deleting everything; a weigh-in; a check-in with tags that survive a save
+and a reopen; two qualifying walks producing the offer, accepting it, and the next
+walk reading four minutes; switching to a wheelchair and to the bed version and
+back from settings; a bed session with its three parts and "How do you feel" in
+place of the talk test; pacing mode on from the pattern question and off from its
+own screen; asking a question and reading a card; a whole monthly check including
+the thirty second measure finishing on its own; Today afterwards carrying measured
+sentences instead of the person's own words; the visit summary and its PDF through
+the share sheet; the export zip, opened and read back; delete, with an empty
+database directory afterwards; numbers off and on again; and turning a reminder on,
+including the permission prompt.
 
-Built and tested: the theme, the encrypted database, the component library from
-DESIGN.md section 3, the eleven setup screens, Today, Move, Abilities, the daily
-three, the walk and the bed set, the offer, settings and its four sub-screens,
-the tag grid, the Sunday write-up, and Ask a question with the thirteen cards.
+The engine is pure and has about a hundred and sixty unit tests, plus fifteen on
+the device. The ones worth knowing about:
 
-The engine is pure and has about a hundred tests: weight smoothing, the eight
-ladders as a table, progression with every threshold a named constant, the four
-ways of getting around, pacing mode, gap decay, the tag validator against a
-thirty-seven case corpus, the week writer against every shape of week, and the
-card search against twenty-six questions somebody would actually ask.
+- The job 6 validator against 37 deliberately bad paragraphs, every one of which
+  it catches, and six honest ones, every one of which survives.
+- Forty-eight generated visit briefs whose template summaries all pass that same
+  validator.
+- A repetition counter that is allowed to be low and never high, across four rep
+  counts and three cadences.
+- The tag validator against a 37-sentence corpus.
+- Every route having a screen, read out of the source, because one did not.
+- The accessibility floor in the semantics tree, at normal and at twice the text
+  size.
 
-**The very next concrete step:** Phase 4, the monthly check. It is why every
-ability still reads Same: Better, Same and Quieter come from measures, and there
-are no measures yet. It is also the largest unknown left in the build, because it
-is the accelerometer and MediaPipe rather than more Compose.
+**The very next concrete step:** Try it and see (grid 14 and 15), which is the
+only one of MASTER_SPEC's four visible AI features with nothing behind it. After
+that, the months path (grid 20) and import.
 
 ### What is uncommitted or mid-flight
 
@@ -68,41 +81,50 @@ Nothing at the last commit. Check `git status` before assuming.
 
 ### What would break if somebody assumed it was finished
 
-- **The abilities never change.** Every one reads Same, because Better, Same and
-  Quieter come from the monthly check, which is Phase 4. There is no check yet.
-- **The ability tiles carry the person's own words, not a measured sentence.**
-  The life sentence from LOGIC.md 3b needs measures behind it.
-- **Tapping an ability only switches tabs.** The detail page (grid 9), the weight
-  page (grid 19) and the months path (grid 20) are not built.
+- **Try it and see does not exist.** Grid 14 and 15, LOGIC.md 9b, AI.md job 4.
+  Nothing in the app offers a two-week test and nothing computes a pattern, so
+  the co-occurrence section of the visit-summary brief is always empty.
+- **The months path does not exist.** Grid 20. Vico is proven and unused.
 - **The model is not integrated.** No dependency, no INTERNET permission. The tag
-  grid, the Sunday note and the cards all run without it, and that is the shipped
-  path; the reader is an optional 3.66 GB download that has not been wired.
-- **The visit summary does not exist.** Neither does its validator, which
-  ADDENDUM-01 requires to be built first.
+  grid, the Sunday note, the cards and the visit summary all run without it, and
+  that is the shipped path; the reader is an optional 3.66 GB download.
+- **Wall push-ups are counted by hand, not by the camera.** Grid 11 says the
+  camera counts full reps on the phone. MediaPipe is not integrated, the measure
+  works with a tap per repetition, and no permission is requested.
+- **Import does not exist.** Export does, and LOGIC.md section 14 asks for both.
+- **Health Connect is not integrated.**
 - **Step names and instructions are English literals in Ladders.kt**, and the
-  week writer's sentences are English literals too. Both move to resources in
-  Phase 6, which is where the four languages are.
+  week writer's sentences and the measure names are too. They move to resources
+  with the translations.
 - **strings.xml is English only.** Four locales are declared and three are empty.
-- **Reminders, Health Connect, export, import and delete do not exist.**
+  The switching mechanism works and the picker hides itself until there is a
+  choice; see BLOCKED in DECISIONS.md for what the translations need.
+- **The chair-stand count has never been checked against a human counting.**
+  MASTER_SPEC section 10 asks for that as a device test and it cannot be
+  automated: somebody has to stand up out of a chair ten times with the phone in
+  their pocket and compare. It is the one measurement in the app whose accuracy
+  is unverified.
 
 ---
 
 ## 2. The next concrete steps, in order
 
-1. **Phase 4**, the monthly check. Chair stands timed from the accelerometer, wall
-   push-ups counted with MediaPipe, results reported as life first and numbers
-   second, Same as a result, and the Quieter path shown once and quietly. This is
-   what makes the four abilities real, and it is the largest unknown left.
-2. **Phase 5**, Try it and see, and the visit summary. Build the job 6 validator
-   and its adversarial corpus **before** the model is wired in. ADDENDUM-01 is
-   explicit about that and the reasoning is in DECISIONS.md.
-3. **Phase 6**, numbers-off, the four languages with RTL, text size, TalkBack,
-   reminders with the two-a-week ceiling, Health Connect, export, import, delete.
-4. **Phase 7**, hardening and release, plus `store-assets/` and `LAUNCH.md`.
+1. **Try it and see.** LOGIC.md 9b for the pattern rules, AI.md job 4 for the
+   wording, grid 14 and 15 for the screens. The engine finds the pattern and runs
+   the arithmetic; the honesty of "no difference" is enforced by the engine.
+   Never offered to anybody in pacing mode.
+2. **The months path**, grid 20, with the milestones renamed.
+3. **Import**, to match the export that exists.
+4. **The camera counting wall push-ups**, MediaPipe Pose, grid 11.
+5. **Health Connect.**
+6. **Phase 7**, hardening and release, plus `store-assets/` and `LAUNCH.md`.
 
-The reader itself can be wired at any point after its jobs have fixtures, and it
-is deliberately not on the critical path: every feature it touches already works
-without it.
+The reader itself can be wired at any point: its validator, its fixtures and its
+fallbacks are all built, and every feature it touches already works without it. It
+is deliberately not on the critical path.
+
+**Ask the owner about the translations before doing anything else on them.** They
+are on the BLOCKED list with the reasoning.
 
 ---
 
@@ -145,9 +167,31 @@ deliberate: there is no sensible default for which version of the app somebody i
 using.
 
 **Letting `SteadyViewModel` hold everything.** It grew past detekt's size rule
-twice. Ask a question and Settings are their own view models now, and the split
-works because Today, Move and Abilities each reload the profile when they come
-back into view rather than being told to.
+three times. Ask a question, Settings, the check, the ability pages and the
+summary are their own view models now, and the split works because Today, Move and
+Abilities each reload the profile when they come back into view rather than being
+told to.
+
+**Holding the database in a `lazy`.** Deleting everything closes it, and every
+view model then threw "Database is closed" on its next write. It crashed on the
+first screen of setup, immediately after somebody had deleted everything. The
+database is resolved on every use now; the repositories are stateless wrappers so
+it costs an allocation.
+
+**Running `connectedDebugAndroidTest` on a phone with data on it.** Gradle
+uninstalls both APKs when it finishes and the app's data goes with them. Use
+`tools/device-tests.sh`, which installs and runs through adb and leaves everything
+alone. Separately, `DatabaseSmokeTest` used to destroy the real database and the
+real key; it has its own now.
+
+**Assuming the accessibility tree from a uiautomator dump.** It shows Compose's
+merged label on one node and the click action on another, which reads as "every
+tile is unlabelled" and is wrong. Use a Compose test and `assertHasClickAction`.
+
+**A dynamic locale change with the default bundle configuration.** Play splits
+language resources and fetches the rest on demand, which needs Play Core and a
+network. `bundle { language { enableSplit = false } }` is in the build file and
+has to stay.
 
 ---
 
@@ -183,9 +227,10 @@ green-text `#287855`, and the primary button is filled orange-d.
 
 ## 5. Remaining work, by phase
 
-Phases 4 to 7 of MASTER_SPEC.md section 9. The screens are numbered 1 to 22 in
-`design/screen-grid-v2-capability.html` and MASTER_SPEC section 6 references them
-by number. Of those, screens 9 to 15 and 19 to 21 are not built.
+What is left of MASTER_SPEC.md section 9 is the tail of Phase 5, some of Phase 6,
+and all of Phase 7. The screens are numbered 1 to 22 in
+`design/screen-grid-v2-capability.html`. Of those, 14, 15 and 20 are not built,
+and 11 is built with the person tapping rather than the camera counting.
 
 Not yet created, and required by the template before release: `store-assets/` and
 `LAUNCH.md`.
@@ -202,6 +247,11 @@ All in DECISIONS.md, with reasoning:
 - Rive is not in version 1.
 - The whole schema is at version 1 rather than grown per phase.
 - The job 6 validator is built before the model, not after.
+- A measure with no published detectable change never moves an ability off Same.
+- The repetition counter is allowed to under-count and never to over-count.
+- Numbers-off replaces the weight figure and leaves the capability counts alone.
+- The language picker shows only languages that have strings behind them.
+- Device tests use their own database and their own key.
 - The repository history was rewritten deliberately.
 
 ---
