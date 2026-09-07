@@ -87,7 +87,11 @@ object Ladders {
         Step(
             index = index,
             ladder = Ladder.ChairAndStanding,
-            domain = AbilityDomain.GetUp,
+            // LOGIC.md groups band rows into this ladder because of where they
+            // are done, sitting in a chair. The ability they feed is Carry, and
+            // MASTER_SPEC requires every exercise to belong to exactly one, so
+            // the step says Carry and the ladder it sits in says nothing.
+            domain = if (name.contains("band rows")) AbilityDomain.Carry else AbilityDomain.GetUp,
             amount = reps,
             measure = if (index == 0) StepMeasure.Minutes else StepMeasure.Repetitions,
             name = name,

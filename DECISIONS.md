@@ -517,3 +517,31 @@ without thinking about it.
 Every stage of the four-stage balance test is standing. Replacing it with sitting
 unsupported is not a smaller version of the same thing; it is the right measure
 for the ability. Same reasoning as the ladders.
+
+### A test that every route has a screen
+
+A route was declared, navigated to from two places, and had no `composable`
+registered for it. The compiler cannot see that and no other test would have
+caught it; it would have been a crash on tapping an ability tile. `RoutesTest`
+reads the source and holds every declared route to having something that draws
+it, and every navigation to a route that exists. Crude, and the only way to check
+it without a device.
+
+`Route.OFFER` was removed at the same time. The offer is a thing the app is saying
+rather than a place somebody went, so it covers the screen from outside the graph
+and never needed a route.
+
+### The ability page is useful before anything is measured
+
+Grid screen 9 shows an ability with months of history behind it. On the first day
+there is none, and an empty page teaches nobody what the ability is, so the
+exercises that feed it are listed from the start. The three states are separated
+in the copy as well: nothing measured, measured once, and measured twice with
+something to compare.
+
+### Band rows feed Carry, whatever ladder they sit in
+
+LOGIC.md groups seated band rows into the chair-and-standing ladder because of
+where they are done. The ability they feed is Carry. MASTER_SPEC requires every
+exercise to belong to exactly one of the four, so the step carries the domain and
+the ladder it sits in carries none.

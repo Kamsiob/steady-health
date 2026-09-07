@@ -315,6 +315,23 @@
 
     <!-- Ask a question. The cards themselves are in cards.xml. -->
     <string name="abilities_your_week">Your week</string>
+    <string name="ability_behind_it">What is behind it</string>
+    <string name="ability_what_fed">What fed this</string>
+    <string name="ability_weight_lever">One of the levers</string>
+    <string name="ability_before">Last time it was %1$s.</string>
+    <string name="ability_no_check_yet">Nothing measured for this one yet. The monthly check is where that number comes from.</string>
+    <string name="ability_measured_once">Measured once so far. Next month there will be something to compare it with.</string>
+    <string name="ability_feeds">What feeds this</string>
+    <string name="fed_sessions">%1$s since you started. That is what built it.</string>
+    <string name="fed_weight">%1$s less to lift, every time you get up.</string>
+    <string name="weight_page_title">Weight</string>
+    <string name="weight_since">Since you started</string>
+    <string name="weight_days">Days you moved</string>
+    <string name="weight_as_lever">%1$s fewer to carry up the stairs and up off the floor. That is where this number shows up in your life.</string>
+    <plurals name="fed_session_count">
+        <item quantity="one">One session</item>
+        <item quantity="other">%1$d sessions</item>
+    </plurals>
     <string name="ask_title">Ask a question</string>
     <string name="say_tags">Anything else about today?</string>
     <string name="say_tags_reader">Here\'s what I picked up. From what you said. Tap anything that\'s wrong, or add one.</string>

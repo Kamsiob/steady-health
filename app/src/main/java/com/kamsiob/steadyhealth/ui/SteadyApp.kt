@@ -29,6 +29,7 @@ import com.kamsiob.steadyhealth.ui.nav.Route
 import com.kamsiob.steadyhealth.ui.nav.Tab
 import com.kamsiob.steadyhealth.ui.onboarding.OnboardingFlow
 import com.kamsiob.steadyhealth.ui.screens.AbilitiesScreen
+import com.kamsiob.steadyhealth.ui.screens.AbilityDetailScreen
 import com.kamsiob.steadyhealth.ui.screens.AskScreen
 import com.kamsiob.steadyhealth.ui.screens.CardScreen
 import com.kamsiob.steadyhealth.ui.screens.CheckDoneScreen
@@ -47,6 +48,7 @@ import com.kamsiob.steadyhealth.ui.screens.TodayScreen
 import com.kamsiob.steadyhealth.ui.screens.WalkDoneScreen
 import com.kamsiob.steadyhealth.ui.screens.WalkingScreen
 import com.kamsiob.steadyhealth.ui.screens.WeighInScreen
+import com.kamsiob.steadyhealth.ui.screens.WeightPageScreen
 import com.kamsiob.steadyhealth.ui.theme.SteadyPalette
 import kotlinx.coroutines.delay
 
@@ -63,12 +65,13 @@ fun SteadyApp() {
     val askViewModel: AskViewModel = viewModel()
     val settingsViewModel: SettingsViewModel = viewModel()
     val checkViewModel: CheckViewModel = viewModel()
+    val abilityViewModel: AbilityViewModel = viewModel()
     val onboarded by viewModel.onboardingComplete.collectAsStateWithLifecycle()
 
     when (onboarded) {
         null -> Box(Modifier.fillMaxSize().background(SteadyPalette.Ground))
         false -> OnboardingFlow(onFinished = viewModel::onboardingFinished)
-        true -> Tabs(viewModel, askViewModel, settingsViewModel, checkViewModel)
+        true -> Tabs(viewModel, askViewModel, settingsViewModel, checkViewModel, abilityViewModel)
     }
 }
 
@@ -78,6 +81,7 @@ private fun Tabs(
     askViewModel: AskViewModel,
     settingsViewModel: SettingsViewModel,
     checkViewModel: CheckViewModel,
+    abilityViewModel: AbilityViewModel,
 ) {
     val navController = rememberNavController()
     var tab by rememberSaveable { mutableStateOf(Tab.Today) }
@@ -97,7 +101,10 @@ private fun Tabs(
                                 LaunchedEffect(Unit) { viewModel.refresh() }
                                 TodayScreen(
                                     state = state,
-                                    onAbility = { tab = Tab.Abilities },
+                                    onAbility = {
+                                        abilityViewModel.open(it)
+                                        navController.navigate(Route.ABILITY)
+                                    },
                                     onWeighIn = {
                                         viewModel.openWeighIn()
                                         navController.navigate(Route.WEIGH_IN)
@@ -136,7 +143,10 @@ private fun Tabs(
                                 LaunchedEffect(Unit) { viewModel.refresh() }
                                 AbilitiesScreen(
                                     state = state,
-                                    onAbility = {},
+                                    onAbility = {
+                                        abilityViewModel.open(it)
+                                        navController.navigate(Route.ABILITY)
+                                    },
                                     onCheck = {
                                         checkViewModel.open()
                                         navController.navigate(Route.CHECK)
@@ -149,6 +159,7 @@ private fun Tabs(
                     dailyRoutes(viewModel, navController, back)
                     askRoutes(askViewModel, navController, back)
                     checkRoutes(checkViewModel, navController, back)
+                    abilityRoutes(abilityViewModel, navController, back)
                     settingsRoutes(settingsViewModel, navController, back)
 
                     composable(Route.WALK_DONE) {
@@ -278,6 +289,35 @@ private fun NavGraphBuilder.dailyRoutes(
  * tabs and pops back to where it started. Its view model holds the accelerometer,
  * and leaving takes it with them.
  */
+/**
+ * One ability in depth, and the weight behind it. Grid screens 9 and 19.
+ *
+ * Reached from a tile on Today and from a row on Abilities, which are the two
+ * places the four are shown, so tapping one anywhere goes to the same page.
+ */
+private fun NavGraphBuilder.abilityRoutes(
+    viewModel: AbilityViewModel,
+    navController: NavHostController,
+    back: () -> Unit,
+) {
+    composable(Route.ABILITY) {
+        val state by viewModel.detail.collectAsStateWithLifecycle()
+        AbilityDetailScreen(
+            state = state,
+            onWeight = {
+                viewModel.openWeight()
+                navController.navigate(Route.WEIGHT)
+            },
+            onBack = back,
+        )
+    }
+
+    composable(Route.WEIGHT) {
+        val state by viewModel.weightPage.collectAsStateWithLifecycle()
+        WeightPageScreen(state = state, onBack = back)
+    }
+}
+
 private fun NavGraphBuilder.checkRoutes(
     viewModel: CheckViewModel,
     navController: NavHostController,

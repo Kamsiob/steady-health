@@ -22,14 +22,19 @@ enum class Tab(
     Abilities("abilities", R.string.tab_abilities, R.drawable.ic_abilities),
 }
 
-/** Every destination that is not a tab root. */
+/**
+ * Every destination that is not a tab root.
+ *
+ * The offer is not here on purpose. It is a thing the app is saying rather than a
+ * place somebody went, so it covers the screen from outside the graph and has no
+ * route to navigate to or back from.
+ */
 object Route {
     const val TABS = "tabs"
     const val WEIGH_IN = "weigh-in"
     const val SAY_HOW = "say-how"
     const val WALKING = "walking"
     const val WALK_DONE = "walk-done"
-    const val OFFER = "offer"
     const val SETTINGS = "settings"
     const val GETTING_AROUND = "getting-around"
     const val LEAVE_OUT = "leave-out"
@@ -40,4 +45,6 @@ object Route {
     const val CHECK = "check"
     const val CHECK_MEASURE = "check-measure"
     const val CHECK_DONE = "check-done"
+    const val ABILITY = "ability"
+    const val WEIGHT = "weight"
 }
