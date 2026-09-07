@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  The status bar icon. One colour, flat, no detail: Android draws it as a
+  silhouette at 24dp and anything else turns into a smudge. The hill and the sun,
+  which is the app's own shape everywhere else.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="#FFFFFFFF">
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M17,4.5m-3,0a3,3 0 1,0 6,0a3,3 0 1,0 -6,0" />
+    <path
+        android:fillColor="#FF000000"
+        android:pathData="M1,20 C5.5,14 8.5,11 12,11 C15.5,11 18.5,14 23,20 Z" />
+</vector>

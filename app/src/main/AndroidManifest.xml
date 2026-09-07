@@ -17,6 +17,13 @@
     -->
 
     <!--
+      Asked for the first time somebody turns a reminder on, never before, and
+      the app works exactly the same if it is refused. LOGIC.md section 12 caps
+      what this permission can ever produce at two notifications a week.
+    -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!--
       localeConfig is read from Android 13 onward, where the system settings
       offer a per-app language. Below that it is ignored and the app's own
       language picker is what a person uses. Both are wanted, so lint is told

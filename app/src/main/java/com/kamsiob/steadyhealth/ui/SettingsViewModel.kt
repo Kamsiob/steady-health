@@ -6,17 +6,21 @@ import androidx.lifecycle.viewModelScope
 import com.kamsiob.steadyhealth.R
 import com.kamsiob.steadyhealth.data.DataRepository
 import com.kamsiob.steadyhealth.data.ProfileRepository
+import com.kamsiob.steadyhealth.data.ReminderRepository
 import com.kamsiob.steadyhealth.data.SteadyDatabase
 import com.kamsiob.steadyhealth.domain.Exclusion
 import com.kamsiob.steadyhealth.domain.GettingAround
 import com.kamsiob.steadyhealth.domain.PemAnswer
 import com.kamsiob.steadyhealth.engine.Envelope
 import com.kamsiob.steadyhealth.engine.PacingEngine
+import com.kamsiob.steadyhealth.engine.ReminderKind
 import com.kamsiob.steadyhealth.engine.WaysOfGettingAround
 import com.kamsiob.steadyhealth.export.DataExport
 import com.kamsiob.steadyhealth.export.Share
 import com.kamsiob.steadyhealth.export.SummaryPages
 import com.kamsiob.steadyhealth.export.SummaryPdf
+import com.kamsiob.steadyhealth.remind.ReminderWorker
+import com.kamsiob.steadyhealth.remind.Reminding
 import com.kamsiob.steadyhealth.ui.screens.SettingsUiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -49,6 +53,7 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     private val db get() = SteadyDatabase.get(getApplication())
     private val profile get() = ProfileRepository(db)
     private val data get() = DataRepository(db)
+    private val reminders get() = ReminderRepository(db)
 
     private val _settings = MutableStateFlow(SettingsUiState())
     val settings: StateFlow<SettingsUiState> = _settings.asStateFlow()
@@ -71,6 +76,8 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         pacing = profile.pacing()
         envelope = profile.envelope()
         _pattern.value = profile.pem()
+        val on = ReminderKind.entries.filter { profile.reminderOn(it) }.toSet()
+
         _settings.value = SettingsUiState(
             gettingAround = profile.gettingAround(),
             gettingAroundLabel = context.getString(labelFor(profile.gettingAround())),
@@ -86,6 +93,9 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
             },
             pacing = pacing,
             pemLabel = context.getString(labelFor(_pattern.value)),
+            remindersOn = on,
+            remindersLeft = reminders.leftThisWeek(System.currentTimeMillis()),
+            remindersBlocked = on.isNotEmpty() && !Reminding.allowed(context),
             envelopeMinutes = envelope.minutes,
             envelopeDays = envelope.daysPerWeek,
         )
@@ -143,6 +153,28 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
 
     /** True while the delete screen is asking. It asks once and only once. */
     val confirmingDelete: StateFlow<Boolean> = _confirmingDelete.asStateFlow()
+
+    /**
+     * Turn one reminder on or off.
+     *
+     * Turning the first one on is the only moment this app asks for the
+     * notification permission, which ONBOARDING.md is explicit about: never at
+     * setup, never before somebody has asked for something that needs it.
+     *
+     * The daily job runs only while at least one is on, and is cancelled outright
+     * when the last one goes off. A job that wakes a phone to decide not to speak
+     * is still a job waking a phone.
+     */
+    fun setReminder(kind: ReminderKind, on: Boolean) = viewModelScope.launch {
+        profile.setReminderOn(kind, on)
+        val context = getApplication<Application>()
+        if (profile.anyReminderOn()) {
+            ReminderWorker.schedule(context)
+        } else {
+            ReminderWorker.stop(context)
+        }
+        refreshSettings()
+    }
 
     fun askToDelete() {
         _confirmingDelete.value = true

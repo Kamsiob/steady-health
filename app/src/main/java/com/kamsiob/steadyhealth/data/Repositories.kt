@@ -17,6 +17,7 @@ import com.kamsiob.steadyhealth.data.entity.MeasureResultEntity
 import com.kamsiob.steadyhealth.data.entity.NoticeEntity
 import com.kamsiob.steadyhealth.data.entity.PersonSynonymEntity
 import com.kamsiob.steadyhealth.data.entity.ReadinessEntity
+import com.kamsiob.steadyhealth.data.entity.ReminderSentEntity
 import com.kamsiob.steadyhealth.data.entity.SessionEntity
 import com.kamsiob.steadyhealth.data.entity.SettingEntity
 import com.kamsiob.steadyhealth.data.entity.StepNameEntity
@@ -51,6 +52,8 @@ import com.kamsiob.steadyhealth.engine.Mention
 import com.kamsiob.steadyhealth.engine.MonthOfSessions
 import com.kamsiob.steadyhealth.engine.PacingEngine
 import com.kamsiob.steadyhealth.engine.Reading
+import com.kamsiob.steadyhealth.engine.ReminderKind
+import com.kamsiob.steadyhealth.engine.Reminders
 import com.kamsiob.steadyhealth.engine.Smoothed
 import com.kamsiob.steadyhealth.engine.VisitInputs
 import com.kamsiob.steadyhealth.engine.VisitSummaryEngine
@@ -393,6 +396,17 @@ class ProfileRepository(private val db: SteadyDatabase) {
     }
 
     suspend fun envelopeStart(): Int = get(ENVELOPE_START)?.toIntOrNull() ?: PacingEngine.DEFAULT.minutes
+
+    /**
+     * Whether one kind of reminder is on. All four are off until somebody says
+     * otherwise, which LOGIC.md section 12 makes a default and not a suggestion.
+     */
+    suspend fun reminderOn(kind: ReminderKind): Boolean = get("remind_${kind.id}").toBoolean()
+
+    suspend fun setReminderOn(kind: ReminderKind, value: Boolean) =
+        put("remind_${kind.id}", value.toString())
+
+    suspend fun anyReminderOn(): Boolean = ReminderKind.entries.any { reminderOn(it) }
 
     suspend fun showNumbers(): Boolean = get(SHOW_NUMBERS)?.toBoolean() ?: true
 
@@ -865,5 +879,23 @@ class DataRepository(private val db: SteadyDatabase) {
 
     private companion object {
         const val SECONDS_PER_MINUTE = 60
+    }
+}
+
+/** What has been sent, so the ceiling can be counted honestly. */
+class ReminderRepository(private val db: SteadyDatabase) {
+
+    suspend fun sentSince(millis: Long): List<Long> = db.reminders().since(millis).map { it.sentAt }
+
+    suspend fun record(kind: ReminderKind, at: Long) {
+        db.reminders().record(ReminderSentEntity(type = kind.id, sentAt = at))
+    }
+
+    /** How many of the two are left, for the line settings shows. */
+    suspend fun leftThisWeek(now: Long): Int =
+        Reminders.leftThisWeek(sentSince(now - A_WEEK), now)
+
+    private companion object {
+        const val A_WEEK = 7L * 24 * 60 * 60 * 1000
     }
 }

@@ -11,6 +11,7 @@ import com.kamsiob.steadyhealth.domain.Exclusion
 import com.kamsiob.steadyhealth.domain.GettingAround
 import com.kamsiob.steadyhealth.domain.PemAnswer
 import com.kamsiob.steadyhealth.domain.Units
+import com.kamsiob.steadyhealth.engine.ReminderKind
 import com.kamsiob.steadyhealth.ui.components.ListItem
 import com.kamsiob.steadyhealth.ui.components.NoteBlock
 import com.kamsiob.steadyhealth.ui.components.Paragraph
@@ -20,6 +21,7 @@ import com.kamsiob.steadyhealth.ui.components.SectionTitle
 import com.kamsiob.steadyhealth.ui.components.SteadyScreen
 import com.kamsiob.steadyhealth.ui.components.Stepper
 import com.kamsiob.steadyhealth.ui.components.SwitchRow
+import com.kamsiob.steadyhealth.ui.theme.SteadyPalette
 
 /** What Settings draws. Grid screen 22. */
 data class SettingsUiState(
@@ -33,6 +35,9 @@ data class SettingsUiState(
     val exclusionsLabel: String = "",
     val pacing: Boolean = false,
     val pemLabel: String = "",
+    val remindersOn: Set<ReminderKind> = emptySet(),
+    val remindersLeft: Int = 0,
+    val remindersBlocked: Boolean = false,
     val envelopeMinutes: Int = 0,
     val envelopeDays: Int = 0,
 )
@@ -53,6 +58,7 @@ data class SettingsActions(
     val onPattern: () -> Unit,
     val onPacing: () -> Unit,
     val onData: () -> Unit,
+    val onReminders: () -> Unit,
 )
 
 /**
@@ -112,6 +118,20 @@ fun SettingsScreen(
             heading = stringResource(R.string.settings_pattern),
             subtitle = state.pemLabel,
             onClick = actions.onPattern,
+        )
+
+        ListItem(
+            heading = stringResource(R.string.settings_reminders),
+            subtitle = if (state.remindersOn.isEmpty()) {
+                stringResource(R.string.settings_reminders_off)
+            } else {
+                pluralStringResource(
+                    R.plurals.settings_reminders_left,
+                    state.remindersLeft,
+                    state.remindersLeft,
+                )
+            },
+            onClick = actions.onReminders,
         )
 
         ListItem(
@@ -208,6 +228,56 @@ fun PatternScreen(
         }
 
         Paragraph(stringResource(R.string.start_pem_why))
+    }
+}
+
+/**
+ * Reminders, and the ceiling above them.
+ *
+ * The ceiling is stated on the screen, in the sentence that says it is a rule in
+ * the app rather than a setting. It is the reason four switches here are not four
+ * ways to be interrupted more.
+ *
+ * Nothing here refers to a day somebody missed, on the screen or in the
+ * notifications it turns on.
+ */
+@Composable
+fun RemindersScreen(
+    on: Set<ReminderKind>,
+    left: Int,
+    blocked: Boolean,
+    onToggle: (ReminderKind, Boolean) -> Unit,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    SteadyScreen(
+        title = stringResource(R.string.reminders_title),
+        onBack = onBack,
+        modifier = modifier,
+    ) {
+        NoteBlock(stringResource(R.string.reminders_ceiling))
+
+        if (blocked) NoteBlock(stringResource(R.string.reminders_denied), tint = SteadyPalette.SkyL)
+
+        listOf(
+            ReminderKind.Walk to (R.string.reminders_walk to R.string.reminders_walk_sub),
+            ReminderKind.StepReady to (R.string.reminders_step to R.string.reminders_step_sub),
+            ReminderKind.WeekNote to (R.string.reminders_week to R.string.reminders_week_sub),
+            ReminderKind.Photo to (R.string.reminders_photo to R.string.reminders_photo_sub),
+        ).forEach { (kind, labels) ->
+            SwitchRow(
+                label = stringResource(labels.first),
+                subtitle = stringResource(labels.second),
+                checked = kind in on,
+                onChange = { onToggle(kind, it) },
+            )
+        }
+
+        if (on.isNotEmpty()) {
+            Paragraph(
+                pluralStringResource(R.plurals.settings_reminders_left, left, left),
+            )
+        }
     }
 }
 

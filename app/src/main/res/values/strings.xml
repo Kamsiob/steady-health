@@ -391,6 +391,36 @@
     <string name="direction_first">Nothing to compare yet</string>
     <string name="direction_spoken">Your weight, %1$s %2$s</string>
 
+    <!--
+      Reminders. LOGIC.md section 12: under ten words each, and no reminder ever
+      refers to a day somebody missed. Two in any rolling seven days, whatever is
+      switched on.
+    -->
+    <string name="remind_channel">Reminders</string>
+    <string name="remind_channel_why">At most two a week, and only what you turned on.</string>
+    <string name="remind_walk">Your walk is there when you are.</string>
+    <string name="remind_photo">Sunday photo, if you fancy it.</string>
+    <string name="remind_week">Your week is written up.</string>
+    <string name="remind_step">A longer walk is ready.</string>
+
+    <string name="settings_reminders">Reminders</string>
+    <string name="settings_reminders_off">Off</string>
+    <plurals name="settings_reminders_left">
+        <item quantity="one">%1$d left this week</item>
+        <item quantity="other">%1$d left this week</item>
+    </plurals>
+    <string name="reminders_title">Reminders</string>
+    <string name="reminders_ceiling">Two a week at most, whatever you turn on. That is a rule in the app, not a setting.</string>
+    <string name="reminders_walk">When your walk fits</string>
+    <string name="reminders_walk_sub">At the habit you named</string>
+    <string name="reminders_photo">Sunday photo</string>
+    <string name="reminders_photo_sub">Only if you take them</string>
+    <string name="reminders_week">Your week is written up</string>
+    <string name="reminders_week_sub">Sunday</string>
+    <string name="reminders_step">A longer walk is ready</string>
+    <string name="reminders_step_sub">When the app offers one</string>
+    <string name="reminders_denied">Android is not letting notifications through. You can change that in the system settings for this app.</string>
+
     <string name="data_title">Your data</string>
     <string name="data_row">Export or delete everything</string>
     <string name="data_export">Export everything</string>

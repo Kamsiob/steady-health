@@ -114,15 +114,41 @@ abstract class SteadyDatabase : RoomDatabase() {
             instance ?: build(context.applicationContext).also { instance = it }
         }
 
-        private fun build(context: Context): SteadyDatabase {
+        /**
+         * A separate database, for the device tests that have to destroy one.
+         *
+         * The template rule is that data-affecting tests do not run against the
+         * owner's data, and a test proving that destroy leaves nothing behind is
+         * the most data-affecting test there is. It ran against the real database
+         * once, on the phone, and wiped a real setup. Now it cannot.
+         */
+        fun forTesting(context: Context, name: String, alias: String): SteadyDatabase =
+            build(context.applicationContext, name, alias)
+
+        fun destroyTesting(context: Context, name: String, alias: String) {
+            DatabaseKey.destroy(context, alias)
+            val dir = context.applicationContext.getDatabasePath(name).parentFile
+            dir?.listFiles()?.filter { it.name.startsWith(name) }?.forEach { it.delete() }
+        }
+
+        private fun build(
+            context: Context,
+            name: String = NAME,
+            alias: String? = null,
+        ): SteadyDatabase {
             // SQLCipher is a native library and nothing loads it for you. Without
             // this the first query throws UnsatisfiedLinkError, which is a crash
             // on the first screen that reads anything, and it cannot be caught by
             // a JVM test because there is no native library there to be missing.
             System.loadLibrary("sqlcipher")
 
-            return Room.databaseBuilder(context, SteadyDatabase::class.java, NAME)
-                .setDriver(SQLCipherDriver(DatabaseKey.passphrase(context), null, null))
+            val passphrase = if (alias == null) {
+                DatabaseKey.passphrase(context)
+            } else {
+                DatabaseKey.passphrase(context, alias)
+            }
+            return Room.databaseBuilder(context, SteadyDatabase::class.java, name)
+                .setDriver(SQLCipherDriver(passphrase, null, null))
                 .setQueryCoroutineContext(Dispatchers.IO)
                 .build()
         }

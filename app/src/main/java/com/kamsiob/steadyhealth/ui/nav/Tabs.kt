@@ -50,4 +50,5 @@ object Route {
     const val WEIGHT = "weight"
     const val SUMMARY = "summary"
     const val DATA = "data"
+    const val REMINDERS = "reminders"
 }

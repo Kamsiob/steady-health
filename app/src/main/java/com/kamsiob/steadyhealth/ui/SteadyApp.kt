@@ -1,5 +1,7 @@
 package com.kamsiob.steadyhealth.ui
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts.RequestPermission
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,6 +26,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.kamsiob.steadyhealth.domain.Exclusion
+import com.kamsiob.steadyhealth.remind.Reminding
 import com.kamsiob.steadyhealth.ui.components.SteadyTabBar
 import com.kamsiob.steadyhealth.ui.nav.Route
 import com.kamsiob.steadyhealth.ui.nav.Tab
@@ -43,6 +46,7 @@ import com.kamsiob.steadyhealth.ui.screens.OfferScreen
 import com.kamsiob.steadyhealth.ui.screens.PacingScreen
 import com.kamsiob.steadyhealth.ui.screens.PatternScreen
 import com.kamsiob.steadyhealth.ui.screens.QuieterScreen
+import com.kamsiob.steadyhealth.ui.screens.RemindersScreen
 import com.kamsiob.steadyhealth.ui.screens.SayHowScreen
 import com.kamsiob.steadyhealth.ui.screens.SettingsActions
 import com.kamsiob.steadyhealth.ui.screens.SettingsScreen
@@ -479,6 +483,7 @@ private fun NavGraphBuilder.settingsRoutes(
                 onPattern = { navController.navigate(Route.PATTERN) },
                 onPacing = { navController.navigate(Route.PACING) },
                 onData = { navController.navigate(Route.DATA) },
+                onReminders = { navController.navigate(Route.REMINDERS) },
             ),
             onBack = back,
         )
@@ -515,6 +520,23 @@ private fun NavGraphBuilder.settingsRoutes(
             onChoose = {
                 viewModel.setPattern(it)
                 back()
+            },
+            onBack = back,
+        )
+    }
+
+    composable(Route.REMINDERS) {
+        val state by viewModel.settings.collectAsStateWithLifecycle()
+        val ask = rememberLauncherForActivityResult(RequestPermission()) { viewModel.refresh() }
+        RemindersScreen(
+            on = state.remindersOn,
+            left = state.remindersLeft,
+            blocked = state.remindersBlocked,
+            onToggle = { kind, on ->
+                // The one moment this app asks for the notification permission,
+                // and only because somebody just asked for something that needs it.
+                if (on) ask.launch(Reminding.POST_NOTIFICATIONS)
+                viewModel.setReminder(kind, on)
             },
             onBack = back,
         )

@@ -672,3 +672,40 @@ every tile was unlabelled. It was reading the wrong node: Compose puts the merge
 label on one node and the click action shows on another in that dump. The
 semantics tree, which is what TalkBack actually reads, has them together, and
 `assertHasClickAction` on the labelled node proves it.
+
+### Two a week is a rule in the app, and the screen says so
+
+LOGIC.md section 12: "Hard ceiling of two notifications in any rolling seven days
+regardless of switches." Regardless is the word that matters, so the ceiling is a
+pure function every path asks before sending, rather than something the scheduler
+is trusted to respect. A scheduler is a thing that runs at seven in the morning
+with nobody watching.
+
+Rolling, not weekly: there is no Monday on which somebody's allowance comes back
+all at once. The settings row shows how many are left, because a limit somebody
+cannot see is a limit they have to take on trust.
+
+Only a notification that actually went out counts against the ceiling. One the
+system swallowed should not cost somebody their week.
+
+The permission is asked the first time a switch goes on and never before, which
+ONBOARDING.md is explicit about. `areNotificationsEnabled` is the question rather
+than the permission state, because the runtime permission only exists from Android
+13 and somebody on 12 can still switch notifications off.
+
+### The device tests were wiping the phone
+
+Two separate problems, both found by running them.
+
+`DatabaseSmokeTest.destroyLeavesNoFileAndNoKey` destroyed the real database and
+the real key, because that is what it was written to prove. It now uses its own
+database name and its own Keystore alias, with its own wrapped-key file, and a
+fourth test whose only job is to assert those are not the real ones.
+
+Separately, Gradle's `connectedDebugAndroidTest` uninstalls both APKs when it
+finishes, which takes the app's data with it. That is a wipe dressed up as a test
+run on a phone somebody is using. `tools/device-tests.sh` installs and runs
+through adb instead and leaves everything where it was.
+
+Both are the template's rule about data-affecting tests, learned the hard way on
+the owner's own device.
