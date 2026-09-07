@@ -7,8 +7,8 @@ it cannot see the reasoning for, or breaking something it does not understand.
 Read this in full. Then DECISIONS.md. Then MASTER_SPEC.md and DESIGN.md. Then
 `git log`.
 
-**Last updated:** 2026-09-06, after Phase 0 completed and CI went green on the
-fresh repository.
+**Last updated:** 2026-09-06, after Phase 1 ran end to end on the Pixel 8:
+setup, a weigh-in, a check-in and a walk.
 
 ---
 
@@ -21,8 +21,8 @@ starting point. The repository history was rewritten: the root commit is
 `dd4c3bd` and nothing before it is reachable. Details in DECISIONS.md under "The
 reset".
 
-**Phase 0 is complete. Phase 1 has started: the component library exists, no
-screens do.**
+**Phases 0 and 1 are done and verified on the phone. Phases 2 to 7 have not
+started.**
 
 What runs on the phone right now: the app installs, opens to a three tab shell
 (Today, Move, Abilities) with the real theme, the bundled Figtree, and the
@@ -39,19 +39,23 @@ What is proven rather than assumed:
 - Every shipped string passes the banned word list, the dash rule and the
   no-shouting rule. Unit test, reading the real resource file.
 
-CI ran green on the fresh repository (run 34063225991, 5m15s): assemble, unit
-tests, lint with warnings as errors, and detekt at zero.
+Somebody can install this, go through setup, weigh in, say how the day went, and
+do a walk. All of it was driven on the Pixel 8 rather than asserted: setup writes
+what it collected, Today shows the four abilities leading and the weight
+following, the daily cards tick as each is done, the walk runs a timer and asks
+the talk test, and nothing crashed through the whole run.
 
-Built and compiling but not yet used by any screen: `SteadyScreen` (the section 4
-anatomy, taking the status bar inset once so no screen has to remember),
-`TopRow`, `SectionTitle`, `Paragraph`, `PrimaryButton`, `SecondaryButton`,
-`Pill`, `ThreeUpChoice`, `TextLink`, and the glyph language (weigh, talk, move,
-sun, moon, glyph tile).
+Built and tested: the theme, the encrypted database, the whole component library
+from DESIGN.md section 3, the eleven setup screens with ONBOARDING.md's copy,
+Today, Move, Abilities, the weigh-in, the check-in, the walk and its done screen.
 
-**The very next concrete step:** the rest of the components DESIGN.md section 3
-names, which Phase 1 needs: Hero, Daily card, Block, List item, Ability tile,
-Ability row, Life card, Rating row, Week row, Dial. Then ONBOARDING.md screen by
-screen from screen 1.
+The engine is pure and has fifty tests: weight smoothing at alpha 0.10, the five
+ladders as a table, and progression with every threshold as a named constant.
+
+**The very next concrete step:** Phase 2, the other three ways of getting around.
+The setup question already stores the answer and nothing yet reads it, so Today,
+Move and the measures are the same for all four. That is the largest gap between
+what the app says it does and what it does.
 
 ### What is uncommitted or mid-flight
 
@@ -59,12 +63,19 @@ Nothing at the last commit. Check `git status` before assuming.
 
 ### What would break if somebody assumed it was finished
 
-- **There are no screens.** Three placeholders. Nothing in ONBOARDING.md is built.
-- **Nothing writes to the database except the smoke test.** The DAOs exist and no
-  repository sits on top of them yet.
-- **The engine does not exist.** Not one rule from LOGIC.md is implemented.
-- **The model is not integrated.** No dependency, no INTERNET permission.
-- **strings.xml has about fifteen strings in it.** English only.
+- **How you get around is asked and never used.** Setup stores it; nothing reads
+  it. A wheelchair user currently gets the on-your-feet app. That is Phase 2 and
+  it is the biggest gap.
+- **The abilities never change.** Every one reads Same, because Better, Same and
+  Quieter come from the monthly check, which is Phase 4. There is no check yet.
+- **The ability tiles carry the person's own words, not a measured sentence.**
+  The life sentence from LOGIC.md 3b needs measures behind it.
+- **Progression is not wired.** The engine decides offers and step backs and
+  nothing calls it after a session yet.
+- **The model is not integrated.** No dependency, no INTERNET permission. The tag
+  grid, the Sunday note and the visit summary do not exist.
+- **strings.xml is English only.** Four locales are declared and three are empty.
+- **Settings and Ask a question are buttons that do nothing.**
 
 ---
 
