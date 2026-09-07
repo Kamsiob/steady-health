@@ -24,6 +24,7 @@ import com.kamsiob.steadyhealth.ui.screens.CheckIntroUiState
 import com.kamsiob.steadyhealth.ui.screens.CheckMeasureUiState
 import com.kamsiob.steadyhealth.ui.screens.CheckResultRow
 import com.kamsiob.steadyhealth.ui.screens.QuieterUiState
+import com.kamsiob.steadyhealth.ui.screens.RateAgainItem
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -73,6 +74,11 @@ class CheckViewModel(application: Application) : AndroidViewModel(application) {
 
     private val _done = MutableStateFlow(CheckDoneUiState())
     val done: StateFlow<CheckDoneUiState> = _done.asStateFlow()
+
+    private val _rateAgain = MutableStateFlow<List<RateAgainItem>>(emptyList())
+
+    /** The person's own list, to be rated again. LOGIC.md 3b, monthly with the check. */
+    val rateAgain: StateFlow<List<RateAgainItem>> = _rateAgain.asStateFlow()
 
     private val _quieter = MutableStateFlow<QuieterUiState?>(null)
 
@@ -208,7 +214,35 @@ class CheckViewModel(application: Application) : AndroidViewModel(application) {
 
     private fun next() {
         at += 1
-        if (at < plan.size) showMeasure() else finish()
+        if (at < plan.size) showMeasure() else loadRatings()
+    }
+
+    /**
+     * Load the person's list for re-rating, or go straight to the result.
+     *
+     * Somebody with nothing on their list does not get an empty screen asking
+     * them to rate nothing.
+     */
+    private fun loadRatings() = viewModelScope.launch {
+        val items = abilities.items().map { item ->
+            val before = abilities.latestRating(item.id)?.rating ?: DEFAULT_RATING
+            RateAgainItem(id = item.id, text = item.text, rating = before, before = before)
+        }
+        _rateAgain.value = items
+        if (items.isEmpty()) finish()
+    }
+
+    fun rate(itemId: Long, rating: Int) {
+        _rateAgain.update { list ->
+            list.map { if (it.id == itemId) it.copy(rating = rating) else it }
+        }
+    }
+
+    /** Save the ratings, then read the result. */
+    fun ratingsDone() = viewModelScope.launch {
+        val now = System.currentTimeMillis()
+        _rateAgain.value.forEach { abilities.rate(it.id, today(), it.rating, now) }
+        finish()
     }
 
     private fun finish() = viewModelScope.launch {
@@ -221,6 +255,20 @@ class CheckViewModel(application: Application) : AndroidViewModel(application) {
         val sentence = plan.map { it.domain }.distinct()
             .firstNotNullOfOrNull { LifeSentences.forDomain(it, values) }
 
+        // Whatever was actually done. Somebody who skipped every measure and
+        // only re-rated their own list has still done something, and a screen
+        // saying "Done" with nothing under it makes it look like they have not.
+        val ratingRows = _rateAgain.value
+            .filter { it.rating != it.before || rows.isEmpty() }
+            .map { item ->
+                CheckResultRow(
+                    name = item.text,
+                    value = string(R.string.rating_now, item.rating),
+                    state = ratingState(item.rating - item.before),
+                    stateLabel = string(stateLabelOf(ratingState(item.rating - item.before))),
+                )
+            }
+
         _done.value = CheckDoneUiState(
             lifeSentence = sentence?.let { string(lifeStringOf(it.id)) }.orEmpty(),
             // Only when the sentence is about the ability they actually named
@@ -231,8 +279,8 @@ class CheckViewModel(application: Application) : AndroidViewModel(application) {
             } else {
                 ""
             },
-            rows = rows,
-            anySame = rows.any { it.state == AbilityState.Same },
+            rows = rows + ratingRows,
+            anySame = (rows + ratingRows).any { it.state == AbilityState.Same },
         )
         _finished.value = true
     }
@@ -305,6 +353,19 @@ class CheckViewModel(application: Application) : AndroidViewModel(application) {
      * else. There is no norm on this screen, no percentage, and no combined
      * anything.
      */
+    /**
+     * What a change in somebody's own rating means.
+     *
+     * Two points or more is a change; one point is inside the range these ratings
+     * move in anyway and is shown without being announced. LOGIC.md 3b, from the
+     * Patient-Specific Functional Scale's own detectable change of about 1.3 to 3.
+     */
+    private fun ratingState(moved: Int) = when {
+        moved >= RATING_CHANGE -> AbilityState.Better
+        moved <= -RATING_CHANGE -> AbilityState.Quieter
+        else -> AbilityState.Same
+    }
+
     private fun row(measure: Measure, value: Double, before: Double?): CheckResultRow {
         val now = valueLabel(measure, value)
         val state = when {
@@ -394,6 +455,12 @@ class CheckViewModel(application: Application) : AndroidViewModel(application) {
 
     private companion object {
         const val A_SECOND = 1000L
+
+        /** The middle of the scale, the same starting point setup uses. */
+        const val DEFAULT_RATING = 5
+
+        /** Two points or more. LOGIC.md 3b. */
+        const val RATING_CHANGE = 2
         const val MILLIS_PER_DAY = 86_400_000L
         const val QUIETER_NOTICE = "quieter"
     }

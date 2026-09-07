@@ -46,6 +46,7 @@ import com.kamsiob.steadyhealth.ui.screens.OfferScreen
 import com.kamsiob.steadyhealth.ui.screens.PacingScreen
 import com.kamsiob.steadyhealth.ui.screens.PatternScreen
 import com.kamsiob.steadyhealth.ui.screens.QuieterScreen
+import com.kamsiob.steadyhealth.ui.screens.RateAgainScreen
 import com.kamsiob.steadyhealth.ui.screens.RemindersScreen
 import com.kamsiob.steadyhealth.ui.screens.SayHowScreen
 import com.kamsiob.steadyhealth.ui.screens.SettingsActions
@@ -485,14 +486,32 @@ private fun NavGraphBuilder.checkRoutes(
     composable(Route.CHECK_MEASURE) {
         val state by viewModel.measure.collectAsStateWithLifecycle()
         val finished by viewModel.finished.collectAsStateWithLifecycle()
-        LaunchedEffect(finished) {
-            if (finished) navController.navigate(Route.CHECK_DONE)
+        val rate by viewModel.rateAgain.collectAsStateWithLifecycle()
+        LaunchedEffect(finished, rate) {
+            when {
+                finished -> navController.navigate(Route.CHECK_DONE)
+                rate.isNotEmpty() -> navController.navigate(Route.CHECK_RATE)
+            }
         }
         CheckMeasureScreen(
             state = state,
             onTap = viewModel::tap,
             onStop = viewModel::stop,
             onSkip = viewModel::skip,
+            onBack = { navController.popBackStack(Route.TABS, inclusive = false) },
+        )
+    }
+
+    composable(Route.CHECK_RATE) {
+        val items by viewModel.rateAgain.collectAsStateWithLifecycle()
+        val finished by viewModel.finished.collectAsStateWithLifecycle()
+        LaunchedEffect(finished) {
+            if (finished) navController.navigate(Route.CHECK_DONE)
+        }
+        RateAgainScreen(
+            items = items,
+            onRate = viewModel::rate,
+            onDone = viewModel::ratingsDone,
             onBack = { navController.popBackStack(Route.TABS, inclusive = false) },
         )
     }

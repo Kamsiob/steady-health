@@ -25,6 +25,7 @@ import com.kamsiob.steadyhealth.ui.components.ListItem
 import com.kamsiob.steadyhealth.ui.components.NoteBlock
 import com.kamsiob.steadyhealth.ui.components.Paragraph
 import com.kamsiob.steadyhealth.ui.components.PrimaryButton
+import com.kamsiob.steadyhealth.ui.components.RatingRow
 import com.kamsiob.steadyhealth.ui.components.SecondaryButton
 import com.kamsiob.steadyhealth.ui.components.SectionTitle
 import com.kamsiob.steadyhealth.ui.components.SteadyScreen
@@ -191,6 +192,51 @@ private fun Dots(count: Int) {
                     .size(DOT)
                     .clip(SteadyShapes.Round)
                     .background(SteadyPalette.Orange),
+            )
+        }
+    }
+}
+
+/** One thing on the person's list, being rated again. */
+data class RateAgainItem(val id: Long, val text: String, val rating: Int, val before: Int)
+
+/**
+ * The person's own list, re-rated. LOGIC.md 3b: "Re-rated monthly with the check."
+ *
+ * It comes after the measures because the numbers are the part that needs a chair
+ * and a wall, and somebody who stops there has still done the useful half. This
+ * part takes twenty seconds and is the one CONTENT.md card 12 says is the reason
+ * the app asks at all: seven seconds off a chair-stand time is abstract, getting
+ * off the floor without your hands is not.
+ */
+@Composable
+fun RateAgainScreen(
+    items: List<RateAgainItem>,
+    onRate: (Long, Int) -> Unit,
+    onDone: () -> Unit,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    SteadyScreen(
+        title = stringResource(R.string.check_title),
+        onBack = onBack,
+        modifier = modifier,
+        footer = { PrimaryButton(label = stringResource(R.string.check_next), onClick = onDone) },
+    ) {
+        SteadyText(
+            text = stringResource(R.string.rate_title),
+            style = SteadyType.ScreenTitleBig,
+            color = SteadyPalette.Navy,
+            modifier = Modifier.semantics { heading() },
+        )
+        Paragraph(stringResource(R.string.rate_scale))
+
+        items.forEach { item ->
+            SectionTitle(item.text)
+            RatingRow(
+                rating = item.rating,
+                onRate = { onRate(item.id, it) },
+                label = item.text,
             )
         }
     }

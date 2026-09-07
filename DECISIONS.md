@@ -787,3 +787,22 @@ without a page about it.
 The tiles are a minimum height rather than a fixed one, and the two in a row match
 each other, so a two-line sentence takes its neighbour up with it. That is also
 what stops them breaking at twice the text size.
+
+### The monthly check re-rates the person's own list
+
+LOGIC.md 3b says so in four words, "Re-rated monthly with the check", and it was
+the missing half of the check: the measures were being taken and the ratings that
+CONTENT.md card 12 calls the reason the app asks at all were not.
+
+It comes after the measures, because the numbers are the part that needs a chair
+and a wall and somebody who stops there has still done the useful half. Somebody
+with nothing on their list does not get an empty screen asking them to rate
+nothing.
+
+Two points or more is a change and one point is not, which is the Patient-Specific
+Functional Scale's own detectable change of about 1.3 to 3 rounded to the
+cautious side. It is the same rule as the measures, for the same reason.
+
+The result screen shows whatever was actually done. Skipping every measure and
+only re-rating your list used to produce a screen saying "Done" with nothing under
+it, which makes it look as though nothing happened.
