@@ -31,4 +31,236 @@
 
     <!-- Phase 0 only. Removed when the screen behind it is built. -->
     <string name="placeholder_phase">This screen is next.</string>
+
+    <!-- ===================== Setup, screen 1: Welcome ===================== -->
+    <string name="welcome_headline">Notice what changes.\nNever get graded.</string>
+    <string name="welcome_line">Your weight, your walks, and how your days go. All of it stays on your phone.</string>
+    <string name="welcome_start">Get started</string>
+    <string name="welcome_caption">Free and open source, by Kamsiob</string>
+    <string name="language_english" translatable="false">English</string>
+    <string name="language_spanish" translatable="false">Español</string>
+    <string name="language_chinese" translatable="false">中文</string>
+    <string name="language_arabic" translatable="false">العربية</string>
+
+    <!-- ===================== Screen 2: Three things ===================== -->
+    <string name="three_title">Three things, and that\'s it</string>
+    <string name="three_weigh">Weigh in when it suits you. The app smooths it so one heavy morning doesn\'t matter.</string>
+    <string name="three_say">Say how the day went. One sentence, talk or type.</string>
+    <string name="three_move">Move for two minutes. A short walk counts.</string>
+    <string name="three_okay">Okay</string>
+
+    <!-- ===================== Screen 2b: How you get around ===================== -->
+    <string name="around_title">How you get around</string>
+    <string name="around_question">Most days, how do you get around?</string>
+    <string name="around_on_feet">On my feet</string>
+    <string name="around_walker">With a walker or cane</string>
+    <string name="around_wheelchair">In a wheelchair</string>
+    <string name="around_in_bed">Mostly in bed or a chair, for now</string>
+    <string name="around_why">This sets what the app measures and what it suggests. There is no wrong answer, and you can change it any time.</string>
+    <string name="around_therapist">Working with a physical or occupational therapist right now?</string>
+
+    <!-- ===================== Screen 3: About you ===================== -->
+    <string name="about_you_title">A little about you</string>
+    <string name="about_you_units">Which units?</string>
+    <string name="units_imperial">Pounds and feet</string>
+    <string name="units_metric">Kilos and centimetres</string>
+    <string name="about_you_height">How tall are you?</string>
+    <string name="about_you_height_why">So the app can do one calculation on the body page. Never for a label.</string>
+    <string name="about_you_age">How old are you?</string>
+    <string name="about_you_age_why">Used only to show typical ranges for your age, if you ever want them. Skip is fine.</string>
+    <string name="about_you_skip">Skip</string>
+    <string name="continue_label">Continue</string>
+
+    <!-- ===================== Screen 4: Where you are starting ===================== -->
+    <string name="start_title">Where you\'re starting</string>
+    <string name="start_chair">Getting out of a low chair is</string>
+    <string name="start_chair_hard">Hard</string>
+    <string name="start_chair_okay">Okay</string>
+    <string name="start_chair_easy">Easy</string>
+    <string name="start_chair_why">Sets how short your first walks and exercises are.</string>
+    <string name="start_stairs">Stairs are</string>
+    <string name="start_stairs_avoid">Something I avoid</string>
+    <string name="start_stairs_stop">Fine with a stop</string>
+    <string name="start_stairs_fine">Fine</string>
+    <string name="start_walk">I can walk before I want to stop for about</string>
+    <string name="start_walk_under5">Under 5 minutes</string>
+    <string name="start_walk_5to15">5 to 15</string>
+    <string name="start_walk_over15">More than 15</string>
+    <string name="start_floor">Getting down to the floor and back up</string>
+    <string name="start_floor_no">No</string>
+    <string name="start_floor_help">With help</string>
+    <string name="start_floor_yes">Yes</string>
+    <string name="start_pem">After activity, do you feel much worse for a day or more afterward?</string>
+    <string name="start_pem_no">No</string>
+    <string name="start_pem_sometimes">Sometimes</string>
+    <string name="start_pem_yes">Yes</string>
+    <string name="start_pem_why">Some people\'s bodies work that way. If yours does, the app won\'t push.</string>
+
+    <!-- ===================== Screen 5: Anything to leave out ===================== -->
+    <string name="leave_out_title">Anything to leave out</string>
+    <string name="leave_out_question">Is there anything you avoid, or have been told not to do?</string>
+    <string name="leave_out_pushing">Pushing or pressing</string>
+    <string name="leave_out_stomach">Anything that strains my stomach</string>
+    <string name="leave_out_floor">Getting down on the floor</string>
+    <string name="leave_out_impact">Jumping or impact</string>
+    <string name="leave_out_knee">Deep knee bending</string>
+    <string name="leave_out_overhead">Lifting overhead</string>
+    <string name="leave_out_twisting">Twisting my back</string>
+    <string name="leave_out_forward">Deep forward bending</string>
+    <string name="leave_out_arching">Arching my back</string>
+    <string name="leave_out_lying">Lying flat on my back</string>
+    <string name="leave_out_breath">Straining or holding my breath</string>
+    <string name="leave_out_why">The app hides those for good. It never asks why.</string>
+    <string name="leave_out_nothing">Nothing to leave out</string>
+
+    <!-- ===================== Screen 6: Readiness ===================== -->
+    <string name="readiness_title">Before harder walks</string>
+    <string name="readiness_chest">Chest pain at rest or when active</string>
+    <string name="readiness_fainting">Fainting or dizziness that made you lose balance in the last year</string>
+    <string name="readiness_supervised">A doctor said only exercise under supervision</string>
+    <string name="readiness_pregnant">Pregnant</string>
+    <string name="readiness_bone">A bone or joint problem that could get worse</string>
+    <string name="readiness_yes">Yes</string>
+    <string name="readiness_no">No</string>
+    <string name="readiness_note">Worth a word with your doctor before the harder walks. Everything up to a 15-minute walk is still here.</string>
+    <string name="readiness_link">The official readiness questionnaire (PAR-Q+)</string>
+    <string name="readiness_attribution">PAR-Q+ Collaboration. Warburton, Jamnik, Bredin and Gledhill, Health and Fitness Journal of Canada 4(2):3 to 23, 2011.</string>
+
+    <!-- ===================== Screen 7: What you want to do ===================== -->
+    <string name="want_title">What would you like to be able to do?</string>
+    <string name="want_prompt">Say it however you would to a friend.</string>
+    <string name="want_hint">Get down to the floor and back up</string>
+    <string name="want_starters">Or pick one of these</string>
+    <string name="want_starter_groceries">Carry the groceries in one trip</string>
+    <string name="want_starter_stairs">Stairs without stopping</string>
+    <string name="want_starter_floor">Get down to the floor and back up</string>
+    <string name="want_starter_kids">Keep up with the kids</string>
+    <string name="want_starter_shelf">Reach the top shelf</string>
+    <string name="want_starter_mailbox">Get to the mailbox on my own</string>
+    <string name="want_starter_stiff">Feel less stiff in the morning</string>
+    <string name="want_add">Add it</string>
+    <string name="want_tracking">I\'ll track these</string>
+
+    <!-- ===================== Screen 7b: Rate each ===================== -->
+    <string name="rate_title">Right now, how hard is each one?</string>
+    <string name="rate_scale">Zero is can\'t do it at all. Ten is easy.</string>
+    <string name="rate_why">The app asks again once a month. The difference between then and now is the whole point.</string>
+
+    <!-- ===================== Screen 8: Anchor ===================== -->
+    <string name="anchor_title">Last thing</string>
+    <string name="anchor_question">When would two minutes of walking fit best?</string>
+    <string name="anchor_why">Pick something you already do every day. Right after it is when the app will suggest a walk.</string>
+    <string name="anchor_coffee">After morning coffee</string>
+    <string name="anchor_lunch">After lunch</string>
+    <string name="anchor_dinner">After dinner</string>
+    <string name="anchor_teeth">After brushing my teeth</string>
+    <string name="anchor_dog">Walking the dog</string>
+    <string name="anchor_school">The school run</string>
+    <string name="anchor_note">It usually takes a few months for something like this to feel automatic. Skipping a day doesn\'t undo anything.</string>
+    <string name="anchor_done">Done</string>
+
+    <!-- ===================== Screen 9: First weigh-in ===================== -->
+    <string name="weigh_title">Weigh in</string>
+    <string name="weigh_this_morning">this morning</string>
+    <string name="weigh_save">Save</string>
+    <string name="weigh_whenever">Weigh in whenever suits you. A missed day is fine.</string>
+    <string name="weigh_first_done">Your first point. The line starts here. It gets smarter every morning you add one, and a missed morning changes nothing.</string>
+
+    <!-- ===================== Screen 10: Name the first walk ===================== -->
+    <string name="name_walk_title">Name your first walk</string>
+    <string name="name_walk_question">What\'s a two-minute walk from your door?</string>
+    <string name="name_walk_hint">To the corner store</string>
+    <string name="name_walk_save">Save</string>
+
+    <!-- ===================== Units ===================== -->
+    <string name="unit_lb">lb</string>
+    <string name="unit_kg">kg</string>
+
+    <!-- ===================== Today ===================== -->
+    <string name="today_morning">Morning</string>
+    <string name="today_afternoon">Afternoon</string>
+    <string name="today_evening">Evening</string>
+    <string name="today_section">Today</string>
+    <string name="today_all_done">All three done</string>
+    <string name="today_progress">%1$d of 3 done</string>
+    <string name="today_weighed_in">Weighed in</string>
+    <string name="today_weigh_in">Weigh in</string>
+    <string name="today_weigh_sub">Takes ten seconds</string>
+    <string name="today_say">Say how today went</string>
+    <string name="today_say_sub">Talk or type, 20 seconds</string>
+    <string name="today_said">Said how today went</string>
+    <string name="today_move">Move for two minutes</string>
+    <string name="today_move_sub">A short walk counts</string>
+    <string name="today_moved">Moved</string>
+    <string name="today_next_walk">Your next walk</string>
+    <string name="today_go">Go</string>
+    <string name="weight_label">Your weight, smoothed</string>
+    <string name="weight_first_week">Smoothed means one heavy morning doesn\'t move it.</string>
+    <string name="weight_daily_line">The scale said %1$s today.</string>
+    <plurals name="week_row_spoken">
+        <item quantity="one">This week: %1$d day with a walk</item>
+        <item quantity="other">This week: %1$d days with a walk</item>
+    </plurals>
+    <string name="day_monday">M</string>
+    <string name="day_tuesday">T</string>
+    <string name="day_wednesday">W</string>
+    <string name="day_thursday">T</string>
+    <string name="day_friday">F</string>
+    <string name="day_saturday">S</string>
+    <string name="day_sunday">S</string>
+
+    <!-- ===================== Say how today went ===================== -->
+    <string name="say_title">Say how today went</string>
+    <string name="say_hint">One sentence is plenty</string>
+    <string name="say_sleep">How much did you sleep?</string>
+    <string name="say_hours">%1$s hours</string>
+    <string name="say_feel">How did the day feel?</string>
+    <string name="say_rough">Rough</string>
+    <string name="say_okay">Okay</string>
+    <string name="say_good">Good</string>
+    <string name="say_save">Save today</string>
+
+    <!-- ===================== Walking ===================== -->
+    <string name="walking_title">Walking</string>
+    <string name="walking_stop">Stop here, that counts</string>
+    <string name="walk_done_title">Done</string>
+    <string name="walk_done_line">Done. That counts.</string>
+    <string name="talk_question">Could you have held a conversation?</string>
+    <string name="talk_yes">Yes, easily</string>
+    <string name="talk_just">Just about</string>
+    <string name="talk_no">No</string>
+    <string name="walk_done_save">Save</string>
+
+    <!-- ===================== Move ===================== -->
+    <string name="move_what_you_want">What you said you want</string>
+    <string name="move_next">Your next walk</string>
+    <string name="move_go">Go</string>
+    <string name="move_strength">One strength set</string>
+    <plurals name="amount_minutes">
+        <item quantity="one">%1$d minute</item>
+        <item quantity="other">%1$d minutes</item>
+    </plurals>
+    <plurals name="amount_times">
+        <item quantity="one">Once</item>
+        <item quantity="other">%1$d times</item>
+    </plurals>
+    <plurals name="amount_seconds">
+        <item quantity="one">%1$d second</item>
+        <item quantity="other">%1$d seconds</item>
+    </plurals>
+
+    <!-- ===================== Abilities ===================== -->
+    <string name="abilities_title">Abilities</string>
+    <string name="abilities_your_list">What you said you want</string>
+    <string name="abilities_waiting">Your first check is after a month. Until then this is what you told the app you wanted.</string>
+    <string name="state_better">Better</string>
+    <string name="state_same">Same</string>
+    <string name="state_quieter">Quieter</string>
+    <string name="ability_no_sentence">Nothing measured yet</string>
+    <!--
+      Not a plural: "out of 10" is a scale, not a count of things, and every
+      language writes it the same way here. Lint sees a number followed by a
+      word and cannot tell the difference.
+    -->
+    <string name="rating_now" tools:ignore="PluralsCandidate">Now %1$d out of 10</string>
 </resources>

@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -67,7 +68,12 @@ fun SteadyScreen(
         modifier = modifier
             .fillMaxSize()
             .background(SteadyPalette.Ground)
-            .statusBarsPadding(),
+            .statusBarsPadding()
+            // Without this the footer sits under the keyboard on every screen
+            // with a text field, and the primary button is unreachable. Going
+            // edge to edge means adjustResize no longer insets the content, so
+            // the inset has to be taken here, once, like the status bar above.
+            .imePadding(),
     ) {
         if (title != null || onBack != null || action != null) {
             TopRow(title = title, onBack = onBack, action = action)

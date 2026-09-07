@@ -47,16 +47,31 @@ class VoiceTest {
 
     @Test
     fun everyStringIsSentenceCase() {
-        // DESIGN.md section 2: sentence case everywhere, no uppercase labels. A
-        // string of three or more letters that is entirely upper case is a label
-        // somebody shouted.
+        // DESIGN.md section 2: sentence case everywhere, no uppercase labels.
+        //
+        // Two things a naive version of this gets wrong, both found by running it.
+        // Arabic has no case at all, so `uppercase()` returns the same string and
+        // every Arabic label looks like shouting. And a proper name carrying an
+        // acronym is not a shouted label; PAR-Q+ is the questionnaire's name.
         val offences = strings.filterValues { value ->
             value.split(' ').any { word ->
                 val letters = word.filter { it.isLetter() }
-                letters.length >= SHOUT && letters == letters.uppercase()
+                val hasCase = letters.lowercase() != letters.uppercase()
+                hasCase &&
+                    letters.length >= SHOUT &&
+                    letters == letters.uppercase() &&
+                    PROPER_NAMES.none { value.contains(it) }
             }
         }
         assertThat(offences.keys).isEmpty()
+    }
+
+    @Test
+    fun theProperNameExceptionIsExactlyWhereItIsSupposedToBe() {
+        // Pinned, so the exception cannot spread into ordinary copy.
+        val using = strings.filterValues { value -> PROPER_NAMES.any { value.contains(it) } }.keys
+
+        assertThat(using).containsExactly("readiness_link", "readiness_attribution")
     }
 
     @Test
@@ -109,6 +124,12 @@ class VoiceTest {
 
     private companion object {
         const val SHOUT = 3
+
+        /**
+         * Names that are legitimately capitalised, and the only ones. COMPLIANCE.md
+         * requires the questionnaire to be named and attributed exactly.
+         */
+        val PROPER_NAMES = listOf("PAR-Q+")
         const val TEN = 10
 
         /** DESIGN.md section 6, restated, with the words the capability frame added. */

@@ -25,4 +25,8 @@ enum class Tab(
 /** Every destination that is not a tab root. */
 object Route {
     const val TABS = "tabs"
+    const val WEIGH_IN = "weigh-in"
+    const val SAY_HOW = "say-how"
+    const val WALKING = "walking"
+    const val WALK_DONE = "walk-done"
 }

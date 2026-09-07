@@ -21,11 +21,20 @@ style:
     ignoreEnums: true
   ReturnCount:
     active: true
-    max: 4
+    # Guard clauses. Each rule in the engine answers one question and returns,
+    # which reads as a list of rules; folding them into nested conditions to get
+    # the count down would make the precedence between them harder to see, and
+    # the precedence is the part that matters.
+    max: 6
   UnusedPrivateMember:
     active: true
 
 complexity:
+  LongMethod:
+    # A composable describes a layout, and a layout is as long as the screen it
+    # draws. Splitting one at sixty lines to satisfy a counter produces a helper
+    # per section that is called once and read never.
+    threshold: 130
   LongParameterList:
     # Compose screens take one callback per action by design, and collapsing
     # them into an object hides which screen uses which.

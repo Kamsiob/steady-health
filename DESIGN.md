@@ -44,6 +44,13 @@ and no new hue is introduced.
 | ink3-text | #6C708F | 4.83 | 4.55 | captions and the provenance line, wherever ink3 would have been the text colour |
 | orange-text | #BD5114 | 4.83 | 4.56 | orange words, including the Summary text action |
 | green-text | #287855 | 5.37 | 5.07 | the word done, and the Better pill (4.52 on green-l) |
+| hill-front | #C45414 | white 4.54 | | the front hill of the morning hero |
+| hill-back | #A54511 | white 6.07 | | the back hill, which is what the hero's words sit on |
+
+The morning hero needs its own two, for the same reason. The render draws the
+hills at #E86A22 and #D65A16 and puts white body text at 13.5/500 on top of them,
+which is 3.22:1 and 3.94:1 and fails. The sky above stays the approved orange; only
+the two hills darken, and the back one darkens further so the two still read as two.
 
 One fill changes with it. The primary button is white at 16/800 on orange, which
 is 2.54:1 and fails even the 3.0:1 that Android allows for text at that size and

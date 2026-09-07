@@ -1,0 +1,91 @@
+package com.kamsiob.steadyhealth.ui.screens
+
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import com.kamsiob.steadyhealth.R
+import com.kamsiob.steadyhealth.domain.AbilityDomain
+import com.kamsiob.steadyhealth.domain.AbilityState
+import com.kamsiob.steadyhealth.ui.components.AbilityRow
+import com.kamsiob.steadyhealth.ui.components.ListItem
+import com.kamsiob.steadyhealth.ui.components.Paragraph
+import com.kamsiob.steadyhealth.ui.components.SectionTitle
+import com.kamsiob.steadyhealth.ui.components.SteadyScreen
+import com.kamsiob.steadyhealth.ui.theme.SteadyPalette
+import com.kamsiob.steadyhealth.ui.theme.SteadyText
+import com.kamsiob.steadyhealth.ui.theme.SteadyType
+
+/** One of the four, as the Abilities tab shows it. */
+data class AbilityRowState(
+    val domain: AbilityDomain,
+    val name: String,
+    val lifeSentence: String,
+    val state: AbilityState,
+)
+
+/** One thing the person said they want, with where they rated it. */
+data class TrackedItemState(val text: String, val domain: AbilityDomain, val rating: Int)
+
+/** What the Abilities tab draws. */
+data class AbilitiesUiState(
+    val abilities: List<AbilityRowState> = emptyList(),
+    val items: List<TrackedItemState> = emptyList(),
+    val waiting: Boolean = true,
+)
+
+/**
+ * Abilities, from the grid, screen 8. The tab that replaced History.
+ *
+ * Four rows, each with its life sentence and its state, then the person's own
+ * list underneath. Same is drawn exactly as Better is drawn: same type, same
+ * size, same weight, and only the pill colour differs, because holding a number
+ * for a year is the work rather than the absence of it.
+ */
+@Composable
+fun AbilitiesScreen(
+    state: AbilitiesUiState,
+    onAbility: (AbilityDomain) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    SteadyScreen(title = null, onBack = null, modifier = modifier) {
+        SteadyText(
+            text = stringResource(R.string.abilities_title),
+            style = SteadyType.Greeting,
+            color = SteadyPalette.Navy,
+        )
+
+        state.abilities.forEach { ability ->
+            AbilityRow(
+                name = ability.name,
+                lifeSentence = ability.lifeSentence,
+                tint = tintFor(ability.domain),
+                state = ability.state,
+                stateLabel = stringResource(labelFor(ability.state)),
+                onClick = { onAbility(ability.domain) },
+                glyph = { AbilityGlyph(ability.domain) },
+            )
+        }
+
+        if (state.items.isNotEmpty()) {
+            SectionTitle(stringResource(R.string.abilities_your_list))
+            state.items.forEach { item ->
+                ListItem(
+                    heading = item.text,
+                    subtitle = stringResource(R.string.rating_now, item.rating),
+                    tileTint = tintFor(item.domain),
+                    glyph = { AbilityGlyph(item.domain) },
+                )
+            }
+        }
+
+        if (state.waiting) {
+            Paragraph(stringResource(R.string.abilities_waiting))
+        }
+    }
+}
+
+private fun labelFor(state: AbilityState) = when (state) {
+    AbilityState.Better -> R.string.state_better
+    AbilityState.Same -> R.string.state_same
+    AbilityState.Quieter -> R.string.state_quieter
+}

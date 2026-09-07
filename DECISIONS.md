@@ -49,6 +49,8 @@ Seeded September 6, 2026 from the design and research process. Claude Code appen
   it back, it also needs a paid Rive plan to author `.riv` files and a decision
   about shipping a binary blob in an AGPL repository. Say either way and it takes
   an hour to change.
+- **"Stop here, that counts" against the two minute rule.** See Phase 1 below. If
+  a short session should tick the daily card, say so and it is a one line change.
 - **Confirm the Play target API requirement** before release. The build uses
   compileSdk 37 and targetSdk 36 on a device running Android 17. Google's floor
   moves on a schedule and the Play Console is the only place to read it.
@@ -231,3 +233,49 @@ Deleting every file whose name starts with the database name is the only version
 that makes "there is no copy anywhere else" true.
 
 Both are the reason the phase has a smoke test rather than a compile check.
+
+## Phase 1
+
+### The spike cap as written makes the ladder unclimbable
+
+LOGIC.md section 6 caps an offered walking step at 110% of the longest session in
+the last month. Read as arithmetic against the next rung, that rule freezes
+everybody at two minutes forever, because the ladder in the same document is 2, 4,
+6, 8, 11, 14, 16, 20, 25, 30 and every one of those is more than 110% of the one
+before it. The smallest jump on the whole ladder is 14%.
+
+So the cap is implemented as what it is for. Frandsen et al. found that what
+predicts injury is a single session much longer than anything done recently, not a
+steady climb, and the ladder is the steady climb. The case worth catching is
+somebody sitting at step seven whose actual walks have been eight minutes being
+offered twenty. The rule: if they have been doing the step they are on, the next
+rung passes; if their recent walks are below their current step, the 110%
+arithmetic applies against what they have really been doing. A test walks every
+rung of the ladder and asserts each one can be reached.
+
+### Four ability glyphs, four shapes
+
+The first version used one shape in four colours, and two of them reused the fixed
+daily glyphs, so the speech bubble meant both "say how today went" and "Carry" on
+the same screen. They are now four different shapes, which the accessibility floor
+requires anyway: nothing in this app is carried by colour alone.
+
+### Two defects only the phone could show
+
+Every glyph drew at zero size inside its tile. A Canvas with no constraints draws
+nothing, and the result looks like a missing icon rather than a bug in a default,
+so the glyphs now fill their slot and a caller can still override.
+
+The keyboard covered the primary button on every screen with a text field. Going
+edge to edge means `adjustResize` no longer insets Compose content, so the screen
+scaffold takes the keyboard inset once, in the same place it takes the status bar.
+Found by trying to save a check-in and having the tap land on the letter v.
+
+### A tension worth watching, not yet resolved
+
+The walking screen's button says "Stop here, that counts", and LOGIC.md section 3
+says a session counts as a day moved at two minutes or more. Somebody who stops at
+twenty seconds is told it counts and then sees the daily card still undone. Both
+sentences are specification. Left as written, because the first walk on the ladder
+is two minutes and stopping early is the unusual case, but it is the kind of thing
+a real user notices before anybody else does.

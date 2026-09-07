@@ -38,6 +38,10 @@ object SteadyPalette {
     /** 4.83 on white, 4.56 on ground. Orange words, including the Summary action. */
     val OrangeText = Color(0xFFBD5114)
 
+    /** The morning hero's hills. White body text sits on the back one. */
+    val HillFront = Color(0xFFC45414)
+    val HillBack = Color(0xFFA54511)
+
     val OrangeL = Color(0xFFFFB27A)
     val Peach = Color(0xFFFFD9BF)
 

@@ -57,6 +57,8 @@ class ContrastTest {
             Triple("green-text on green-l", SteadyPalette.GreenText, SteadyPalette.GreenL),
             Triple("white on navy", SteadyPalette.White, SteadyPalette.Navy),
             Triple("white on navy-l", SteadyPalette.White, SteadyPalette.NavyL),
+            Triple("white on hill-front", SteadyPalette.White, SteadyPalette.HillFront),
+            Triple("white on hill-back", SteadyPalette.White, SteadyPalette.HillBack),
         )
         val failures = pairs.mapNotNull { (name, word, surface) ->
             val r = ratio(word, surface)
