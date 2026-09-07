@@ -19,6 +19,7 @@ import com.kamsiob.steadyhealth.domain.ReadinessFlag
 import com.kamsiob.steadyhealth.domain.Stairs
 import com.kamsiob.steadyhealth.domain.Units
 import com.kamsiob.steadyhealth.domain.WalkTolerance
+import com.kamsiob.steadyhealth.engine.PacingEngine
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -161,7 +162,16 @@ class OnboardingViewModel(application: Application) : AndroidViewModel(applicati
         current.stairs?.let { profile.setStairs(it) }
         current.walkTolerance?.let { profile.setWalkTolerance(it) }
         current.floor?.let { profile.setFloorAccess(it) }
-        current.pem?.let { profile.setPem(it) }
+        current.pem?.let {
+            profile.setPem(it)
+            // The pattern question is one of the two triggers for pacing mode.
+            // Saying yes here means the app never offers anybody a longer
+            // anything, which for a post-exertional pattern is the whole point.
+            if (it == PemAnswer.Yes) {
+                profile.setPacing(true)
+                profile.setEnvelope(PacingEngine.DEFAULT)
+            }
+        }
         current.anchor?.let { profile.setAnchor(it) }
         profile.setExclusions(current.exclusions, now)
         current.readiness.forEach { (flag, yes) -> profile.setReadiness(flag, yes, now) }
@@ -171,8 +181,17 @@ class OnboardingViewModel(application: Application) : AndroidViewModel(applicati
             abilities.rate(id, today(), item.rating, now)
         }
 
+        // Weighing in is off for somebody mostly in bed, and it is a setting
+        // rather than a fact about them, so it can be turned back on.
+        if (current.gettingAround == GettingAround.InBed) profile.setWeighsIn(false)
+
         if (current.firstWalkName.isNotBlank()) {
-            movement.name(Ladder.Walking, 0, current.firstWalkName, now)
+            val ladder = if (current.gettingAround == GettingAround.Wheelchair) {
+                Ladder.Wheeling
+            } else {
+                Ladder.Walking
+            }
+            movement.name(ladder, 0, current.firstWalkName, now)
         }
 
         profile.setOnboardingComplete()

@@ -32,6 +32,7 @@ import com.kamsiob.steadyhealth.ui.components.HeroLabel
 import com.kamsiob.steadyhealth.ui.components.HeroNumber
 import com.kamsiob.steadyhealth.ui.components.HeroSky
 import com.kamsiob.steadyhealth.ui.components.MoveGlyph
+import com.kamsiob.steadyhealth.ui.components.NoteBlock
 import com.kamsiob.steadyhealth.ui.components.RiseGlyph
 import com.kamsiob.steadyhealth.ui.components.SectionTitle
 import com.kamsiob.steadyhealth.ui.components.SteadyGlyph
@@ -72,9 +73,34 @@ data class TodayUiState(
     val walkedThisWeek: List<Boolean> = emptyList(),
     val todayIndex: Int = 0,
     val daysWalked: Int = 0,
+
+    /**
+     * False for somebody mostly in bed, where a daily weight is not part of the
+     * picture. The screen then says so once, in a block, rather than showing a
+     * card nobody can do. Grid screen 7.
+     */
+    val weighsIn: Boolean = true,
+
+    /** What the Move card says, which is not the same for all four ways. */
+    val moveTitle: String = "",
+    val moveSubtitle: String = "",
+
+    /** The label above the next thing: "Your next walk", "Today, for Go". */
+    val nextLabel: String = "",
+
+    /** Shown once when somebody comes back after time away. Never a loss. */
+    val welcomeBack: String? = null,
+
+    /** One sentence the app owes the person, until they say they have read it. */
+    val notice: String? = null,
 ) {
     val doneCount: Int
-        get() = listOf(weighedIn, saidHowItWent, moved).count { it }
+        get() = listOfNotNull(weighedIn.takeIf { weighsIn }, saidHowItWent, moved).count { it }
+
+    /** Three, or two for somebody who is not weighing in. */
+    val dailyCount: Int get() = if (weighsIn) ALL_THREE else ALL_THREE - 1
+
+    val allDone: Boolean get() = doneCount == dailyCount
 }
 
 /**
@@ -97,6 +123,7 @@ fun TodayScreen(
     onMove: () -> Unit,
     onAsk: () -> Unit,
     onSettings: () -> Unit,
+    onNotice: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     SteadyScreen(title = null, onBack = null, modifier = modifier) {
@@ -125,27 +152,9 @@ fun TodayScreen(
             )
         }
 
-        // The four abilities, two by two, leading the screen.
-        state.abilities.chunked(2).forEach { pair ->
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(SteadySpacing.ListGap),
-            ) {
-                pair.forEach { ability ->
-                    AbilityTile(
-                        name = ability.name,
-                        lifeSentence = ability.lifeSentence,
-                        tint = tintFor(ability.domain),
-                        modifier = Modifier.weight(1f),
-                        onClick = { onAbility(ability.domain) },
-                        glyph = { AbilityGlyph(ability.domain) },
-                    )
-                }
-                if (pair.size == 1) Box(Modifier.weight(1f))
-            }
-        }
+        AbilityGrid(state.abilities, onAbility)
 
-        if (state.weightValue != null) {
+        if (state.weighsIn && state.weightValue != null) {
             Hero(sky = if (state.morning) HeroSky.Morning else HeroSky.Evening) {
                 HeroLabel(stringResource(R.string.weight_label))
                 HeroNumber(value = state.weightValue, unit = state.weightUnit)
@@ -153,53 +162,24 @@ fun TodayScreen(
             }
         }
 
-        SectionTitle(
-            text = stringResource(R.string.today_section),
-            aside = if (state.doneCount == ALL_THREE) {
-                stringResource(R.string.today_all_done)
-            } else {
-                stringResource(R.string.today_progress, state.doneCount)
-            },
-        )
+        state.welcomeBack?.let { NoteBlock(it) }
+
+        state.notice?.let {
+            NoteBlock(
+                text = it,
+                tint = SteadyPalette.SkyL,
+                onDismiss = onNotice,
+                dismissLabel = stringResource(R.string.notice_ok),
+            )
+        }
+
+        SectionTitle(text = stringResource(R.string.today_section), aside = doneAside(state))
 
         DailyThree(state = state, onWeighIn = onWeighIn, onSayHow = onSayHow, onMove = onMove)
 
-        if (state.nextWalkName.isNotBlank()) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clip(SteadyShapes.LifeCard)
-                    .background(SteadyPalette.Navy)
-                    .clickable(role = Role.Button, onClick = onMove)
-                    .padding(SteadySpacing.Inside),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Column(modifier = Modifier.weight(1f)) {
-                    SteadyText(
-                        text = stringResource(R.string.today_next_walk),
-                        style = SteadyType.CardTitle,
-                        color = SteadyPalette.White.copy(alpha = LABEL_ALPHA),
-                    )
-                    SteadyText(
-                        text = state.nextWalkName,
-                        style = SteadyType.SectionTitle,
-                        color = SteadyPalette.White,
-                    )
-                }
-                Box(
-                    modifier = Modifier
-                        .clip(SteadyShapes.Round)
-                        .background(SteadyPalette.OrangeD)
-                        .padding(horizontal = GO_SIDE, vertical = GO_TOP),
-                ) {
-                    SteadyText(
-                        text = stringResource(R.string.today_go),
-                        style = SteadyType.Button,
-                        color = SteadyPalette.White,
-                    )
-                }
-            }
-        }
+        if (!state.weighsIn) NoteBlock(stringResource(R.string.today_weighing_off))
+
+        if (state.nextWalkName.isNotBlank()) NextThing(state = state, onMove = onMove)
 
         if (state.dayLetters.isNotEmpty()) {
             WeekRow(
@@ -207,6 +187,87 @@ fun TodayScreen(
                 walked = state.walkedThisWeek,
                 todayIndex = state.todayIndex,
                 spoken = pluralStringResource(R.plurals.week_row_spoken, state.daysWalked, state.daysWalked),
+            )
+        }
+    }
+}
+
+/**
+ * The four abilities, two by two, leading the screen.
+ *
+ * Two by two and never one by four, because the four are equals and a list would
+ * put one of them first.
+ */
+@Composable
+private fun AbilityGrid(abilities: List<AbilityTileState>, onAbility: (AbilityDomain) -> Unit) {
+    abilities.chunked(2).forEach { pair ->
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(SteadySpacing.ListGap),
+        ) {
+            pair.forEach { ability ->
+                AbilityTile(
+                    name = ability.name,
+                    lifeSentence = ability.lifeSentence,
+                    tint = tintFor(ability.domain),
+                    modifier = Modifier.weight(1f),
+                    onClick = { onAbility(ability.domain) },
+                    glyph = { AbilityGlyph(ability.domain) },
+                )
+            }
+            if (pair.size == 1) Box(Modifier.weight(1f))
+        }
+    }
+}
+
+/** "2 of 3 done", "All three done", or "Both done" for somebody not weighing in. */
+@Composable
+private fun doneAside(state: TodayUiState): String = when {
+    !state.allDone -> stringResource(R.string.today_progress, state.doneCount, state.dailyCount)
+    state.weighsIn -> stringResource(R.string.today_all_done)
+    else -> stringResource(R.string.today_all_done_two)
+}
+
+/**
+ * The dark row at the bottom of Today: what the next one is, and a way in.
+ *
+ * Its own composable because the label above the name is not always "Your next
+ * walk". It is "Today, for Go" in a wheelchair and "Two minutes in bed" at the
+ * other end, and the state carries the words rather than the screen choosing.
+ */
+@Composable
+private fun NextThing(state: TodayUiState, onMove: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(SteadyShapes.LifeCard)
+            .background(SteadyPalette.Navy)
+            .clickable(role = Role.Button, onClick = onMove)
+            .padding(SteadySpacing.Inside),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            SteadyText(
+                text = state.nextLabel,
+                style = SteadyType.CardTitle,
+                color = SteadyPalette.White.copy(alpha = LABEL_ALPHA),
+            )
+            SteadyText(
+                text = state.nextWalkName,
+                style = SteadyType.SectionTitle,
+                color = SteadyPalette.White,
+            )
+        }
+        Box(
+            modifier = Modifier
+                .clip(SteadyShapes.Round)
+                .background(SteadyPalette.OrangeD)
+                .padding(horizontal = GO_SIDE, vertical = GO_TOP),
+        ) {
+            SteadyText(
+                text = stringResource(R.string.today_go),
+                style = SteadyType.Button,
+                color = SteadyPalette.White,
             )
         }
     }
@@ -227,16 +288,18 @@ private fun DailyThree(
     onMove: () -> Unit,
 ) {
     Row(horizontalArrangement = Arrangement.spacedBy(SteadySpacing.ListGap)) {
-        DailyCard(
-            title = stringResource(
-                if (state.weighedIn) R.string.today_weighed_in else R.string.today_weigh_in,
-            ),
-            subtitle = stringResource(R.string.today_weigh_sub),
-            tint = SteadyPalette.Sand,
-            done = state.weighedIn,
-            modifier = Modifier.weight(1f),
-            onClick = onWeighIn,
-        ) { WeighGlyph() }
+        if (state.weighsIn) {
+            DailyCard(
+                title = stringResource(
+                    if (state.weighedIn) R.string.today_weighed_in else R.string.today_weigh_in,
+                ),
+                subtitle = stringResource(R.string.today_weigh_sub),
+                tint = SteadyPalette.Sand,
+                done = state.weighedIn,
+                modifier = Modifier.weight(1f),
+                onClick = onWeighIn,
+            ) { WeighGlyph() }
+        }
 
         DailyCard(
             title = stringResource(
@@ -250,8 +313,8 @@ private fun DailyThree(
         ) { TalkGlyph() }
 
         DailyCard(
-            title = stringResource(if (state.moved) R.string.today_moved else R.string.today_move),
-            subtitle = stringResource(R.string.today_move_sub),
+            title = if (state.moved) stringResource(R.string.today_moved) else state.moveTitle,
+            subtitle = state.moveSubtitle,
             tint = SteadyPalette.GreenL,
             done = state.moved,
             modifier = Modifier.weight(1f),

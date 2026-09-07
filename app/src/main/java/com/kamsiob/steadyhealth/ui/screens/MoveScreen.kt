@@ -9,6 +9,7 @@ import com.kamsiob.steadyhealth.ui.components.HeroExplain
 import com.kamsiob.steadyhealth.ui.components.HeroLabel
 import com.kamsiob.steadyhealth.ui.components.HeroSky
 import com.kamsiob.steadyhealth.ui.components.ListItem
+import com.kamsiob.steadyhealth.ui.components.NoteBlock
 import com.kamsiob.steadyhealth.ui.components.Paragraph
 import com.kamsiob.steadyhealth.ui.components.PrimaryButton
 import com.kamsiob.steadyhealth.ui.components.SectionTitle
@@ -26,6 +27,24 @@ data class MoveUiState(
     val walkName: String = "",
     val walkInstruction: String = "",
     val strength: MoveItem? = null,
+
+    /** The label over the hero, which the way of getting around decides. */
+    val heroLabel: String = "",
+
+    /**
+     * The parts of one session, done back to back. Only the bed set uses this;
+     * every other way of getting around does one thing at a time.
+     */
+    val set: List<MoveItem> = emptyList(),
+
+    /** Shown for somebody using a walker. Grid screen 17. */
+    val helper: Boolean = false,
+
+    /** Pacing mode: the sentence that says what this is and what it is not. */
+    val pacingNote: String? = null,
+
+    /** In pacing mode, when the days for this week have been used. */
+    val restToday: Boolean = false,
 )
 
 /**
@@ -60,7 +79,7 @@ fun MoveScreen(
         }
 
         Hero(sky = HeroSky.Plain) {
-            HeroLabel(stringResource(R.string.move_next))
+            HeroLabel(state.heroLabel)
             SteadyText(
                 text = state.walkName,
                 style = SteadyType.ScreenTitleBig,
@@ -72,6 +91,24 @@ fun MoveScreen(
         state.strength?.let { set ->
             SectionTitle(stringResource(R.string.move_strength))
             ListItem(heading = set.name, subtitle = set.instruction, value = set.amount)
+        }
+
+        if (state.set.isNotEmpty()) {
+            SectionTitle(stringResource(R.string.move_set_parts))
+            state.set.forEach { part ->
+                ListItem(heading = part.name, subtitle = part.instruction, value = part.amount)
+            }
+        }
+
+        state.pacingNote?.let { NoteBlock(it) }
+
+        if (state.restToday) NoteBlock(stringResource(R.string.move_pacing_rest))
+
+        if (state.helper) {
+            NoteBlock(
+                heading = stringResource(R.string.move_helper_title),
+                text = stringResource(R.string.move_helper_body),
+            )
         }
     }
 }

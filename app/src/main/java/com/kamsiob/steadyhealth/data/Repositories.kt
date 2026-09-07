@@ -28,6 +28,8 @@ import com.kamsiob.steadyhealth.domain.Units
 import com.kamsiob.steadyhealth.domain.WalkTolerance
 import com.kamsiob.steadyhealth.domain.WeightSource
 import com.kamsiob.steadyhealth.engine.DoneSession
+import com.kamsiob.steadyhealth.engine.Envelope
+import com.kamsiob.steadyhealth.engine.PacingEngine
 import com.kamsiob.steadyhealth.engine.Reading
 import com.kamsiob.steadyhealth.engine.Smoothed
 import com.kamsiob.steadyhealth.engine.WeightEngine
@@ -213,6 +215,11 @@ class MovementRepository(private val db: SteadyDatabase) {
     suspend fun recordOffered(ladder: Ladder, day: Long) {
         db.ladders().upsertState(state(ladder).copy(lastOfferedDay = day))
     }
+
+    /** After a long gap: a fortnight during which nothing is offered. */
+    suspend fun ease(ladder: Ladder, untilDay: Long) {
+        db.ladders().upsertState(state(ladder).copy(easingUntilDay = untilDay))
+    }
 }
 
 /** The person's own list, and their ratings of it. */
@@ -299,6 +306,34 @@ class ProfileRepository(private val db: SteadyDatabase) {
 
     suspend fun setAnchor(value: Anchor) = put(ANCHOR, value.id)
 
+    suspend fun weighsIn(): Boolean = get(WEIGHS_IN)?.toBoolean() ?: true
+
+    suspend fun setWeighsIn(value: Boolean) = put(WEIGHS_IN, value.toString())
+
+    /**
+     * Pacing mode, and the envelope that goes with it.
+     *
+     * The starting envelope is kept as well as the current one, because the
+     * settings screen has to be able to say how far it has come down without
+     * asking the person to remember.
+     */
+    suspend fun pacing(): Boolean = get(PACING).toBoolean()
+
+    suspend fun setPacing(value: Boolean) = put(PACING, value.toString())
+
+    suspend fun envelope(): Envelope = Envelope(
+        minutes = get(ENVELOPE_MINUTES)?.toIntOrNull() ?: PacingEngine.DEFAULT.minutes,
+        daysPerWeek = get(ENVELOPE_DAYS)?.toIntOrNull() ?: PacingEngine.DEFAULT.daysPerWeek,
+    )
+
+    suspend fun setEnvelope(value: Envelope) {
+        put(ENVELOPE_MINUTES, value.minutes.toString())
+        put(ENVELOPE_DAYS, value.daysPerWeek.toString())
+        if (get(ENVELOPE_START) == null) put(ENVELOPE_START, value.minutes.toString())
+    }
+
+    suspend fun envelopeStart(): Int = get(ENVELOPE_START)?.toIntOrNull() ?: PacingEngine.DEFAULT.minutes
+
     suspend fun showNumbers(): Boolean = get(SHOW_NUMBERS)?.toBoolean() ?: true
 
     suspend fun setShowNumbers(value: Boolean) = put(SHOW_NUMBERS, value.toString())
@@ -343,5 +378,10 @@ class ProfileRepository(private val db: SteadyDatabase) {
         const val PEM = "pem"
         const val ANCHOR = "anchor"
         const val SHOW_NUMBERS = "show_numbers"
+        const val WEIGHS_IN = "weighs_in"
+        const val PACING = "pacing"
+        const val ENVELOPE_MINUTES = "envelope_minutes"
+        const val ENVELOPE_DAYS = "envelope_days"
+        const val ENVELOPE_START = "envelope_start_minutes"
     }
 }

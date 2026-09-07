@@ -5,17 +5,22 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextAlign
@@ -185,6 +190,52 @@ fun ThreeUpChoice(
                 )
             }
         }
+    }
+}
+
+/**
+ * A row with a switch, for the things that are on or off.
+ *
+ * The subtitle says what off means rather than what on means, because somebody
+ * reading a settings list is deciding whether to change something, and "off shows
+ * words instead" answers that where "show numbers" does not.
+ */
+@Composable
+fun SwitchRow(
+    label: String,
+    checked: Boolean,
+    onChange: (Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+    subtitle: String? = null,
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(SteadyShapes.ListItem)
+            .background(SteadyPalette.White)
+            .toggleable(value = checked, role = Role.Switch, onValueChange = onChange)
+            .heightIn(min = SteadySpacing.TapTarget)
+            .padding(SteadySpacing.Tight)
+            .semantics(mergeDescendants = true) {
+                contentDescription = listOfNotNull(label, subtitle).joinToString(", ")
+            },
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(SteadySpacing.Tight),
+    ) {
+        Column(modifier = Modifier.weight(1f)) {
+            SteadyText(text = label, style = SteadyType.ListItemHeading, color = SteadyPalette.Navy)
+            subtitle?.let {
+                SteadyText(text = it, style = SteadyType.Caption, color = SteadyPalette.Ink2)
+            }
+        }
+        Switch(
+            checked = checked,
+            onCheckedChange = null,
+            colors = SwitchDefaults.colors(
+                checkedTrackColor = SteadyPalette.Green,
+                checkedThumbColor = SteadyPalette.White,
+            ),
+        )
     }
 }
 

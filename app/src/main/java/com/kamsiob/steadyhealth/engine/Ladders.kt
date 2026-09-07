@@ -2,6 +2,7 @@ package com.kamsiob.steadyhealth.engine
 
 import com.kamsiob.steadyhealth.domain.AbilityDomain
 import com.kamsiob.steadyhealth.domain.Exclusion
+import com.kamsiob.steadyhealth.domain.GettingAround
 import com.kamsiob.steadyhealth.domain.Ladder
 
 /** One step on a ladder: what to do, for how long or how many. */
@@ -165,29 +166,243 @@ object Ladders {
     }
 
     /**
-     * What this person can see, given what they said to leave out.
+     * Go, for somebody in a wheelchair.
      *
-     * LOGIC.md section 5's visibility table. An exclusion hides a ladder or caps
-     * it, and the seated ladder plus short walks are the floor that is never
-     * taken away.
+     * Deliberately the same numbers as walking. A minute is a minute, the talk
+     * test works the same way, and giving this ladder its own shorter shape would
+     * be the interface saying something about the person that it has no business
+     * saying.
      */
-    fun visibleLadders(exclusions: Set<Exclusion>): LadderPlan {
-        val ladders = buildList {
-            // Walking is always visible. LOGIC.md hides jogging and intervals
-            // under the impact exclusion, and this ladder stops at thirty
-            // minutes, so there is nothing yet for that rule to hide.
-            add(VisibleLadder(Ladder.Walking, walking))
-            add(VisibleLadder(Ladder.ChairAndStanding, chairFor(exclusions)))
-            if (Exclusion.GettingOnTheFloor !in exclusions) {
-                add(VisibleLadder(Ladder.Floor, floorFor(exclusions)))
-            }
-            if (Exclusion.Pushing !in exclusions) {
-                add(VisibleLadder(Ladder.Pushing, pushing))
-            }
-            add(VisibleLadder(Ladder.Balance, balance))
+    val wheeling: List<Step> = listOf(
+        2, 4, 6, 8, 11, 14, 16, 20, 25, 30,
+    ).mapIndexed { index, minutes ->
+        Step(
+            index = index,
+            ladder = Ladder.Wheeling,
+            domain = AbilityDomain.Go,
+            amount = minutes,
+            measure = StepMeasure.Minutes,
+            name = "$minutes minutes wheeling",
+            instruction = "At a pace you could talk right through.",
+        )
+    }
+
+    /**
+     * Seated strength, transfers, and pressure relief.
+     *
+     * This is the wheelchair user's strength ladder, and it is also what LOGIC.md
+     * section 5 puts in front of anybody who left pushing out: the band press in
+     * range replaces the push-up ladder rather than leaving a hole where it was.
+     */
+    val seated: List<Step> = listOf(
+        SeatedStep(
+            reps = 8,
+            name = "Seated band rows",
+            instruction = "Band round your feet or a table leg, pull back, breathe out as you pull.",
+            domain = AbilityDomain.Carry,
+        ),
+        SeatedStep(
+            reps = 8,
+            name = "Seated band press",
+            instruction = "Band behind you, press forward at chest height. Breathe out as you press.",
+            domain = AbilityDomain.Carry,
+        ),
+        SeatedStep(
+            reps = 5,
+            name = "Pressure relief lifts",
+            instruction = "Hands on the armrests, lift clear for a few seconds, down with control.",
+            domain = AbilityDomain.GetUp,
+        ),
+        SeatedStep(
+            reps = 10,
+            name = "Forward lean and back",
+            instruction = "Lean forward over your knees, pause, come back up tall.",
+            domain = AbilityDomain.GetUp,
+        ),
+        SeatedStep(
+            reps = 8,
+            name = "Seated rotation",
+            instruction = "Hands on your chest, turn slowly one way, then the other.",
+            domain = AbilityDomain.Steady,
+        ),
+        SeatedStep(
+            reps = 10,
+            name = "Overhead reach",
+            instruction = "Reach both arms up as far as is comfortable. Slowly.",
+            domain = AbilityDomain.Steady,
+        ),
+        SeatedStep(
+            reps = 5,
+            name = "Transfers",
+            instruction = "Chair to bed and back, however you do it. Rest between.",
+            domain = AbilityDomain.GetUp,
+        ),
+        SeatedStep(
+            reps = 12,
+            name = "Seated band press",
+            instruction = "Same band, a few more.",
+            domain = AbilityDomain.Carry,
+        ),
+        SeatedStep(
+            reps = 12,
+            name = "Seated band rows",
+            instruction = "Same band, a few more.",
+            domain = AbilityDomain.Carry,
+        ),
+    ).mapIndexed { index, step ->
+        Step(
+            index = index,
+            ladder = Ladder.Seated,
+            domain = step.domain,
+            amount = step.reps,
+            measure = StepMeasure.Repetitions,
+            name = step.name,
+            instruction = step.instruction,
+        )
+    }
+
+    /**
+     * The bed set, from screen 18 of the grid.
+     *
+     * Unlike every other ladder these are not done one at a time. A session is the
+     * first [BED_SET_PARTS] of them run back to back, and progression adds a part
+     * rather than making a part longer, which is why [bedSet] takes the step index
+     * and returns a list.
+     */
+    val inBed: List<Step> = listOf(
+        BedStep(
+            seconds = 40,
+            name = "Ankle pumps",
+            instruction = "Point and flex, 30 each side. Keeps the blood moving.",
+            domain = AbilityDomain.Steady,
+        ),
+        BedStep(
+            seconds = 60,
+            name = "Towel squeeze",
+            instruction = "As hard as is comfortable, 5 seconds, 6 times each hand.",
+            domain = AbilityDomain.Carry,
+        ),
+        BedStep(
+            seconds = 40,
+            name = "Ten slow breaths",
+            instruction = "In through the nose, out slowly. The phone counts.",
+            domain = AbilityDomain.Go,
+        ),
+        BedStep(
+            seconds = 60,
+            name = "Sit to the edge",
+            instruction = "Roll onto your side, push up with the lower arm. Rest there.",
+            domain = AbilityDomain.GetUp,
+        ),
+        BedStep(
+            seconds = 60,
+            name = "Heel slides",
+            instruction = "One heel at a time, up towards you and back down.",
+            domain = AbilityDomain.Go,
+        ),
+        BedStep(
+            seconds = 45,
+            name = "Arms overhead",
+            instruction = "Reach both arms up as far as is comfortable. Slowly.",
+            domain = AbilityDomain.Carry,
+        ),
+    ).mapIndexed { index, step ->
+        Step(
+            index = index,
+            ladder = Ladder.InBed,
+            domain = step.domain,
+            amount = step.seconds,
+            measure = StepMeasure.Seconds,
+            name = step.name,
+            instruction = step.instruction,
+        )
+    }
+
+    /** How many parts a bed session starts with. Step one adds a fourth. */
+    const val BED_SET_PARTS = 3
+
+    /**
+     * The parts of one bed session at [stepIndex], and nothing else.
+     *
+     * [exclusions] applies here as it does everywhere: somebody who left lying
+     * flat out does not get sit to the edge offered from lying down, and the set
+     * is still a set.
+     */
+    fun bedSet(stepIndex: Int, exclusions: Set<Exclusion> = emptySet()): List<Step> {
+        val available = inBed.filterNot { hiddenInBed(it, exclusions) }
+        return available.take(BED_SET_PARTS + stepIndex.coerceAtLeast(0))
+    }
+
+    private fun hiddenInBed(step: Step, exclusions: Set<Exclusion>): Boolean = when {
+        Exclusion.LiftingOverhead in exclusions && step.name == "Arms overhead" -> true
+        Exclusion.StomachStrain in exclusions && step.name == "Sit to the edge" -> true
+        else -> false
+    }
+
+    private data class SeatedStep(
+        val reps: Int,
+        val name: String,
+        val instruction: String,
+        val domain: AbilityDomain,
+    )
+
+    private data class BedStep(
+        val seconds: Int,
+        val name: String,
+        val instruction: String,
+        val domain: AbilityDomain,
+    )
+
+    /**
+     * What this person can see, given how they get around and what they said to
+     * leave out.
+     *
+     * LOGIC.md section 5's visibility table, plus the rule from section 3b that
+     * the way of getting around selects which exercises exist at all. An
+     * exclusion hides a ladder or caps it, and something is always left.
+     */
+    fun visibleLadders(
+        way: GettingAround = GettingAround.OnFeet,
+        exclusions: Set<Exclusion> = emptySet(),
+    ): LadderPlan {
+        val ladders = when (way) {
+            GettingAround.OnFeet, GettingAround.Walker -> onFootLadders(exclusions)
+            GettingAround.Wheelchair -> wheelchairLadders(exclusions)
+            GettingAround.InBed -> listOf(VisibleLadder(Ladder.InBed, bedSet(LAST_STEP, exclusions)))
         }
         return LadderPlan(ladders.filter { it.steps.isNotEmpty() })
     }
+
+    private fun onFootLadders(exclusions: Set<Exclusion>): List<VisibleLadder> = buildList {
+        // Walking is always visible. LOGIC.md hides jogging and intervals under
+        // the impact exclusion, and this ladder stops at thirty minutes, so there
+        // is nothing yet for that rule to hide.
+        add(VisibleLadder(Ladder.Walking, walking))
+        add(VisibleLadder(Ladder.ChairAndStanding, chairFor(exclusions)))
+        if (Exclusion.GettingOnTheFloor !in exclusions) {
+            add(VisibleLadder(Ladder.Floor, floorFor(exclusions)))
+        }
+        if (Exclusion.Pushing in exclusions) {
+            // Pushing is not simply removed. LOGIC.md replaces it with the band
+            // press in range, so the ability it fed still has something in it.
+            add(VisibleLadder(Ladder.Seated, seatedFor(exclusions).filter { it.name.contains("press") }))
+        } else {
+            add(VisibleLadder(Ladder.Pushing, pushing))
+        }
+        add(VisibleLadder(Ladder.Balance, balance))
+    }
+
+    /**
+     * The pushing ladder is not here on purpose. Every one of its steps is
+     * written for somebody standing at a wall or a counter, and rewriting the
+     * instructions to mean something else would be describing a movement the app
+     * has not thought about. The seated ladder carries Carry instead, and the
+     * band press is in it twice.
+     */
+    private fun wheelchairLadders(exclusions: Set<Exclusion>): List<VisibleLadder> = listOf(
+        VisibleLadder(Ladder.Wheeling, wheeling),
+        VisibleLadder(Ladder.Seated, seatedFor(exclusions)),
+    )
 
     private fun chairFor(exclusions: Set<Exclusion>): List<Step> =
         if (Exclusion.DeepKneeBending in exclusions) {
@@ -203,6 +418,18 @@ object Ladders {
         floor.filterNot { step ->
             Exclusion.LyingFlat in exclusions && step.name in LYING_STEPS
         }
+
+    private fun seatedFor(exclusions: Set<Exclusion>): List<Step> = seated.filterNot { step ->
+        when {
+            Exclusion.LiftingOverhead in exclusions && step.name == "Overhead reach" -> true
+            Exclusion.TwistingBack in exclusions && step.name == "Seated rotation" -> true
+            Exclusion.DeepForwardBending in exclusions && step.name == "Forward lean and back" -> true
+            else -> false
+        }
+    }
+
+    /** Enough to ask for the whole bed set rather than a session's worth of it. */
+    private const val LAST_STEP = 99
 
     private val LYING_STEPS = setOf("Glute bridge")
 }

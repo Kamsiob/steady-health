@@ -30,4 +30,9 @@ object Route {
     const val WALKING = "walking"
     const val WALK_DONE = "walk-done"
     const val OFFER = "offer"
+    const val SETTINGS = "settings"
+    const val GETTING_AROUND = "getting-around"
+    const val LEAVE_OUT = "leave-out"
+    const val PACING = "pacing"
+    const val PATTERN = "pattern"
 }

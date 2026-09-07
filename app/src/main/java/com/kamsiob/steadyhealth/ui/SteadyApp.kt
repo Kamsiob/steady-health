@@ -15,19 +15,29 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.kamsiob.steadyhealth.domain.Exclusion
 import com.kamsiob.steadyhealth.ui.components.SteadyTabBar
 import com.kamsiob.steadyhealth.ui.nav.Route
 import com.kamsiob.steadyhealth.ui.nav.Tab
 import com.kamsiob.steadyhealth.ui.onboarding.OnboardingFlow
 import com.kamsiob.steadyhealth.ui.screens.AbilitiesScreen
+import com.kamsiob.steadyhealth.ui.screens.GettingAroundScreen
+import com.kamsiob.steadyhealth.ui.screens.LeaveOutSettingsScreen
 import com.kamsiob.steadyhealth.ui.screens.MoveScreen
 import com.kamsiob.steadyhealth.ui.screens.OfferScreen
+import com.kamsiob.steadyhealth.ui.screens.PacingScreen
+import com.kamsiob.steadyhealth.ui.screens.PatternScreen
 import com.kamsiob.steadyhealth.ui.screens.SayHowScreen
+import com.kamsiob.steadyhealth.ui.screens.SettingsActions
+import com.kamsiob.steadyhealth.ui.screens.SettingsScreen
 import com.kamsiob.steadyhealth.ui.screens.TodayScreen
 import com.kamsiob.steadyhealth.ui.screens.WalkDoneScreen
 import com.kamsiob.steadyhealth.ui.screens.WalkingScreen
@@ -85,7 +95,11 @@ private fun Tabs(viewModel: SteadyViewModel) {
                                     },
                                     onMove = { tab = Tab.Move },
                                     onAsk = {},
-                                    onSettings = {},
+                                    onSettings = {
+                                        viewModel.openSettings()
+                                        navController.navigate(Route.SETTINGS)
+                                    },
+                                    onNotice = viewModel::dismissNotice,
                                 )
                             }
 
@@ -107,58 +121,8 @@ private fun Tabs(viewModel: SteadyViewModel) {
                         }
                     }
 
-                    composable(Route.WEIGH_IN) {
-                        val state by viewModel.weighIn.collectAsStateWithLifecycle()
-                        WeighInScreen(
-                            state = state,
-                            onWeight = viewModel::setWeight,
-                            onSave = {
-                                viewModel.saveWeighIn()
-                                back()
-                            },
-                            onBack = back,
-                        )
-                    }
-
-                    composable(Route.SAY_HOW) {
-                        val state by viewModel.sayHow.collectAsStateWithLifecycle()
-                        SayHowScreen(
-                            state = state,
-                            onSentence = viewModel::setSentence,
-                            onSleep = viewModel::setSleep,
-                            onRating = viewModel::setDayRating,
-                            onSave = {
-                                viewModel.saveDay()
-                                back()
-                            },
-                            onBack = back,
-                        )
-                    }
-
-                    composable(Route.WALKING) {
-                        val state by viewModel.walking.collectAsStateWithLifecycle()
-                        var seconds by remember { mutableIntStateOf(0) }
-
-                        // One tick a second while this screen is on top. It stops when
-                        // the screen leaves, so a walk somebody backed out of does not
-                        // keep counting in the background.
-                        LaunchedEffect(Unit) {
-                            while (true) {
-                                delay(ONE_SECOND)
-                                seconds += 1
-                                viewModel.tickWalk(seconds)
-                            }
-                        }
-
-                        WalkingScreen(
-                            state = state,
-                            onStop = {
-                                viewModel.stopWalk(seconds)
-                                navController.navigate(Route.WALK_DONE)
-                            },
-                            onBack = back,
-                        )
-                    }
+                    dailyRoutes(viewModel, navController, back)
+                    settingsRoutes(viewModel, navController, back)
 
                     composable(Route.WALK_DONE) {
                         val state by viewModel.walkDone.collectAsStateWithLifecycle()
@@ -201,3 +165,152 @@ private fun Tabs(viewModel: SteadyViewModel) {
 }
 
 private const val ONE_SECOND = 1000L
+
+/**
+ * The settings routes, in their own function.
+ *
+ * Not a separate graph, just a separate place to read them: settings is a list of
+ * small screens that all pop back to the same place, and having them inline made
+ * the one composable that holds the whole app twice as long as anything else.
+ */
+/**
+ * The daily three and the walk, in their own function, for the same reason as
+ * [settingsRoutes]: they are a list of small screens that all end where they
+ * started.
+ */
+private fun NavGraphBuilder.dailyRoutes(
+    viewModel: SteadyViewModel,
+    navController: NavHostController,
+    back: () -> Unit,
+) {
+    composable(Route.WEIGH_IN) {
+        val state by viewModel.weighIn.collectAsStateWithLifecycle()
+        WeighInScreen(
+            state = state,
+            onWeight = viewModel::setWeight,
+            onSave = {
+                viewModel.saveWeighIn()
+                back()
+            },
+            onBack = back,
+        )
+    }
+
+    composable(Route.SAY_HOW) {
+        val state by viewModel.sayHow.collectAsStateWithLifecycle()
+        SayHowScreen(
+            state = state,
+            onSentence = viewModel::setSentence,
+            onSleep = viewModel::setSleep,
+            onRating = viewModel::setDayRating,
+            onSave = {
+                viewModel.saveDay()
+                back()
+            },
+            onBack = back,
+        )
+    }
+
+    composable(Route.WALKING) {
+        val state by viewModel.walking.collectAsStateWithLifecycle()
+        var seconds by remember { mutableIntStateOf(0) }
+
+        // One tick a second while this screen is on top. It stops when
+        // the screen leaves, so a walk somebody backed out of does not
+        // keep counting in the background.
+        LaunchedEffect(Unit) {
+            while (true) {
+                delay(ONE_SECOND)
+                seconds += 1
+                viewModel.tickWalk(seconds)
+            }
+        }
+
+        WalkingScreen(
+            state = state,
+            onStop = {
+                viewModel.stopWalk(seconds)
+                navController.navigate(Route.WALK_DONE)
+            },
+            onBack = back,
+        )
+    }
+}
+
+private fun NavGraphBuilder.settingsRoutes(
+    viewModel: SteadyViewModel,
+    navController: NavHostController,
+    back: () -> Unit,
+) {
+    composable(Route.SETTINGS) {
+        val state by viewModel.settings.collectAsStateWithLifecycle()
+        SettingsScreen(
+            state = state,
+            actions = SettingsActions(
+                onGettingAround = { navController.navigate(Route.GETTING_AROUND) },
+                onTherapist = viewModel::setTherapist,
+                onWeighsIn = viewModel::setWeighsIn,
+                onShowNumbers = viewModel::setShowNumbers,
+                onExclusions = { navController.navigate(Route.LEAVE_OUT) },
+                onPattern = { navController.navigate(Route.PATTERN) },
+                onPacing = { navController.navigate(Route.PACING) },
+            ),
+            onBack = back,
+        )
+    }
+
+    composable(Route.GETTING_AROUND) {
+        val state by viewModel.settings.collectAsStateWithLifecycle()
+        GettingAroundScreen(
+            selected = state.gettingAround,
+            onChoose = {
+                viewModel.setGettingAround(it)
+                back()
+            },
+            onBack = back,
+        )
+    }
+
+    composable(Route.LEAVE_OUT) {
+        val state by viewModel.settings.collectAsStateWithLifecycle()
+        LeaveOutSettingsScreen(
+            selected = state.exclusions,
+            labels = Exclusion.entries.map {
+                it to stringResource(viewModel.labelFor(it))
+            },
+            onToggle = viewModel::toggleExclusion,
+            onBack = back,
+        )
+    }
+
+    composable(Route.PATTERN) {
+        val pem by viewModel.pattern.collectAsStateWithLifecycle()
+        PatternScreen(
+            selected = pem,
+            onChoose = {
+                viewModel.setPattern(it)
+                back()
+            },
+            onBack = back,
+        )
+    }
+
+    composable(Route.PACING) {
+        val state by viewModel.settings.collectAsStateWithLifecycle()
+        PacingScreen(
+            minutes = state.envelopeMinutes,
+            days = state.envelopeDays,
+            onMinutes = viewModel::setEnvelopeMinutes,
+            onDays = viewModel::setEnvelopeDays,
+            onStop = {
+                // LOGIC.md section 7: the app re-asks the pattern question when
+                // somebody leaves, so leaving lands on that question rather than
+                // back in a list of switches.
+                viewModel.stopPacing()
+                back()
+                navController.navigate(Route.PATTERN)
+            },
+            onBack = back,
+        )
+    }
+}

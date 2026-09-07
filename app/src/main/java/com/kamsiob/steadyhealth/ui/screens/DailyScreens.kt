@@ -13,6 +13,7 @@ import com.kamsiob.steadyhealth.domain.DayRating
 import com.kamsiob.steadyhealth.domain.TalkTest
 import com.kamsiob.steadyhealth.domain.Units
 import com.kamsiob.steadyhealth.ui.components.Dial
+import com.kamsiob.steadyhealth.ui.components.ListItem
 import com.kamsiob.steadyhealth.ui.components.Paragraph
 import com.kamsiob.steadyhealth.ui.components.PrimaryButton
 import com.kamsiob.steadyhealth.ui.components.SecondaryButton
@@ -147,6 +148,12 @@ data class WalkingUiState(
     val walkName: String = "",
     val elapsed: String = "0:00",
     val instruction: String = "",
+
+    /**
+     * The parts of the set, listed above the timer. Only the bed session has
+     * them; a walk is one thing and the list would be a list of one.
+     */
+    val parts: List<MoveItem> = emptyList(),
 )
 
 /** Screen 10 of the grid. Minutes big, the instruction under them. */
@@ -163,6 +170,14 @@ fun WalkingScreen(
         modifier = modifier,
         footer = { PrimaryButton(label = stringResource(R.string.walking_stop), onClick = onStop) },
     ) {
+        state.parts.forEach { part ->
+            ListItem(
+                heading = part.name,
+                subtitle = part.instruction,
+                value = part.amount,
+            )
+        }
+
         Spacer(Modifier.height(SteadySpacing.Inside))
         SteadyText(
             text = state.elapsed,
@@ -183,6 +198,15 @@ data class WalkDoneUiState(
     val summary: String = "",
     val elapsed: String = "",
     val talkTest: TalkTest? = null,
+
+    /**
+     * True in bed, where the talk test is the wrong question.
+     *
+     * The grid's own note on screen 18: the talk test becomes "how do you feel",
+     * and done is done. The three answers still mean what they meant to the
+     * progression rules, so nothing behind the screen changes.
+     */
+    val askHowYouFeel: Boolean = false,
 )
 
 /** Screen 11. Today's time, then the talk test in plain words. */
@@ -213,13 +237,25 @@ fun WalkDoneScreen(
         )
         Paragraph("${state.summary} ${state.elapsed}".trim())
 
-        SectionTitle(stringResource(R.string.talk_question))
-        ThreeUpChoice(
-            options = listOf(
-                stringResource(R.string.talk_yes),
-                stringResource(R.string.talk_just),
-                stringResource(R.string.talk_no),
+        SectionTitle(
+            stringResource(
+                if (state.askHowYouFeel) R.string.feel_question else R.string.talk_question,
             ),
+        )
+        ThreeUpChoice(
+            options = if (state.askHowYouFeel) {
+                listOf(
+                    stringResource(R.string.feel_good),
+                    stringResource(R.string.feel_same),
+                    stringResource(R.string.feel_tired),
+                )
+            } else {
+                listOf(
+                    stringResource(R.string.talk_yes),
+                    stringResource(R.string.talk_just),
+                    stringResource(R.string.talk_no),
+                )
+            },
             selectedIndex = state.talkTest?.ordinal,
             onSelect = { onTalkTest(TalkTest.entries[it]) },
             selectedFill = SteadyPalette.GreenL,

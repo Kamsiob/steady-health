@@ -279,3 +279,107 @@ twenty seconds is told it counts and then sees the daily card still undone. Both
 sentences are specification. Left as written, because the first walk on the ladder
 is two minutes and stopping early is the unusual case, but it is the kind of thing
 a real user notices before anybody else does.
+
+## Phase 2
+
+### The four ways of getting around are four versions, not one with parts removed
+
+The domain ids never change: everything stored carries Get up, Go, Carry or
+Steady, and a row written last year has to keep meaning what it meant. What
+changes is the word on the tile, the ladders behind it, and whether weighing in
+is part of the day. So `WayOfGettingAround` carries structure only, `renamed` says
+which of the four are called something else, and the words themselves are string
+resources, because they are read by a person and the app ships in four languages.
+
+The wheelchair version has its own ladders rather than the walking ones with
+walking taken out. The pushing ladder is not offered from a chair because every
+one of its steps is written for somebody standing at a wall or a counter, and
+rewriting the words to mean something else would be describing a movement nobody
+has thought about. The seated ladder carries Carry instead, with the band press
+in it twice.
+
+Wheeling uses the same numbers as walking: 2, 4, 6, 8, 11, 14, 16, 20, 25, 30. A
+minute is a minute, the talk test works the same way, and giving that ladder its
+own shorter shape would be the interface saying something about the person that
+it has no business saying. A test holds the two lists equal.
+
+### The bed set is a set, and its title comes from its parts
+
+Screen 18 shows three things done back to back rather than one step at a time, so
+`bedSet(stepIndex)` returns a list and progression adds a part rather than making
+a part longer. The title is computed from what the parts add up to, so adding a
+fourth changes the words without anybody having to remember to.
+
+Rounded to the nearest minute, not up: the set runs a hundred and forty seconds
+and the approved copy calls it two minutes. Rounding up would call it three,
+which asks for more than the app is about to ask for.
+
+### Digits, not words, for the length of the bed set
+
+The grid writes "Two minutes in bed". Every other amount in the app is a digit
+("A 2 minute walk", "8 times", "40 seconds"), and this one is computed, so
+spelling one of them out would put two conventions on one screen. Both the fixed
+card and the computed title now read "2 minutes in bed".
+
+### "Shown as a lever, not a score" could not ship as written
+
+Grid screen 22 writes the weigh-in row that way. The word is on DESIGN.md section
+6's banned list and rule 1 of the brief admits no exception, not even for a
+sentence that denies the thing. The row now reads "One of the levers, not the
+point", which says the same thing in allowed words. Caught by the voice test,
+which reads the real strings.xml.
+
+### In bed, the talk test becomes how you feel
+
+The grid's own note on screen 18. "Could you have held a conversation?" is the
+wrong question for a set of ankle pumps. The three answers still carry the same
+meaning to the progression rules, so nothing behind the screen changes: Good,
+About the same, Tired.
+
+### Pacing mode turns itself on, and only the person turns it off
+
+LOGIC.md section 7 makes both the pattern question and two reports of "much worse
+the next day" in a month triggers. Entering is automatic because pacing mode is
+the careful state, it removes offers and stops anything increasing, and entering
+it costs nothing that cannot be undone from settings. The app says so once, in a
+block on Today, rather than changing quietly.
+
+Leaving is not automatic and never will be. It has its own screen, and leaving
+lands on the pattern question again rather than back in a list of switches,
+because section 7 says the app re-asks it.
+
+In pacing mode the ladder is not the headline: Move leads with "Up to 5 minutes"
+rather than the step name, because naming a step would be the app suggesting a
+number the person did not choose. The decision chain is not run at all, so there
+is no offer to suppress.
+
+### Gap decay runs when the app opens, not after a session
+
+Somebody who has been away for a month meets the decision before they do
+anything, not after, so `ReturningEngine` is separate from `ProgressionEngine`
+and runs on refresh. It is applied once per gap: the notice is keyed by ladder
+and by the day they last did something, so opening the app twice does not take
+four steps off anybody. The fortnight of easing after a long gap suppresses
+offers the same way a "not yet" does, which is the one thing both of them mean.
+
+Two steps is the most it ever takes, however long somebody has been away, so
+coming back after a year is not worse than coming back after a month.
+
+### Settings exists now, because the way of getting around has to be changeable
+
+LOGIC.md section 3b says it is set at onboarding and changeable in settings, and
+until now the gear did nothing. Built: how you get around, working with a
+therapist, weigh in, show numbers, anything to leave out, the pattern question,
+and the limit. The rest of grid screen 22 (try it and see, the reader, language,
+reminders, your data) lands with the features it belongs to, rather than as rows
+that do nothing.
+
+Changing how you get around keeps everything already recorded. Sessions carry the
+ladder they were done on, so a walk from before a wheelchair is still a walk.
+
+### Step names are still English literals in Ladders.kt
+
+Every step's name and instruction is a Kotlin string, which cannot be translated.
+This was already true of the walking ladder and is now true of three more. It is
+a real gap and it belongs to Phase 6, which is where the four languages are.
+Recorded here so it is not discovered there.

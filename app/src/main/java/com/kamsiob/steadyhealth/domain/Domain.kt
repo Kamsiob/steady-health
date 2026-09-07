@@ -59,13 +59,29 @@ enum class GettingAround(val id: String) {
     }
 }
 
-/** The five ladders of LOGIC.md section 5. */
+/**
+ * The ladders, from LOGIC.md section 5 plus the three that belong to the other
+ * ways of getting around.
+ *
+ * They are one enum rather than one per way, because a person can change how they
+ * get around and their history has to keep meaning what it meant. A wheeling
+ * session stays a wheeling session afterwards.
+ */
 enum class Ladder(val id: String) {
     Walking("walking"),
     ChairAndStanding("chair_standing"),
     Floor("floor"),
     Pushing("pushing"),
     Balance("balance"),
+
+    /** Distance in a wheelchair, which is Go for somebody who uses one. */
+    Wheeling("wheeling"),
+
+    /** Seated strength and pressure relief. */
+    Seated("seated"),
+
+    /** The bed set: ankles, grip, breathing. */
+    InBed("in_bed"),
     ;
 
     companion object {

@@ -21,6 +21,16 @@
     <string name="ability_go">Go</string>
     <string name="ability_carry">Carry</string>
     <string name="ability_steady">Steady</string>
+    <!--
+      The same four abilities, named for how the person gets around. The ids
+      behind them never change, so a row written last year still means what it
+      meant. Nothing here suggests one of these is a lesser version of another.
+    -->
+    <string name="ability_transfer">Transfer</string>
+    <string name="ability_sit_up">Sit up</string>
+    <string name="ability_breathe">Breathe</string>
+    <string name="ability_grip">Grip</string>
+    <string name="ability_ankles">Ankles</string>
 
     <!-- ===================== Top row ===================== -->
     <string name="action_back">Back</string>
@@ -182,7 +192,13 @@
     <string name="today_evening">Evening</string>
     <string name="today_section">Today</string>
     <string name="today_all_done">All three done</string>
-    <string name="today_progress">%1$d of 3 done</string>
+    <string name="today_all_done_two">Both done</string>
+    <!--
+      "2 of 3 done" is a count against a total, not a quantity, and the second
+      number is the one that could vary. Every language writes this the same way,
+      so a plural would give four identical items and one more thing to get wrong.
+    -->
+    <string name="today_progress" tools:ignore="PluralsCandidate">%1$d of %2$d done</string>
     <string name="today_weighed_in">Weighed in</string>
     <string name="today_weigh_in">Weigh in</string>
     <string name="today_weigh_sub">Takes ten seconds</string>
@@ -269,4 +285,94 @@
       word and cannot tell the difference.
     -->
     <string name="rating_now" tools:ignore="PluralsCandidate">Now %1$d out of 10</string>
+
+    <!-- Today and Move, for the other three ways of getting around. -->
+    <!--
+      The grid writes this "Two minutes in bed". Every other amount in the app is
+      a digit ("A 2 minute walk", "8 times", "40 seconds") and the length of this
+      set is computed, so spelling one of them out would put two conventions on
+      one screen. Digits, and the same words as the computed title.
+    -->
+    <string name="today_move_bed">2 minutes in bed</string>
+    <string name="today_move_sub_bed">Ankles, then grip</string>
+    <string name="today_move_sub_wheel">Arms, then a shift</string>
+    <string name="today_weighing_off">Weighing in is off for now. Turn it back on in settings whenever you like.</string>
+    <string name="today_next_go">Today, for Go</string>
+
+    <plurals name="bed_set_title">
+        <item quantity="one">One minute in bed</item>
+        <item quantity="other">%1$d minutes in bed</item>
+    </plurals>
+
+    <!--
+      In bed the talk test is the wrong question, so the grid replaces it with
+      how you feel. The three answers carry the same meaning underneath.
+    -->
+    <string name="feel_question">How do you feel?</string>
+    <string name="feel_good">Good</string>
+    <string name="feel_same">About the same</string>
+    <string name="feel_tired">Tired</string>
+
+    <string name="notice_ok">Got it</string>
+
+    <!-- Settings, grid screen 22. -->
+    <string name="settings_title">Settings</string>
+    <string name="settings_getting_around">How you get around</string>
+    <string name="settings_therapist">Working with a therapist</string>
+    <string name="settings_therapist_sub">Lets you add what they gave you as your own list</string>
+    <string name="settings_weigh_in">Weigh in</string>
+    <!--
+      Grid screen 22 writes this row as "Shown as a lever, not a score". The word
+      is banned by DESIGN.md section 6 and rule 1 of the brief admits no
+      exception, not even for a sentence that denies the thing. Same meaning,
+      allowed words.
+    -->
+    <string name="settings_weigh_in_sub">One of the levers, not the point</string>
+    <string name="settings_show_numbers">Show numbers</string>
+    <string name="settings_show_numbers_sub">Off shows words instead</string>
+    <string name="settings_leave_out">Anything to leave out</string>
+    <string name="settings_leave_out_none">Nothing</string>
+    <string name="settings_pattern">Feeling worse afterwards</string>
+    <string name="settings_pacing">Working within a limit</string>
+    <plurals name="settings_pacing_sub">
+        <item quantity="one">%1$d minute, %2$d days a week</item>
+        <item quantity="other">%1$d minutes, %2$d days a week</item>
+    </plurals>
+    <string name="pacing_minutes">How long, at most</string>
+    <string name="pacing_days">How many days a week</string>
+    <plurals name="pacing_days_value">
+        <item quantity="one">%1$d day</item>
+        <item quantity="other">%1$d days</item>
+    </plurals>
+    <string name="pacing_stop">Stop working within a limit</string>
+    <string name="pacing_stop_why">You decide this, and only you. If you stop, the app will ask the question about feeling worse afterwards again.</string>
+
+
+    <!-- Pacing mode. LOGIC.md section 7. -->
+    <string name="today_move_pacing">Move within your limit</string>
+    <string name="today_move_sub_pacing">At or below, never above</string>
+    <string name="move_pacing_label">Today, within your limit</string>
+    <plurals name="move_pacing_within">
+        <item quantity="one">Up to %1$d minute</item>
+        <item quantity="other">Up to %1$d minutes</item>
+    </plurals>
+    <string name="move_pacing_note">This is not graded exercise. Staying inside your energy limit is the method.</string>
+    <string name="move_pacing_rest">Rest today. You have had your days this week, and that is the plan working.</string>
+    <string name="pacing_on_notice">Two sessions this month left you much worse the next day. Move now stays inside a limit you set, and nothing goes up on its own. You can change this in settings whenever you like.</string>
+    <string name="pacing_reduced">Your limit is now %1$s. It came down because yesterday was worse.</string>
+
+    <!-- Move, extra blocks. -->
+    <string name="move_set">Today\'s set</string>
+    <string name="move_set_parts">What is in it</string>
+    <plurals name="move_bed_explain">
+        <item quantity="one">One thing, and stop whenever.</item>
+        <item quantity="other">%1$d things, back to back. Stop whenever.</item>
+    </plurals>
+    <string name="move_helper_title">Someone nearby helps.</string>
+    <string name="move_helper_body">Not to hold you, just to be there the first few times.</string>
+
+    <!-- Coming back after time away. LOGIC.md section 6, and never as a loss. -->
+    <string name="welcome_back_short">Good to see you. Your next one is a little shorter than where you left off, so the first one back is easy.</string>
+    <string name="welcome_back_long">Good to see you. Move starts a couple of steps back and stays there for a fortnight. Coming back is meant to be the easy part.</string>
+    <string name="welcome_back_ask">Good to see you. A few questions have gone stale, so the app will ask them again before it suggests anything.</string>
 </resources>

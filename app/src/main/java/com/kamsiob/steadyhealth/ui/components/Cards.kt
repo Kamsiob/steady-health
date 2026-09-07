@@ -71,6 +71,50 @@ fun Block(
     }
 }
 
+/**
+ * A tinted block of plain sentences, for the things the app says once.
+ *
+ * Weighing being off, coming back after time away, what pacing mode means. Sand
+ * rather than white because these are asides and not the screen's business, and
+ * never a colour that reads as a warning, because none of them is one.
+ */
+@Composable
+fun NoteBlock(
+    text: String,
+    modifier: Modifier = Modifier,
+    heading: String? = null,
+    tint: Color = SteadyPalette.Sand,
+    onDismiss: (() -> Unit)? = null,
+    dismissLabel: String = "",
+) {
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(SteadyShapes.Card)
+            .background(tint)
+            .then(
+                if (onDismiss != null) {
+                    Modifier.clickable(role = Role.Button, onClickLabel = dismissLabel, onClick = onDismiss)
+                } else {
+                    Modifier
+                },
+            )
+            .padding(SteadySpacing.InsideTight)
+            .semantics(mergeDescendants = true) {
+                contentDescription = listOfNotNull(heading, text).joinToString(" ")
+            },
+        verticalArrangement = Arrangement.spacedBy(SteadySpacing.Tight),
+    ) {
+        heading?.let {
+            SteadyText(text = it, style = SteadyType.CardTitle, color = SteadyPalette.Navy)
+        }
+        SteadyText(text = text, style = SteadyType.Body, color = SteadyPalette.Ink2)
+        if (onDismiss != null) {
+            SteadyText(text = dismissLabel, style = SteadyType.CardTitle, color = SteadyPalette.OrangeText)
+        }
+    }
+}
+
 /** Two blocks side by side, which is the only grid DESIGN.md has. */
 @Composable
 fun TwoUp(

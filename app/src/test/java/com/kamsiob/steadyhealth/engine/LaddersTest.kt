@@ -13,7 +13,7 @@ class LaddersTest {
     fun thereIsAlwaysSomethingToDo() {
         // The promise in LOGIC.md section 5: when nearly everything is excluded
         // there is still the seated ladder, still short walks, still band work.
-        val plan = Ladders.visibleLadders(Exclusion.entries.toSet())
+        val plan = Ladders.visibleLadders(exclusions = Exclusion.entries.toSet())
 
         assertThat(plan.hasSomethingToDo).isTrue()
         assertThat(plan.steps(Ladder.ChairAndStanding)).isNotEmpty()
@@ -22,21 +22,21 @@ class LaddersTest {
 
     @Test
     fun pushingHidesThePushingLadder() {
-        val plan = Ladders.visibleLadders(setOf(Exclusion.Pushing))
+        val plan = Ladders.visibleLadders(exclusions = setOf(Exclusion.Pushing))
 
         assertThat(plan.steps(Ladder.Pushing)).isEmpty()
     }
 
     @Test
     fun theFloorExclusionHidesFloorWork() {
-        val plan = Ladders.visibleLadders(setOf(Exclusion.GettingOnTheFloor))
+        val plan = Ladders.visibleLadders(exclusions = setOf(Exclusion.GettingOnTheFloor))
 
         assertThat(plan.steps(Ladder.Floor)).isEmpty()
     }
 
     @Test
     fun lyingFlatHidesTheOneStepThatNeedsIt() {
-        val plan = Ladders.visibleLadders(setOf(Exclusion.LyingFlat))
+        val plan = Ladders.visibleLadders(exclusions = setOf(Exclusion.LyingFlat))
 
         assertThat(plan.steps(Ladder.Floor).map { it.name }).doesNotContain("Glute bridge")
         assertThat(plan.steps(Ladder.Floor)).isNotEmpty()
@@ -46,7 +46,7 @@ class LaddersTest {
     fun everyStepBelongsToExactlyOneAbility() {
         // MASTER_SPEC section 4. There is nowhere to put a step that belongs to
         // none, and nothing that belongs to two.
-        val all = Ladders.visibleLadders(emptySet()).ladders.flatMap { it.steps }
+        val all = Ladders.visibleLadders().ladders.flatMap { it.steps }
 
         assertThat(all).isNotEmpty()
         all.forEach { assertThat(AbilityDomain.entries).contains(it.domain) }
