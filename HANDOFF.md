@@ -7,9 +7,10 @@ it cannot see the reasoning for, or breaking something it does not understand.
 Read this in full. Then DECISIONS.md. Then MASTER_SPEC.md and DESIGN.md. Then
 `git log`.
 
-**Last updated:** 2026-09-06, after Phase 6's data, reminder and accessibility
-work. Phases 0 to 5 are done, Phase 6 is most of the way, and all of it was driven
-on the Pixel 8 rather than asserted.
+**Last updated:** 2026-09-06, at the point the app was handed over for testing.
+Phases 0 to 5 are done, Phase 6 is most of the way, and all of it was driven on
+the Pixel 8 rather than asserted. 178 unit tests and 15 device tests, all passing;
+CI green; debug APK 41.7 MB.
 
 ---
 
