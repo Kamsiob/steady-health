@@ -219,6 +219,12 @@ has to stay.
   points `Engine`, `EngineConfig`, `Conversation`; `initialize()` can take ten
   seconds. MediaPipe's `.task` format is the legacy path. Constrained decoding is
   not documented, which is why the tag validator is a validator.
+- **The emulator does not run on this machine.** `avdmanager` creates an AVD and
+  `emulator` starts, reaches "Emulator is performing a full startup", and the process
+  exits without an error in its log. Tried windowed and headless, `swiftshader_indirect`
+  and the default GPU, on a fresh `steady-gate` AVD from
+  `system-images;android-36;google_apis;x86_64`. `/dev/kvm` is `crw-rw-rw-`, so it is
+  not a permissions problem. Everything that needs a device therefore needs the phone.
 - Debug APK with SQLCipher and Vico: **39 MB**. Adding Rive took it to **54 MB**.
 - Figtree ships as one variable font, 62 KB, covering weights 400 to 900.
 

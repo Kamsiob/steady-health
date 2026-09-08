@@ -1,6 +1,7 @@
 package com.kamsiob.steadyhealth.ui
 
 import android.app.Application
+import androidx.annotation.StringRes
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.kamsiob.steadyhealth.R
@@ -39,9 +40,11 @@ import com.kamsiob.steadyhealth.engine.StepMeasure
 import com.kamsiob.steadyhealth.engine.WayOfGettingAround
 import com.kamsiob.steadyhealth.engine.WaysOfGettingAround
 import com.kamsiob.steadyhealth.engine.WeightEngine
+import com.kamsiob.steadyhealth.session.Area
 import com.kamsiob.steadyhealth.ui.screens.AbilitiesUiState
 import com.kamsiob.steadyhealth.ui.screens.AbilityRowState
 import com.kamsiob.steadyhealth.ui.screens.AbilityTileState
+import com.kamsiob.steadyhealth.ui.screens.BringBack
 import com.kamsiob.steadyhealth.ui.screens.MoveItem
 import com.kamsiob.steadyhealth.ui.screens.MoveUiState
 import com.kamsiob.steadyhealth.ui.screens.OfferUiState
@@ -172,6 +175,19 @@ class SteadyViewModel(application: Application) : AndroidViewModel(application) 
         refresh()
     }
 
+    /**
+     * The one answer to "ready to try those again?".
+     *
+     * Yes closes the episode and the movements come back. Not yet puts another quiet
+     * week between the person and the question, which is the only honest thing to do
+     * with an answer that means "ask me later".
+     */
+    fun bringBack(area: Area, yes: Boolean) = viewModelScope.launch {
+        val today = today()
+        if (yes) runs.clearSore(area, today) else runs.reportSore(area, today)
+        refresh()
+    }
+
     fun refresh() = viewModelScope.launch {
         loadProfile()
         applyTimeAway()
@@ -293,8 +309,37 @@ class SteadyViewModel(application: Application) : AndroidViewModel(application) 
             notice = _notice.value,
             session = cards.sessionCard(date.toEpochDay(), way.way, exclusions),
             noticed = cards.noticedLine(date.toEpochDay()),
+            worthAWord = worthAWord(today),
+            bringBack = bringBackQuestion(today),
         )
     }
+
+    /**
+     * "Worth a word with your doctor about that shoulder." ADDENDUM-03 Part 2.
+     *
+     * Once, ever, per area, after the same one has hurt twice inside a month. No
+     * interpretation, no advice, and no second time: `showOnce` is what makes the
+     * "once" true rather than intended.
+     */
+    private suspend fun worthAWord(today: Long): String? {
+        val area = runs.soreAreas(today).firstOrNull { runs.reportedTwiceInAMonth(it, today) }
+            ?: return null
+        val said = profile.showOnce("$WORTH_A_WORD:${area.id}", System.currentTimeMillis())
+        if (!said) return null
+        return string(R.string.hurt_worth_a_word, string(Labels.forArea(area)).lowercase())
+    }
+
+    /** The one question about an area whose week is up. */
+    private suspend fun bringBackQuestion(today: Long): BringBack? {
+        val area = runs.soreAreaToAskAbout(today) ?: return null
+        return BringBack(
+            question = string(R.string.hurt_bring_back, string(Labels.forArea(area)).lowercase()),
+            area = area,
+        )
+    }
+
+    private fun string(@StringRes id: Int, vararg args: Any): String =
+        getApplication<Application>().getString(id, *args)
 
     /**
      * What the next thing is called: the person's own name for it if they have
@@ -906,5 +951,6 @@ class SteadyViewModel(application: Application) : AndroidViewModel(application) 
 
         /** Keyed by ladder and by the day they left, so it fires once per gap. */
         const val WELCOME_BACK_NOTICE = "welcome_back"
+        const val WORTH_A_WORD = "worth_a_word"
     }
 }

@@ -4,6 +4,7 @@ import com.kamsiob.steadyhealth.R
 import com.kamsiob.steadyhealth.domain.AbilityDomain
 import com.kamsiob.steadyhealth.domain.Exclusion
 import com.kamsiob.steadyhealth.domain.GettingAround
+import com.kamsiob.steadyhealth.session.Area
 
 /**
  * The words for the two enums that appear in more than one place.
@@ -41,6 +42,18 @@ object Labels {
         AbilityDomain.Go -> R.string.ability_go
         AbilityDomain.Carry -> R.string.ability_carry
         AbilityDomain.Steady -> R.string.ability_steady
+    }
+
+    fun forArea(value: Area) = when (value) {
+        Area.Shoulder -> R.string.hurt_shoulder
+        Area.Arm -> R.string.hurt_arm
+        Area.Back -> R.string.hurt_back
+        Area.Hip -> R.string.hurt_hip
+        Area.Knee -> R.string.hurt_knee
+        Area.Ankle -> R.string.hurt_ankle
+        Area.Neck -> R.string.hurt_neck
+        // Never shown: it is the value for a movement that belongs to no one area.
+        Area.None -> R.string.hurt_rather_not
     }
 
     fun forLanguage(tag: String) = when (tag) {

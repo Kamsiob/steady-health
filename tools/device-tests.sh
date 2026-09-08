@@ -17,15 +17,20 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PACKAGE="com.kamsiob.steadyhealth"
 RUNNER="$PACKAGE.test/androidx.test.runner.AndroidJUnitRunner"
 
+# Which device, when more than one is attached. STEADY_SERIAL picks it; without it
+# adb refuses rather than choosing, which is the right way round.
+ADB=(adb)
+if [ -n "${STEADY_SERIAL:-}" ]; then ADB=(adb -s "$STEADY_SERIAL"); fi
+
 cd "$ROOT"
 source ./gradle-env.sh
 ./gradlew assembleDebug assembleDebugAndroidTest -q
 
-adb install -r -t "app/build/outputs/apk/debug/app-debug.apk" >/dev/null
-adb install -r -t "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk" >/dev/null
+"${ADB[@]}" install -r -t "app/build/outputs/apk/debug/app-debug.apk" >/dev/null
+"${ADB[@]}" install -r -t "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk" >/dev/null
 
 if [ $# -gt 0 ]; then
-  adb shell am instrument -w -e class "$PACKAGE.$1" "$RUNNER"
+  "${ADB[@]}" shell am instrument -w -e class "$PACKAGE.$1" "$RUNNER"
 else
-  adb shell am instrument -w "$RUNNER"
+  "${ADB[@]}" shell am instrument -w "$RUNNER"
 fi

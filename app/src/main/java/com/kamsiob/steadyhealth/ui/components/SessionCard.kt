@@ -35,12 +35,15 @@ data class SessionCardState(
     val feeds: String? = null,
     val adaptation: String? = null,
     val doneToday: Boolean = false,
+    /** "Left the knee movements out this week", when an area is suppressed. */
+    val leftOut: String? = null,
 )
 
 @Composable
 fun SessionCard(
     state: SessionCardState,
     onGo: () -> Unit,
+    onSomethingSmall: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -80,6 +83,9 @@ fun SessionCard(
         state.adaptation?.let {
             SteadyText(text = it, style = SteadyType.Body, color = SteadyPalette.Sand)
         }
+        state.leftOut?.let {
+            SteadyText(text = it, style = SteadyType.Body, color = SteadyPalette.Sand)
+        }
 
         if (state.doneToday) {
             SteadyText(
@@ -93,6 +99,15 @@ fun SessionCard(
         PrimaryButton(
             label = stringResource(if (state.doneToday) R.string.card_again else R.string.card_go),
             onClick = onGo,
+            modifier = Modifier.padding(top = SteadySpacing.Tight),
+        )
+
+        // ADDENDUM-03 Part 2, tiredness. Ninety seconds, and it counts as a session.
+        // A quiet second line rather than a second button, because it is an out and
+        // not a choice between two equal things.
+        TextLink(
+            label = stringResource(R.string.offer_small),
+            onClick = onSomethingSmall,
             modifier = Modifier.padding(top = SteadySpacing.Tight),
         )
     }

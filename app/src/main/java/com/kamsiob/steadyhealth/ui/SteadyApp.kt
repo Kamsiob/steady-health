@@ -355,6 +355,13 @@ private fun TabBody(
                     sessionViewModel.startTodays()
                     navController.navigate(Route.SESSION)
                 },
+                onSomethingSmall = {
+                    sessionViewModel.startSomethingSmall()
+                    navController.navigate(Route.SESSION)
+                },
+                onBringBack = { yes ->
+                    state.bringBack?.let { viewModel.bringBack(it.area, yes) }
+                },
                 onSettings = {
                     settingsViewModel.openSettings()
                     navController.navigate(Route.SETTINGS)

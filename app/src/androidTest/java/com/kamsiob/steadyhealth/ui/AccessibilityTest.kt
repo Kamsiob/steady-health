@@ -42,7 +42,7 @@ class AccessibilityTest {
 
     @Test
     fun everyThingOnTodayThatCanBeTappedSaysWhatItIs() {
-        compose.setContent { SteadyTheme { TodayScreen(today, {}, {}, {}, {}, {}) } }
+        compose.setContent { SteadyTheme { TodayScreen(today, {}, {}, {}, {}, {}, {}, {}) } }
 
         // DESIGN.md section 7: TalkBack labels describe meaning, not drawing.
         listOf(
@@ -56,7 +56,7 @@ class AccessibilityTest {
 
     @Test
     fun theSessionCardIsTheOneObviousThingOnToday() {
-        compose.setContent { SteadyTheme { TodayScreen(today, {}, {}, {}, {}, {}) } }
+        compose.setContent { SteadyTheme { TodayScreen(today, {}, {}, {}, {}, {}, {}, {}) } }
 
         compose.onNodeWithText("Today's session").assertIsDisplayed()
         compose.onNodeWithText("About 6 minutes").assertIsDisplayed()
@@ -65,7 +65,7 @@ class AccessibilityTest {
 
     @Test
     fun whatTheAppNoticedIsSaidPlainlyAndIsNotAButton() {
-        compose.setContent { SteadyTheme { TodayScreen(today, {}, {}, {}, {}, {}) } }
+        compose.setContent { SteadyTheme { TodayScreen(today, {}, {}, {}, {}, {}, {}, {}) } }
 
         // A noticed line is the app describing, never the app asking. Making it
         // tappable would turn an observation into a task.
@@ -75,7 +75,7 @@ class AccessibilityTest {
 
     @Test
     fun nothingTappableIsWithoutALabel() {
-        compose.setContent { SteadyTheme { TodayScreen(today, {}, {}, {}, {}, {}) } }
+        compose.setContent { SteadyTheme { TodayScreen(today, {}, {}, {}, {}, {}, {}, {}) } }
         val tappable = compose.onAllNodes(hasClickAction()).fetchSemanticsNodes()
         assertTrue("Today has things to tap", tappable.isNotEmpty())
         tappable.forEach { node ->
@@ -98,7 +98,7 @@ class AccessibilityTest {
                     fontScale = 2f,
                 ),
             ) {
-                SteadyTheme { TodayScreen(today, {}, {}, {}, {}, {}) }
+                SteadyTheme { TodayScreen(today, {}, {}, {}, {}, {}, {}, {}) }
             }
         }
         compose.onNodeWithText("Get up").assertIsDisplayed()

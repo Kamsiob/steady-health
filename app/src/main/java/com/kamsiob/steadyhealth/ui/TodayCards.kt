@@ -41,12 +41,13 @@ class TodayCards(private val application: Application, private val db: SteadyDat
         exclusions: Set<Exclusion>,
     ): SessionCardState {
         val history = runs.history()
+        val sore = runs.soreAreas(today)
         val plan = SessionEngine.plan(
             SessionInputs(
                 way = way,
                 exclusions = exclusions,
                 kit = profile.kit(),
-                sore = runs.soreAreas(today),
+                sore = sore,
                 history = history,
                 lastFelt = runs.lastFelt(),
                 feltBefore = runs.feltBefore(),
@@ -71,6 +72,10 @@ class TodayCards(private val application: Application, private val db: SteadyDat
                 ?.let { string(R.string.card_feeds, it) },
             adaptation = adaptationLine(plan.adaptation),
             doneToday = history.any { it.epochDay == today },
+            // ADDENDUM-03 Part 2: the next offer says which area was left out, so
+            // nobody has to wonder why a movement they know went missing.
+            leftOut = sore.firstOrNull()
+                ?.let { string(R.string.hurt_left_out, string(Labels.forArea(it)).lowercase()) },
         )
     }
 

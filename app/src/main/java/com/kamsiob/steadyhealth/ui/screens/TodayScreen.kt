@@ -22,11 +22,13 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.kamsiob.steadyhealth.R
 import com.kamsiob.steadyhealth.domain.AbilityDomain
+import com.kamsiob.steadyhealth.session.Area
 import com.kamsiob.steadyhealth.ui.components.AbilityTile
 import com.kamsiob.steadyhealth.ui.components.CarryGlyph
 import com.kamsiob.steadyhealth.ui.components.DailyCard
 import com.kamsiob.steadyhealth.ui.components.NoteBlock
 import com.kamsiob.steadyhealth.ui.components.RiseGlyph
+import com.kamsiob.steadyhealth.ui.components.SecondaryButton
 import com.kamsiob.steadyhealth.ui.components.SessionCard
 import com.kamsiob.steadyhealth.ui.components.SessionCardState
 import com.kamsiob.steadyhealth.ui.components.SteadyGlyph
@@ -39,6 +41,14 @@ import com.kamsiob.steadyhealth.ui.theme.SteadyPalette
 import com.kamsiob.steadyhealth.ui.theme.SteadySpacing
 import com.kamsiob.steadyhealth.ui.theme.SteadyText
 import com.kamsiob.steadyhealth.ui.theme.SteadyType
+
+/**
+ * The one question the app asks about an area that hurt, seven days later.
+ *
+ * Asked once and never repeated, because a suppressed movement that keeps asking to
+ * come back is the app arguing with somebody about their own body.
+ */
+data class BringBack(val question: String, val area: Area)
 
 /** One ability, as Today shows it. */
 data class AbilityTileState(
@@ -91,6 +101,12 @@ data class TodayUiState(
 
     /** The one line the app noticed, or nothing at all. ADDENDUM-03 Part 9. */
     val noticed: String? = null,
+
+    /** Said once, ever, when the same area has hurt twice in a month. */
+    val worthAWord: String? = null,
+
+    /** An area whose week is up, asked about once. */
+    val bringBack: BringBack? = null,
 ) {
     val doneCount: Int
         get() = listOfNotNull(weighedIn.takeIf { weighsIn }, saidHowItWent, moved).count { it }
@@ -113,11 +129,14 @@ data class TodayUiState(
  * beside an ability that changed, and nowhere else.
  */
 @Composable
+@Suppress("LongParameterList") // One screen, one callback for each thing on it.
 fun TodayScreen(
     state: TodayUiState,
     onAbility: (AbilityDomain) -> Unit,
     onSayHow: () -> Unit,
     onGo: () -> Unit,
+    onSomethingSmall: () -> Unit,
+    onBringBack: (Boolean) -> Unit,
     onSettings: () -> Unit,
     onNotice: () -> Unit,
     modifier: Modifier = Modifier,
@@ -143,7 +162,27 @@ fun TodayScreen(
             )
         }
 
-        state.session?.let { SessionCard(state = it, onGo = onGo) }
+        state.session?.let {
+            SessionCard(state = it, onGo = onGo, onSomethingSmall = onSomethingSmall)
+        }
+
+        state.bringBack?.let { asking ->
+            NoteBlock(asking.question)
+            Row(horizontalArrangement = Arrangement.spacedBy(SteadySpacing.ListGap)) {
+                SecondaryButton(
+                    label = stringResource(R.string.hurt_bring_back_yes),
+                    onClick = { onBringBack(true) },
+                    modifier = Modifier.weight(1f),
+                )
+                SecondaryButton(
+                    label = stringResource(R.string.hurt_bring_back_no),
+                    onClick = { onBringBack(false) },
+                    modifier = Modifier.weight(1f),
+                )
+            }
+        }
+
+        state.worthAWord?.let { NoteBlock(it) }
 
         state.noticed?.let { NoteBlock(it) }
 

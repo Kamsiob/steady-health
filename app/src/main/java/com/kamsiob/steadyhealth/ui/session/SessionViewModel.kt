@@ -133,6 +133,18 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
         start(SessionEngine.plan(inputs), first = runs.history().isEmpty())
     }
 
+    /**
+     * The ninety second version. ADDENDUM-03 Part 2, tiredness.
+     *
+     * One movement, and it is saved as a session like any other. Nothing anywhere
+     * records that it was the short one, because a record of the days somebody could
+     * only manage ninety seconds is not what this app is.
+     */
+    fun startSomethingSmall() = viewModelScope.launch {
+        val inputs = inputsFor(profile, runs).copy(wantSmall = true)
+        start(SessionEngine.plan(inputs), first = runs.history().isEmpty())
+    }
+
     /** Run a session somebody already has, for the offer card and the extras. */
     fun start(plan: SessionPlan, first: Boolean = false) {
         startedAt = System.currentTimeMillis()
