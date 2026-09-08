@@ -322,6 +322,7 @@ class SteadyViewModel(application: Application) : AndroidViewModel(application) 
             want = nextThing?.first,
             towards = nextThing?.second,
             worthAWord = worthAWord(today),
+            sunday = date.dayOfWeek == DayOfWeek.SUNDAY,
             bringBack = bringBackQuestion(today),
         )
     }

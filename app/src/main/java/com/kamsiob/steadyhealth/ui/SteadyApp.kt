@@ -57,6 +57,7 @@ import com.kamsiob.steadyhealth.ui.screens.SessionsScreen
 import com.kamsiob.steadyhealth.ui.screens.SettingsActions
 import com.kamsiob.steadyhealth.ui.screens.SettingsScreen
 import com.kamsiob.steadyhealth.ui.screens.SummaryScreen
+import com.kamsiob.steadyhealth.ui.screens.SundayScreen
 import com.kamsiob.steadyhealth.ui.screens.TodayScreen
 import com.kamsiob.steadyhealth.ui.screens.TryOfferScreen
 import com.kamsiob.steadyhealth.ui.screens.TryResultScreen
@@ -160,42 +161,7 @@ private fun Tabs(
 
                     dailyRoutes(viewModel, navController, back)
 
-                    composable(Route.PAST_SESSION) {
-                        val state by sessionsViewModel.past.collectAsStateWithLifecycle()
-                        PastSessionScreen(
-                            state = state,
-                            onCount = sessionsViewModel::correctPast,
-                            onRepeat = {
-                                sessionViewModel.repeat(state.runId)
-                                navController.navigate(Route.SESSION)
-                            },
-                            onRemove = { sessionsViewModel.removePast(back) },
-                            onBack = back,
-                        )
-                    }
-
-                    composable(Route.PHONE_FREE) {
-                        val state by sessionViewModel.phoneFree.collectAsStateWithLifecycle()
-                        PhoneFreeScreen(
-                            state = state,
-                            onRead = sessionViewModel::readPhoneFree,
-                            onDidIt = sessionViewModel::phoneFreeDone,
-                            onManaged = sessionViewModel::phoneFreeManaged,
-                            onSave = { sessionViewModel.savePhoneFree(back) },
-                            onBack = back,
-                        )
-                    }
-
-                    composable(Route.LOG_PAST) {
-                        val state by sessionsViewModel.logPast.collectAsStateWithLifecycle()
-                        LogPastScreen(
-                            state = state,
-                            onDay = sessionsViewModel::chooseLogDay,
-                            onMovement = sessionsViewModel::toggleLogMovement,
-                            onSave = { sessionsViewModel.saveLogPast(back) },
-                            onBack = back,
-                        )
-                    }
+                    sessionsRoutes(sessionsViewModel, sessionViewModel, navController, back)
 
                     askRoutes(askViewModel, navController, back)
                     checkRoutes(checkViewModel, navController, back) {
@@ -427,6 +393,10 @@ private fun TabBody(
                 },
                 onBringBack = { yes ->
                     state.bringBack?.let { viewModel.bringBack(it.area, yes) }
+                },
+                onSunday = {
+                    sessionsViewModel.openSunday()
+                    navController.navigate(Route.SUNDAY)
                 },
                 onNotice = viewModel::dismissNotice,
             )
@@ -703,6 +673,62 @@ private fun NavGraphBuilder.askRoutes(
     composable(Route.CARD) {
         val state by viewModel.card.collectAsStateWithLifecycle()
         CardScreen(state = state, onBack = back)
+    }
+}
+
+/**
+ * The screens that hang off the Sessions tab.
+ *
+ * Their own builder because Tabs was one line past detekt's length rule, and because
+ * these four belong together: a week read back, a session read back, a session done
+ * away from the phone, and one added after the fact.
+ */
+private fun NavGraphBuilder.sessionsRoutes(
+    viewModel: SessionsViewModel,
+    sessionViewModel: SessionViewModel,
+    navController: NavHostController,
+    back: () -> Unit,
+) {
+    composable(Route.SUNDAY) {
+        val state by viewModel.sundayReview.collectAsStateWithLifecycle()
+        SundayScreen(state = state, onBack = back)
+    }
+
+    composable(Route.PAST_SESSION) {
+        val state by viewModel.past.collectAsStateWithLifecycle()
+        PastSessionScreen(
+            state = state,
+            onCount = viewModel::correctPast,
+            onRepeat = {
+                sessionViewModel.repeat(state.runId)
+                navController.navigate(Route.SESSION)
+            },
+            onRemove = { viewModel.removePast(back) },
+            onBack = back,
+        )
+    }
+
+    composable(Route.PHONE_FREE) {
+        val state by sessionViewModel.phoneFree.collectAsStateWithLifecycle()
+        PhoneFreeScreen(
+            state = state,
+            onRead = sessionViewModel::readPhoneFree,
+            onDidIt = sessionViewModel::phoneFreeDone,
+            onManaged = sessionViewModel::phoneFreeManaged,
+            onSave = { sessionViewModel.savePhoneFree(back) },
+            onBack = back,
+        )
+    }
+
+    composable(Route.LOG_PAST) {
+        val state by viewModel.logPast.collectAsStateWithLifecycle()
+        LogPastScreen(
+            state = state,
+            onDay = viewModel::chooseLogDay,
+            onMovement = viewModel::toggleLogMovement,
+            onSave = { viewModel.saveLogPast(back) },
+            onBack = back,
+        )
     }
 }
 

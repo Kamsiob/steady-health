@@ -21,6 +21,7 @@ import com.kamsiob.steadyhealth.ui.screens.PastDay
 import com.kamsiob.steadyhealth.ui.screens.PastMovement
 import com.kamsiob.steadyhealth.ui.screens.PastSessionUiState
 import com.kamsiob.steadyhealth.ui.screens.SessionsUiState
+import com.kamsiob.steadyhealth.ui.screens.SundayUiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -28,6 +29,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.ZoneId
+import java.time.format.TextStyle
+import java.util.Locale
 
 /**
  * The Sessions tab, and logging a session that already happened.
@@ -63,6 +66,22 @@ class SessionsViewModel(application: Application) : AndroidViewModel(application
 
     private val _past = MutableStateFlow(PastSessionUiState())
     val past: StateFlow<PastSessionUiState> = _past.asStateFlow()
+
+    private val _sunday = MutableStateFlow(SundayUiState())
+    val sundayReview: StateFlow<SundayUiState> = _sunday.asStateFlow()
+
+    /** Open the Sunday review. Never sent, never notified: opened. */
+    fun openSunday() = viewModelScope.launch {
+        val from = LocalDate.now(ZoneId.systemDefault())
+        val names = (0 until Week.DAYS).map {
+            from.plusDays(it.toLong())
+                .dayOfWeek
+                .getDisplayName(TextStyle.FULL, Locale.getDefault())
+        }
+        // The day names are read here rather than in the sentence maker because a day
+        // of the week is a locale's business.
+        _sunday.value = cards.sunday(today(), names)
+    }
 
     /** Open one session already done, to read it, fix it, or remove it. */
     fun openPast(runId: Long) = viewModelScope.launch {

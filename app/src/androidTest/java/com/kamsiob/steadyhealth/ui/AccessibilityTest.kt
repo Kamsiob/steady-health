@@ -50,6 +50,7 @@ class AccessibilityTest {
                     onSomethingSmall = {},
                     onWithoutThePhone = {},
                     onBringBack = {},
+                    onSunday = {},
                     onNotice = {},
                 ) } }
 
@@ -73,6 +74,7 @@ class AccessibilityTest {
                     onSomethingSmall = {},
                     onWithoutThePhone = {},
                     onBringBack = {},
+                    onSunday = {},
                     onNotice = {},
                 ) } }
 
@@ -91,6 +93,7 @@ class AccessibilityTest {
                     onSomethingSmall = {},
                     onWithoutThePhone = {},
                     onBringBack = {},
+                    onSunday = {},
                     onNotice = {},
                 ) } }
 
@@ -110,6 +113,7 @@ class AccessibilityTest {
                     onSomethingSmall = {},
                     onWithoutThePhone = {},
                     onBringBack = {},
+                    onSunday = {},
                     onNotice = {},
                 ) } }
         val tappable = compose.onAllNodes(hasClickAction()).fetchSemanticsNodes()
@@ -142,6 +146,7 @@ class AccessibilityTest {
                     onSomethingSmall = {},
                     onWithoutThePhone = {},
                     onBringBack = {},
+                    onSunday = {},
                     onNotice = {},
                 ) }
             }

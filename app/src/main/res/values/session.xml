@@ -243,4 +243,23 @@
     -->
     <string name="look_back_line" tools:ignore="PluralsCandidate">%1$s: %2$d when you started, %3$d now.</string>
 
+
+    <!--
+      The Sunday review. ADDENDUM-03 Part 10, and the only place in the app that looks
+      forward. Never notified: it waits on Today for somebody to open it.
+    -->
+    <string name="sunday_title">Your week</string>
+    <string name="sunday_open">Read your week</string>
+    <string name="sunday_did">What you did</string>
+    <string name="sunday_moved">What moved</string>
+    <string name="sunday_noticed">One thing</string>
+    <string name="sunday_ahead">The week ahead</string>
+    <string name="sunday_nothing_moved">Nothing has moved far enough to be worth saying yet. It will.</string>
+    <plurals name="sunday_days">
+        <item quantity="one">One day with a session.</item>
+        <item quantity="other">%1$d days with a session.</item>
+    </plurals>
+    <string name="sunday_concrete">%1$s would make %2$d.</string>
+    <string name="sunday_ahead_met">You have already met this week. Anything more is extra.</string>
+
 </resources>

@@ -22,6 +22,7 @@ import com.kamsiob.steadyhealth.session.SessionInputs
 import com.kamsiob.steadyhealth.session.Week
 import com.kamsiob.steadyhealth.ui.components.SessionCardState
 import com.kamsiob.steadyhealth.ui.screens.LibraryRow
+import com.kamsiob.steadyhealth.ui.screens.SundayUiState
 import com.kamsiob.steadyhealth.ui.screens.WeekBar
 import java.time.LocalDate
 import java.time.ZoneId
@@ -252,6 +253,44 @@ class TodayCards(private val application: Application, private val db: SteadyDat
         val back = LookBacks.of(runs.history(), todayEpochDay()) ?: return null
         val name = Movements.byId(back.movementId)?.name ?: return null
         return string(R.string.look_back_line, name, back.then, back.now)
+    }
+
+    /**
+     * The Sunday review. ADDENDUM-03 Part 10.
+     *
+     * Everything in it already happened except the last line, which names one day
+     * that would meet the week. One concrete thing rather than a plan, because a plan
+     * for somebody else's week is the app deciding what their Thursday is for.
+     */
+    suspend fun sunday(today: Long, dayNames: List<String>): SundayUiState {
+        val history = runs.history()
+        val week = Week.of(history, today, profile.weekTarget())
+        val since = today - Week.DAYS + 1
+        val movements = history.filter { it.epochDay in since..today }
+            .mapNotNull { Movements.byId(it.movementId)?.name }
+            .distinct()
+
+        return SundayUiState(
+            did = listOfNotNull(
+                plural(R.plurals.sunday_days, week.done, week.done),
+                movements.takeIf { it.isNotEmpty() }?.joinToString(", "),
+            ),
+            moved = lookBackLine(),
+            noticed = Noticed.of(history, today)?.let { say(it) },
+            ahead = ahead(week, dayNames),
+        )
+    }
+
+    /**
+     * One day that would meet the week, named.
+     *
+     * The day after tomorrow if there is room for it, because naming today is not
+     * looking forward and naming a day already gone is worse than saying nothing.
+     */
+    private fun ahead(week: Week, dayNames: List<String>): String {
+        if (week.met) return string(R.string.sunday_ahead_met)
+        val ahead = dayNames.getOrNull(1) ?: return string(R.string.sunday_ahead_met)
+        return string(R.string.sunday_concrete, ahead, week.done + 1)
     }
 
     private suspend fun fourWeeks(): List<Week> =

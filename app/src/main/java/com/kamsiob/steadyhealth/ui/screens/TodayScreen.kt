@@ -21,6 +21,7 @@ import com.kamsiob.steadyhealth.session.Area
 import com.kamsiob.steadyhealth.ui.components.AbilityTile
 import com.kamsiob.steadyhealth.ui.components.CarryGlyph
 import com.kamsiob.steadyhealth.ui.components.DailyCard
+import com.kamsiob.steadyhealth.ui.components.ListItem
 import com.kamsiob.steadyhealth.ui.components.NoteBlock
 import com.kamsiob.steadyhealth.ui.components.RiseGlyph
 import com.kamsiob.steadyhealth.ui.components.SecondaryButton
@@ -109,6 +110,9 @@ data class TodayUiState(
     /** Said once, ever, when the same area has hurt twice in a month. */
     val worthAWord: String? = null,
 
+    /** True on a Sunday, when there is a week to read back. Part 10. */
+    val sunday: Boolean = false,
+
     /** An area whose week is up, asked about once. */
     val bringBack: BringBack? = null,
 ) {
@@ -142,6 +146,7 @@ fun TodayScreen(
     onSomethingSmall: () -> Unit,
     onWithoutThePhone: () -> Unit,
     onBringBack: (Boolean) -> Unit,
+    onSunday: () -> Unit,
     onNotice: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -214,6 +219,12 @@ fun TodayScreen(
         }
 
         AbilityGrid(state.abilities, onAbility)
+
+        // Never notified. It waits here for somebody to open it, which is what makes
+        // it a thing offered rather than a thing asked of them.
+        if (state.sunday) {
+            ListItem(heading = stringResource(R.string.sunday_open), onClick = onSunday)
+        }
 
         DailyCard(
             title = stringResource(
