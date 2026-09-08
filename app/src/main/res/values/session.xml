@@ -120,6 +120,29 @@
         <item quantity="one">One day with a session this week, against %2$d last week.</item>
         <item quantity="other">%1$d days with a session this week, against %2$d last week.</item>
     </plurals>
+    <string name="noticed_day">Day %1$d.</string>
+
+    <!--
+      The week. ADDENDUM-03 Part 10: a count against a number the person chose, never
+      a run of days, and nothing that can be broken.
+    -->
+    <plurals name="week_so_far">
+        <item quantity="one">One this week. %2$d more makes %3$d.</item>
+        <item quantity="other">%1$d this week. %2$d more makes %3$d.</item>
+    </plurals>
+    <plurals name="week_one_more">
+        <item quantity="one">One this week. One more makes %3$d.</item>
+        <item quantity="other">%1$d this week. One more makes %3$d.</item>
+    </plurals>
+    <string name="week_met">That\'s %1$d. Anything more is extra.</string>
+    <!--
+      The number here is the three, four or five the person chose, so it is never one
+      and a plural would give identical items in every language.
+    -->
+    <string name="week_none" tools:ignore="PluralsCandidate">Nothing this week yet. %1$d makes a week.</string>
+    <string name="settings_week">Sessions a week</string>
+    <string name="settings_week_sub">What you are aiming for. Change it whenever.</string>
+    <string name="week_choice">%1$d a week</string>
     <plurals name="noticed_how_many">
         <item quantity="one">One session so far.</item>
         <item quantity="other">%1$d sessions so far.</item>

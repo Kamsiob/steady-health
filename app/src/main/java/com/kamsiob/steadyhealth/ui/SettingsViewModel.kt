@@ -100,6 +100,7 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
             remindersBlocked = on.isNotEmpty() && !Reminding.allowed(context),
             envelopeMinutes = envelope.minutes,
             envelopeDays = envelope.daysPerWeek,
+            weekTarget = profile.weekTarget(),
         )
     }
 
@@ -277,6 +278,11 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     }
 
     private fun labelFor(value: GettingAround) = Labels.forGettingAround(value)
+
+    fun setWeekTarget(value: Int) = viewModelScope.launch {
+        profile.setWeekTarget(value)
+        refresh()
+    }
 
     fun labelFor(value: Exclusion) = Labels.forExclusion(value)
 

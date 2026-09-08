@@ -71,6 +71,30 @@ class NoticedTest {
         assertThat(Noticed.of(history, TODAY)).isEqualTo(Noticed.HowMany(3))
     }
 
+    @Test
+    fun thereIsAlwaysSomethingTrueToSay() {
+        val nothing = Noticed.all(emptyList(), TODAY, since = TODAY - 8)
+        assertThat(nothing).containsExactly(Noticed.DayNumber(9))
+    }
+
+    @Test
+    fun itSaysAtMostThreeThings() {
+        val history = (1..12).map { done("heel_raises", TODAY - it, 20 - it) }
+        assertThat(Noticed.all(history, TODAY, since = TODAY - 40).size)
+            .isAtMost(Noticed.MOST_LINES)
+    }
+
+    @Test
+    fun theDayNumberIsOnlyTheLastResort() {
+        val history = listOf(
+            done("a", TODAY - 2, 5),
+            done("b", TODAY - 1, 5),
+            done("c", TODAY, 5),
+        )
+        assertThat(Noticed.all(history, TODAY, since = TODAY - 8))
+            .doesNotContain(Noticed.DayNumber(9))
+    }
+
     private fun done(id: String, day: Long, result: Int) =
         Done(movementId = id, epochDay = day, result = result, target = result)
 

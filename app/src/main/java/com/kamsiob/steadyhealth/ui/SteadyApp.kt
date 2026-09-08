@@ -641,6 +641,7 @@ private fun NavGraphBuilder.settingsRoutes(
                     askViewModel.openAsk()
                     navController.navigate(Route.ASK)
                 },
+                onWeekTarget = viewModel::setWeekTarget,
             ),
             onBack = back,
         )

@@ -106,7 +106,7 @@ fun SessionCard(
         // A quiet second line rather than a second button, because it is an out and
         // not a choice between two equal things.
         TextLink(
-            label = stringResource(R.string.offer_small),
+            label = stringResource(R.string.offer_got_a_minute),
             onClick = onSomethingSmall,
             modifier = Modifier.padding(top = SteadySpacing.Tight),
         )

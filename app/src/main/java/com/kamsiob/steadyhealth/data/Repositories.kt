@@ -77,6 +77,7 @@ import com.kamsiob.steadyhealth.session.Kit
 import com.kamsiob.steadyhealth.session.Movements
 import com.kamsiob.steadyhealth.session.Piece
 import com.kamsiob.steadyhealth.session.Result
+import com.kamsiob.steadyhealth.session.Week
 import java.time.LocalDate
 
 /**
@@ -376,6 +377,18 @@ class ProfileRepository(private val db: SteadyDatabase) {
 
     suspend fun setChairHasArms(value: Boolean) = put(CHAIR_ARMS, value.toString())
 
+    /**
+     * How many sessions a week the person is aiming for. Three, four or five.
+     *
+     * Coerced on the way out as well as on the way in, so a value written by an older
+     * build or a hand-edited row cannot produce a week nobody can meet.
+     */
+    suspend fun weekTarget(): Int =
+        get(WEEK_TARGET)?.toIntOrNull()?.coerceIn(Week.CHOICES.first(), Week.CHOICES.last())
+            ?: Week.DEFAULT
+
+    suspend fun setWeekTarget(value: Int) = put(WEEK_TARGET, value.toString())
+
     /** The day the person started, for "since you began" and for nothing else. */
     suspend fun anchorDay(): Long? = get(ANCHOR_DAY)?.toLongOrNull()
 
@@ -530,6 +543,7 @@ class ProfileRepository(private val db: SteadyDatabase) {
         const val ONBOARDING_STEP = "onboarding_step"
         const val CHAIR_ARMS = "chair_arms"
         const val ANCHOR_DAY = "anchor_day"
+        const val WEEK_TARGET = "week_target"
         const val WITH_THERAPIST = "with_therapist"
         const val UNITS = "units"
         const val HEIGHT = "height_cm"

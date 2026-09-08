@@ -308,7 +308,8 @@ class SteadyViewModel(application: Application) : AndroidViewModel(application) 
             welcomeBack = welcomeBack,
             notice = _notice.value,
             session = cards.sessionCard(date.toEpochDay(), way.way, exclusions),
-            noticed = cards.noticedLine(date.toEpochDay()),
+            noticed = cards.noticedLines(date.toEpochDay()),
+            week = cards.weekLine(date.toEpochDay()),
             worthAWord = worthAWord(today),
             bringBack = bringBackQuestion(today),
         )

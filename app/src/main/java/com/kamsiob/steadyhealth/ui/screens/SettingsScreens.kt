@@ -12,6 +12,7 @@ import com.kamsiob.steadyhealth.domain.GettingAround
 import com.kamsiob.steadyhealth.domain.PemAnswer
 import com.kamsiob.steadyhealth.domain.Units
 import com.kamsiob.steadyhealth.engine.ReminderKind
+import com.kamsiob.steadyhealth.session.Week
 import com.kamsiob.steadyhealth.ui.components.ListItem
 import com.kamsiob.steadyhealth.ui.components.NoteBlock
 import com.kamsiob.steadyhealth.ui.components.Paragraph
@@ -21,6 +22,7 @@ import com.kamsiob.steadyhealth.ui.components.SectionTitle
 import com.kamsiob.steadyhealth.ui.components.SteadyScreen
 import com.kamsiob.steadyhealth.ui.components.Stepper
 import com.kamsiob.steadyhealth.ui.components.SwitchRow
+import com.kamsiob.steadyhealth.ui.components.ThreeUpChoice
 import com.kamsiob.steadyhealth.ui.help.Place
 import com.kamsiob.steadyhealth.ui.theme.SteadyPalette
 
@@ -42,6 +44,8 @@ data class SettingsUiState(
     val remindersBlocked: Boolean = false,
     val envelopeMinutes: Int = 0,
     val envelopeDays: Int = 0,
+    /** Three, four or five sessions a week. ADDENDUM-03 Part 10. */
+    val weekTarget: Int = Week.DEFAULT,
 )
 
 /**
@@ -63,6 +67,7 @@ data class SettingsActions(
     val onReminders: () -> Unit,
     val onTryItAndSee: (Boolean) -> Unit,
     val onAsk: () -> Unit,
+    val onWeekTarget: (Int) -> Unit,
 )
 
 /**
@@ -98,6 +103,16 @@ fun SettingsScreen(
             heading = stringResource(R.string.ask_title),
             subtitle = stringResource(R.string.settings_ask_sub),
             onClick = actions.onAsk,
+        )
+
+        // Set once and changeable, which is what makes it a choice rather than a
+        // number the app decided for somebody.
+        SectionTitle(stringResource(R.string.settings_week))
+        Paragraph(stringResource(R.string.settings_week_sub))
+        ThreeUpChoice(
+            options = Week.CHOICES.map { stringResource(R.string.week_choice, it) },
+            selectedIndex = Week.CHOICES.indexOf(state.weekTarget).takeIf { it >= 0 },
+            onSelect = { actions.onWeekTarget(Week.CHOICES[it]) },
         )
 
         SwitchRow(

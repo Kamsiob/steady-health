@@ -99,8 +99,11 @@ data class TodayUiState(
     /** Today's session. Null only while it is still being planned. */
     val session: SessionCardState? = null,
 
-    /** The one line the app noticed, or nothing at all. ADDENDUM-03 Part 9. */
-    val noticed: String? = null,
+    /** One to three lines the app noticed, never none. ADDENDUM-03 Part 9. */
+    val noticed: List<String> = emptyList(),
+
+    /** Where the week is against the number the person chose. ADDENDUM-03 Part 10. */
+    val week: String = "",
 
     /** Said once, ever, when the same area has hurt twice in a month. */
     val worthAWord: String? = null,
@@ -184,7 +187,13 @@ fun TodayScreen(
 
         state.worthAWord?.let { NoteBlock(it) }
 
-        state.noticed?.let { NoteBlock(it) }
+        if (state.week.isNotBlank() || state.noticed.isNotEmpty()) {
+            NoteBlock(
+                text = (listOf(state.week) + state.noticed)
+                    .filter { it.isNotBlank() }
+                    .joinToString("\n"),
+            )
+        }
 
         state.welcomeBack?.let { NoteBlock(it) }
 

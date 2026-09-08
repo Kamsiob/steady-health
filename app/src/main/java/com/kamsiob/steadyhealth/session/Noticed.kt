@@ -21,6 +21,14 @@ sealed interface Noticed {
     /** How many sessions there have been, once there are enough to be worth saying. */
     data class HowMany(val sessions: Int) : Noticed
 
+    /**
+     * What day of this they are on, counted from the day they started.
+     *
+     * The line for when there is nothing else true to say. ADDENDUM-03 Part 9: never
+     * empty, and one true small thing is better than a cheerful invented one.
+     */
+    data class DayNumber(val day: Int) : Noticed
+
     companion object {
 
         /** Under this many sessions the app has nothing honest to say, and says nothing. */
@@ -28,6 +36,9 @@ sealed interface Noticed {
 
         /** A movement has to have been done this many times before its numbers mean anything. */
         const val ENOUGH_OF_ONE = 3
+
+        /** Three is a glance. Four is a list. */
+        const val MOST_LINES = 3
 
         private const val DAYS_IN_WEEK = 7
 
@@ -40,6 +51,25 @@ sealed interface Noticed {
          */
         fun of(history: List<Done>, today: Long): Noticed? =
             climbed(history) ?: moreDays(history, today) ?: howMany(history)
+
+        /**
+         * Everything true worth saying today, at most three, never nothing.
+         *
+         * ADDENDUM-03 Part 9. The order is what a person would rather hear: something
+         * they can do more of, then how the week is going, then a count. When none of
+         * those is true, which day of this they are on, which is always true and
+         * never flattering.
+         */
+        fun all(history: List<Done>, today: Long, since: Long?): List<Noticed> {
+            val lines = listOfNotNull(
+                climbed(history),
+                moreDays(history, today),
+                howMany(history),
+            ).take(MOST_LINES)
+            if (lines.isNotEmpty()) return lines
+            val day = since?.let { (today - it + 1).toInt() }?.takeIf { it >= 1 }
+            return listOfNotNull(day?.let { DayNumber(it) })
+        }
 
         private fun climbed(history: List<Done>): Noticed? = history
             .groupBy { it.movementId }

@@ -14,6 +14,7 @@ import com.kamsiob.steadyhealth.session.Movements
 import com.kamsiob.steadyhealth.session.Noticed
 import com.kamsiob.steadyhealth.session.SessionEngine
 import com.kamsiob.steadyhealth.session.SessionInputs
+import com.kamsiob.steadyhealth.session.Week
 import com.kamsiob.steadyhealth.ui.components.SessionCardState
 
 /**
@@ -105,8 +106,27 @@ class TodayCards(private val application: Application, private val db: SteadyDat
      * The rule that chose it is in [Noticed] and is tested without a device. This only
      * turns the answer into a sentence.
      */
-    suspend fun noticedLine(today: Long): String? =
-        when (val noticed = Noticed.of(runs.history(), today)) {
+    /**
+     * Where the week is. ADDENDUM-03 Part 10.
+     *
+     * Days with a session rather than sessions, because somebody who does three on a
+     * Sunday has not had a week of three.
+     */
+    suspend fun weekLine(today: Long): String {
+        val week = Week.of(runs.history(), today, profile.weekTarget())
+        return when {
+            week.met -> string(R.string.week_met, week.wanted)
+            week.done == 0 -> string(R.string.week_none, week.wanted)
+            week.toGo == 1 -> plural(R.plurals.week_one_more, week.done, week.done, 1, week.wanted)
+            else -> plural(R.plurals.week_so_far, week.done, week.done, week.toGo, week.wanted)
+        }
+    }
+
+    suspend fun noticedLines(today: Long): List<String> =
+        Noticed.all(runs.history(), today, profile.anchorDay()).map { say(it) }
+
+    private fun say(noticed: Noticed): String =
+        when (noticed) {
             is Noticed.Climbed -> string(
                 R.string.noticed_climbed,
                 Movements.byId(noticed.movementId)?.name.orEmpty(),
@@ -127,7 +147,7 @@ class TodayCards(private val application: Application, private val db: SteadyDat
                 noticed.sessions,
             )
 
-            null -> null
+            is Noticed.DayNumber -> string(R.string.noticed_day, noticed.day)
         }
 
     private fun string(@StringRes id: Int, vararg args: Any): String =

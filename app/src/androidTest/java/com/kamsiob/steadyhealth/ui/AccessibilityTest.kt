@@ -114,7 +114,7 @@ class AccessibilityTest {
                         exclusionsLabel = "Nothing",
                         pemLabel = "No",
                     ),
-                    actions = SettingsActions({}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}),
+                    actions = SettingsActions({}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}),
                     onBack = {},
                 )
             }
@@ -147,7 +147,8 @@ class AccessibilityTest {
             bookends = "With a warm up and a cool down.",
             feeds = "For Get up, Go, Carry",
         ),
-        noticed = "Heel raises: 14, from 10 when you started.",
+        noticed = listOf("Heel raises: 14, from 10 when you started."),
+        week = "Two this week. One more makes three.",
     )
 
     private companion object {
