@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!--
+      The help system, DESIGN.md 4b, from ADDENDUM-03 Part 4. Three layers.
+
+      L1 is one sand block per screen, shown once, dismissed for good. Those strings
+      live in onboarding.xml beside the rest of the first run, because that is when
+      most of them are read.
+
+      L2 is the sheet behind the question mark. Every screen with a dot has: two
+      sentences saying what the screen is for, a line for each thing on it, and two or
+      three questions somebody would actually ask. Hand written, never generated.
+
+      L3 is the info dot beside a number. Every number in this app can say what it is
+      and where it came from.
+    -->
+
+    <string name="help_what_is">What this is</string>
+    <string name="help_on_screen">What each thing means</string>
+    <string name="help_dismiss">Tap anywhere to close</string>
+
+    <!-- Today. -->
+    <string name="help_today_what">Today is one session and one thing the app has noticed. There is never more than one thing to do on this screen.</string>
+    <string name="help_today_p1">The card at the top is today\'s session. It says what it is and roughly how long it takes.</string>
+    <string name="help_today_p2">The line under it is something the app noticed in your own records. It is never a warning and never asks you to do anything.</string>
+    <string name="help_today_p3">Nothing here counts days in a row or gives you a number for how you are doing overall.</string>
+    <string name="help_today_q1">What if I don\'t do one for a while?</string>
+    <string name="help_today_a1">Nothing happens. The next session starts from what you last did, not from the days in between, and it will be a little shorter for a few days until you are back into it.</string>
+    <string name="help_today_q2">Can I do more than one in a day?</string>
+    <string name="help_today_a2">Yes. When you finish, the card offers another one. The app will not ask you to.</string>
+    <string name="help_today_q3">Where does the noticed line come from?</string>
+    <string name="help_today_a3">From what you have put into this app, on this phone. Nothing is sent anywhere and nothing else is read.</string>
+
+    <!-- A session. -->
+    <string name="help_session_what">This is a session. It reads itself out, so you can put the phone down and listen rather than watch.</string>
+    <string name="help_session_p1">The big number is how many you have done. The number under it is what the app is aiming for, which is a suggestion and not a rule.</string>
+    <string name="help_session_p2">The ring fills as you go. It is there so you can see where you are from across the room.</string>
+    <string name="help_session_p3">The four small buttons are always there: make it easier, skip this one, that\'s enough for today, and something hurts.</string>
+    <string name="help_session_q1">What if I stop early?</string>
+    <string name="help_session_a1">Press "That\'s enough for today". Everything you did is saved and it counts as a session.</string>
+    <string name="help_session_q2">What happens if I press "Something hurts"?</string>
+    <string name="help_session_a2">The session stops straight away and asks where. Whatever you pick is left out for the next week, without you having to do anything else.</string>
+    <string name="help_session_q3">Does it count for me?</string>
+    <string name="help_session_a3">For some movements, yes, if the phone is on you. For everything else, tap the ring once each time. Either way you can correct the number afterwards.</string>
+
+    <!-- Move. -->
+    <string name="help_move_what">Everything you can do, and everything you have done. Sessions, walks, and the movements the app knows.</string>
+    <string name="help_move_p1">The top of the screen is what is available now.</string>
+    <string name="help_move_p2">Below it is what you have already done, most recent first.</string>
+    <string name="help_move_q1">Can I pick my own movement?</string>
+    <string name="help_move_a1">Yes. Open any movement and start it on its own. It is saved like any other session.</string>
+    <string name="help_move_q2">Why is something not on the list?</string>
+    <string name="help_move_a2">Either you left it out in Settings, or you said an area hurt in the last week. Both come back on their own.</string>
+
+    <!-- Abilities. -->
+    <string name="help_abilities_what">What has changed since you started, in your own words and in numbers you can check.</string>
+    <string name="help_abilities_p1">Each row is one thing your body does, with where it is now.</string>
+    <string name="help_abilities_p2">Same is shown the same way as better, because staying where you are takes doing.</string>
+    <string name="help_abilities_q1">Why is nothing here yet?</string>
+    <string name="help_abilities_a1">It needs a few sessions before it can say anything honest. Until then it says nothing rather than guessing.</string>
+    <string name="help_abilities_q2">Can I add my own?</string>
+    <string name="help_abilities_a2">Yes. Anything you say you want to be able to do is kept in your words and tracked as its own row.</string>
+
+    <!-- Settings. -->
+    <string name="help_settings_what">Your list, your settings, and how the app works. Everything here can be changed and nothing here is sent anywhere.</string>
+    <string name="help_settings_p1">How you get around changes which movements are offered.</string>
+    <string name="help_settings_p2">What to leave out hides anything you avoid, straight away.</string>
+    <string name="help_settings_q1">Where is my information kept?</string>
+    <string name="help_settings_a1">On this phone, encrypted, and nowhere else. There is no account and nothing to sign in to.</string>
+    <string name="help_settings_q2">How do I get rid of it all?</string>
+    <string name="help_settings_a2">Your data, then delete everything. It is immediate and there is no copy anywhere else.</string>
+
+</resources>

@@ -14,6 +14,7 @@ import com.kamsiob.steadyhealth.ui.components.Paragraph
 import com.kamsiob.steadyhealth.ui.components.PrimaryButton
 import com.kamsiob.steadyhealth.ui.components.SectionTitle
 import com.kamsiob.steadyhealth.ui.components.SteadyScreen
+import com.kamsiob.steadyhealth.ui.help.Place
 import com.kamsiob.steadyhealth.ui.theme.SteadyPalette
 import com.kamsiob.steadyhealth.ui.theme.SteadyText
 import com.kamsiob.steadyhealth.ui.theme.SteadyType
@@ -65,6 +66,7 @@ fun MoveScreen(
         title = null,
         onBack = null,
         modifier = modifier,
+        help = Place.Move,
         footer = { PrimaryButton(label = stringResource(R.string.move_go), onClick = onGo) },
     ) {
         SteadyText(

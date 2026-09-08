@@ -21,6 +21,7 @@ import com.kamsiob.steadyhealth.ui.components.SectionTitle
 import com.kamsiob.steadyhealth.ui.components.SteadyScreen
 import com.kamsiob.steadyhealth.ui.components.Stepper
 import com.kamsiob.steadyhealth.ui.components.SwitchRow
+import com.kamsiob.steadyhealth.ui.help.Place
 import com.kamsiob.steadyhealth.ui.theme.SteadyPalette
 
 /** What Settings draws. Grid screen 22. */
@@ -82,6 +83,7 @@ fun SettingsScreen(
         title = stringResource(R.string.settings_title),
         onBack = onBack,
         modifier = modifier,
+        help = Place.Settings,
     ) {
         ListItem(
             heading = stringResource(R.string.settings_getting_around),

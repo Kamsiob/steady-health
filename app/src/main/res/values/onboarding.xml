@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!--
+      Onboarding, from ADDENDUM-03 Part 3. The measure of this file is a number:
+      under sixty seconds from launch to the start of the first session. Every string
+      here is either on the way to that or asked afterwards.
+    -->
+
+    <!-- O1. The hook. Nothing to read, nothing to sign, nothing to allow. -->
+    <string name="o1_headline">What can you do?</string>
+    <string name="o1_line">This app keeps track of what your body can do, and helps you do more of it. Everything stays on your phone.</string>
+    <string name="o1_show_me">Show me</string>
+
+    <!-- O2. One question, four cards. -->
+    <string name="o2_question">Most days, how do you get around?</string>
+    <string name="o2_why">There\'s a version of this app for each. Change it any time.</string>
+
+    <!-- O3. Their words. -->
+    <string name="o3_question">What would you like to be able to do?</string>
+    <string name="o3_speak">Say it</string>
+    <string name="o3_type">Type it</string>
+    <string name="o3_hint">In your own words</string>
+    <string name="o3_or">Or pick one of these</string>
+    <string name="o3_keeping">I\'ll keep track of this</string>
+    <string name="o3_add">Add it</string>
+    <string name="o3_skip">Skip for now</string>
+    <string name="o3_default">Move more easily</string>
+    <string name="o3_chip_floor">Get off the floor</string>
+    <string name="o3_chip_stairs">Stairs without stopping</string>
+    <string name="o3_chip_shopping">Carry the shopping in one trip</string>
+    <string name="o3_chip_grandkids">Keep up with the grandkids</string>
+    <string name="o3_chip_further">Walk further than I do now</string>
+    <string name="o3_chip_stronger">Get stronger than I am</string>
+
+    <!-- O4. The first session, which is not a question. -->
+    <string name="o4_title">Here\'s something you can do right now.</string>
+    <string name="o4_length">It takes about two minutes.</string>
+
+    <!-- O5. Three things afterwards, one tap each, all skippable. -->
+    <string name="o5_avoid">Anything you avoid, or have been told not to do?</string>
+    <string name="o5_avoid_nothing">Nothing</string>
+    <string name="o5_chair">Do you have a sturdy chair without arms?</string>
+    <string name="o5_chair_yes">Yes</string>
+    <string name="o5_chair_arms">Only with arms</string>
+    <string name="o5_chair_no">No</string>
+    <string name="o5_skip">Skip</string>
+    <string name="o5_done">Done</string>
+
+    <!-- The sand blocks. Every screen explains itself once, and never again. -->
+    <string name="says_today">This is today. One session, and what the app has noticed.</string>
+    <string name="says_sessions">Everything you can do, and everything you\'ve done.</string>
+    <string name="says_progress">What\'s changed since you started.</string>
+    <string name="says_you">Your list, your settings, and how the app works.</string>
+    <string name="says_library">Sixty or so movements. Tap any to read it, or start it now.</string>
+    <string name="says_dismiss">Got it</string>
+    <string name="says_close_mark" translatable="false">\u00d7</string>
+
+    <!-- The help dot, in the same place on every screen. -->
+    <string name="help_dot">Help</string>
+    <string name="help_dot_mark" translatable="false">?</string>
+    <string name="help_close">Close</string>
+    <string name="help_questions">Questions people ask</string>
+
+</resources>

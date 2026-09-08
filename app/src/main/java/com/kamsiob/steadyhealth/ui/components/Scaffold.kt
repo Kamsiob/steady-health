@@ -22,6 +22,10 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -29,7 +33,14 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.kamsiob.steadyhealth.R
+import com.kamsiob.steadyhealth.ui.help.Help
+import com.kamsiob.steadyhealth.ui.help.HelpDot
+import com.kamsiob.steadyhealth.ui.help.HelpSheet
+import com.kamsiob.steadyhealth.ui.help.HelpViewModel
+import com.kamsiob.steadyhealth.ui.help.Place
 import com.kamsiob.steadyhealth.ui.theme.SteadyPalette
 import com.kamsiob.steadyhealth.ui.theme.SteadySpacing
 import com.kamsiob.steadyhealth.ui.theme.SteadyText
@@ -61,52 +72,91 @@ fun SteadyScreen(
     modifier: Modifier = Modifier,
     action: ScreenAction? = null,
     gap: androidx.compose.ui.unit.Dp = SteadySpacing.BetweenBlocks,
+    help: Place? = null,
     footer: (@Composable () -> Unit)? = null,
     content: @Composable () -> Unit,
 ) {
-    Column(
-        modifier = modifier
-            .fillMaxSize()
-            .background(SteadyPalette.Ground)
-            .statusBarsPadding()
-            // Without this the footer sits under the keyboard on every screen
-            // with a text field, and the primary button is unreachable. Going
-            // edge to edge means adjustResize no longer insets the content, so
-            // the inset has to be taken here, once, like the status bar above.
-            .imePadding(),
-    ) {
-        if (title != null || onBack != null || action != null) {
-            TopRow(title = title, onBack = onBack, action = action)
-        }
+    val helpViewModel: HelpViewModel = viewModel()
+    val seen by helpViewModel.seen.collectAsStateWithLifecycle()
+    var asking by rememberSaveable { mutableStateOf(false) }
 
+    Box(modifier = modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .weight(1f)
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = SteadySpacing.Screen),
-            verticalArrangement = Arrangement.spacedBy(gap),
+                .fillMaxSize()
+                .background(SteadyPalette.Ground)
+                .statusBarsPadding()
+                // Without this the footer sits under the keyboard on every screen
+                // with a text field, and the primary button is unreachable. Going
+                // edge to edge means adjustResize no longer insets the content, so
+                // the inset has to be taken here, once, like the status bar above.
+                .imePadding(),
         ) {
-            content()
-            Spacer(Modifier.size(SteadySpacing.BetweenBlocks))
-        }
+            if (hasTopRow(title, onBack, action, help)) {
+                TopRow(
+                    title = title,
+                    onBack = onBack,
+                    action = action,
+                    help = help?.let { { asking = true } },
+                )
+            }
 
-        if (footer != null) {
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(
-                        start = SteadySpacing.Screen,
-                        end = SteadySpacing.Screen,
-                        top = SteadySpacing.ListGap,
-                        bottom = 14.dp,
-                    ),
-                verticalArrangement = Arrangement.spacedBy(SteadySpacing.ListGap),
+                    .weight(1f)
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = SteadySpacing.Screen),
+                verticalArrangement = Arrangement.spacedBy(gap),
             ) {
-                footer()
+                if (help != null) {
+                    ScreenSaysOnce(help, seen, onDismiss = { helpViewModel.dismiss(help) })
+                }
+                content()
+                Spacer(Modifier.size(SteadySpacing.BetweenBlocks))
+            }
+
+            if (footer != null) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            start = SteadySpacing.Screen,
+                            end = SteadySpacing.Screen,
+                            top = SteadySpacing.ListGap,
+                            bottom = 14.dp,
+                        ),
+                    verticalArrangement = Arrangement.spacedBy(SteadySpacing.ListGap),
+                ) {
+                    footer()
+                }
             }
         }
+
+        if (asking && help != null) {
+            HelpSheet(place = help, onClose = { asking = false })
+        }
     }
+}
+
+private fun hasTopRow(
+    title: String?,
+    onBack: (() -> Unit)?,
+    action: ScreenAction?,
+    help: Place?,
+): Boolean = title != null || onBack != null || action != null || help != null
+
+/**
+ * L1, in the one place every screen passes through.
+ *
+ * Nothing is drawn until the answer is known, because a sand block that appears and
+ * then vanishes when the database replies is worse than one that arrives a frame late.
+ */
+@Composable
+private fun ScreenSaysOnce(place: Place, seen: Set<String>?, onDismiss: () -> Unit) {
+    val says = Help.topic(place).says ?: return
+    if (seen == null || place.seenKey in seen) return
+    SaysOnce(text = stringResource(says), onDismiss = onDismiss)
 }
 
 /**
@@ -120,6 +170,7 @@ fun TopRow(
     onBack: (() -> Unit)?,
     modifier: Modifier = Modifier,
     action: ScreenAction? = null,
+    help: (() -> Unit)? = null,
 ) {
     Row(
         modifier = modifier
@@ -173,6 +224,10 @@ fun TopRow(
                     .clickable(role = Role.Button, onClick = action.onClick)
                     .padding(horizontal = SteadySpacing.ListGap, vertical = 13.dp),
             )
+        }
+
+        if (help != null) {
+            HelpDot(onClick = help)
         }
     }
 }

@@ -173,8 +173,8 @@
     <string name="weigh_title">Weigh in</string>
     <string name="weigh_this_morning">this morning</string>
     <string name="weigh_save">Save</string>
-    <string name="weigh_whenever">Weigh in whenever suits you. A missed day is fine.</string>
-    <string name="weigh_first_done">Your first point. The line starts here. It gets smarter every morning you add one, and a missed morning changes nothing.</string>
+    <string name="weigh_whenever">Weigh in whenever suits you. Skipping a day is fine.</string>
+    <string name="weigh_first_done">Your first point. The line starts here. It gets smarter every morning you add one, and skipping a morning changes nothing.</string>
 
     <!-- ===================== Screen 10: Name the first walk ===================== -->
     <string name="name_walk_title">Name your first walk</string>

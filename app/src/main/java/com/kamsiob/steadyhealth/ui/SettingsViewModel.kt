@@ -276,26 +276,9 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         refresh()
     }
 
-    private fun labelFor(value: GettingAround) = when (value) {
-        GettingAround.OnFeet -> R.string.around_on_feet
-        GettingAround.Walker -> R.string.around_walker
-        GettingAround.Wheelchair -> R.string.around_wheelchair
-        GettingAround.InBed -> R.string.around_in_bed
-    }
+    private fun labelFor(value: GettingAround) = Labels.forGettingAround(value)
 
-    fun labelFor(value: Exclusion) = when (value) {
-        Exclusion.Pushing -> R.string.leave_out_pushing
-        Exclusion.StomachStrain -> R.string.leave_out_stomach
-        Exclusion.GettingOnTheFloor -> R.string.leave_out_floor
-        Exclusion.Impact -> R.string.leave_out_impact
-        Exclusion.DeepKneeBending -> R.string.leave_out_knee
-        Exclusion.LiftingOverhead -> R.string.leave_out_overhead
-        Exclusion.TwistingBack -> R.string.leave_out_twisting
-        Exclusion.DeepForwardBending -> R.string.leave_out_forward
-        Exclusion.ArchingBack -> R.string.leave_out_arching
-        Exclusion.LyingFlat -> R.string.leave_out_lying
-        Exclusion.BreathHolding -> R.string.leave_out_breath
-    }
+    fun labelFor(value: Exclusion) = Labels.forExclusion(value)
 
     private companion object {
         const val DAYS_IN_WEEK = 7

@@ -9,11 +9,14 @@ import com.kamsiob.steadyhealth.R
 import com.kamsiob.steadyhealth.data.ProfileRepository
 import com.kamsiob.steadyhealth.data.RunRepository
 import com.kamsiob.steadyhealth.data.SteadyDatabase
+import com.kamsiob.steadyhealth.sensing.Motion
+import com.kamsiob.steadyhealth.sensing.RepCounter
 import com.kamsiob.steadyhealth.session.Area
 import com.kamsiob.steadyhealth.session.Buzz
 import com.kamsiob.steadyhealth.session.Counted
 import com.kamsiob.steadyhealth.session.Ending
 import com.kamsiob.steadyhealth.session.Felt
+import com.kamsiob.steadyhealth.session.Sensed
 import com.kamsiob.steadyhealth.session.SessionEngine
 import com.kamsiob.steadyhealth.session.SessionInputs
 import com.kamsiob.steadyhealth.session.SessionPlan
@@ -25,6 +28,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -46,6 +51,7 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
 
     private val speech = Speech(application)
     private val buzz = Buzz(application)
+    private val motion = Motion(application)
     private val db get() = SteadyDatabase.get(getApplication())
     private val runs get() = RunRepository(db)
     private val profile get() = ProfileRepository(db)
@@ -61,6 +67,8 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
     val askingWhereItHurts: StateFlow<Boolean> = _askingWhereItHurts.asStateFlow()
 
     private var clock: Job? = null
+    private var sensing: Job? = null
+    private var sensed = 0
     private var spokenCount = 0
     private var saidMoreThanLast = false
 
@@ -73,6 +81,41 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
 
     var speaking: Boolean = true
         private set
+
+    /**
+     * The accelerometer, on only while a set it can count is actually running.
+     *
+     * Driven off the state rather than off each button, because there are eight ways
+     * out of a live set and a listener left registered by the one that was forgotten
+     * is a battery leak nobody would find. Anything the sensor counts is a rep like
+     * any other, so tapping still works for somebody holding the phone.
+     */
+    init {
+        viewModelScope.launch {
+            _runner
+                .map { it?.let { runner -> Triple(runner.stage, runner.paused, runner.movement?.sensedBy) } }
+                .distinctUntilChanged()
+                .collect { key -> senseWhile(key?.first, key?.second == true, key?.third) }
+        }
+    }
+
+    private fun senseWhile(stage: Stage?, paused: Boolean, sensedBy: Sensed?) {
+        sensing?.cancel()
+        sensing = null
+        val counter = when {
+            stage != Stage.Live || paused -> return
+            sensedBy == Sensed.Steps -> RepCounter.forSteps()
+            sensedBy == Sensed.Stands -> RepCounter.forStands()
+            else -> return
+        }
+        sensed = 0
+        sensing = viewModelScope.launch {
+            motion.counts(counter).collect { count ->
+                repeat((count - sensed).coerceAtLeast(0)) { rep() }
+                sensed = count
+            }
+        }
+    }
 
     /**
      * Plan today's session from what is actually stored, and run it.

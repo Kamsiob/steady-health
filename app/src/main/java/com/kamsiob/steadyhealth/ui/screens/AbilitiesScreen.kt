@@ -13,6 +13,7 @@ import com.kamsiob.steadyhealth.ui.components.Paragraph
 import com.kamsiob.steadyhealth.ui.components.SectionTitle
 import com.kamsiob.steadyhealth.ui.components.SteadyScreen
 import com.kamsiob.steadyhealth.ui.components.TextLink
+import com.kamsiob.steadyhealth.ui.help.Place
 import com.kamsiob.steadyhealth.ui.theme.SteadyPalette
 import com.kamsiob.steadyhealth.ui.theme.SteadyText
 import com.kamsiob.steadyhealth.ui.theme.SteadyType
@@ -62,7 +63,7 @@ fun AbilitiesScreen(
     tryOffer: Boolean = false,
     tryResult: Boolean = false,
 ) {
-    SteadyScreen(title = null, onBack = null, modifier = modifier) {
+    SteadyScreen(title = null, onBack = null, modifier = modifier, help = Place.Abilities) {
         SteadyText(
             text = stringResource(R.string.abilities_title),
             style = SteadyType.Greeting,

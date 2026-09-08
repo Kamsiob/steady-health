@@ -134,6 +134,7 @@ object Movements {
             ceiling = 12,
             harder = "sit_to_stand",
             ways = feet,
+            sensedBy = Sensed.Stands,
         ),
         Movement(
             id = "sit_to_stand",
@@ -150,6 +151,7 @@ object Movements {
             easier = "sit_to_stand_high",
             harder = "sit_to_stand_slow",
             excludedBy = setOf(Exclusion.DeepKneeBending),
+            sensedBy = Sensed.Stands,
         ),
         Movement(
             id = "sit_to_stand_slow",
@@ -167,6 +169,7 @@ object Movements {
             harder = "sit_to_stand_one_arm",
             excludedBy = setOf(Exclusion.DeepKneeBending),
             seconds = 60,
+            sensedBy = Sensed.Stands,
         ),
         Movement(
             id = "sit_to_stand_one_arm",
@@ -182,6 +185,7 @@ object Movements {
             ceiling = 15,
             easier = "sit_to_stand_slow",
             excludedBy = setOf(Exclusion.DeepKneeBending),
+            sensedBy = Sensed.Stands,
         ),
         Movement(
             id = "mini_squat",
@@ -332,6 +336,7 @@ object Movements {
             ceiling = 8,
             ways = bed,
             seconds = 60,
+            sensedBy = Sensed.Stands,
         ),
     )
 
@@ -385,6 +390,7 @@ object Movements {
             ceiling = 120,
             ways = feet,
             seconds = 60,
+            sensedBy = Sensed.Steps,
         ),
         Movement(
             id = "stairs",
@@ -749,7 +755,7 @@ object Movements {
             id = "cool_calf_stretch",
             name = "Calf stretch",
             setup = "Hands on the wall, one foot back, heel down. Hold.",
-            stopRule = "Ease off whenever. A stretch should never hurt.",
+            stopRule = "Ease off whenever. A stretch never has to hurt.",
             counted = Counted.Hold,
             piece = Piece.CoolDown,
             domain = AbilityDomain.Steady,
@@ -813,6 +819,22 @@ object Movements {
      * Four filters, in the order they matter: the way they get around, what they said
      * to leave out, what is in the room, and any area they said hurts.
      */
+    /**
+     * What the very first session opens with.
+     *
+     * Named rather than derived. O4 is a designed moment: it has to need nothing in
+     * the room, be over in about two minutes, and look like something rather than
+     * like a warm up. A rule that picked "the shortest available movement" would get
+     * one of those three right.
+     */
+    fun first(way: GettingAround): Movement? = byId(
+        when (way) {
+            GettingAround.OnFeet, GettingAround.Walker -> "heel_raises"
+            GettingAround.Wheelchair -> "overhead_reach"
+            GettingAround.InBed -> "sit_to_edge"
+        },
+    )
+
     fun available(
         way: GettingAround,
         exclusions: Set<Exclusion> = emptySet(),

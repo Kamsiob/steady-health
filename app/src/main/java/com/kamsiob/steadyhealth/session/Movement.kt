@@ -63,6 +63,19 @@ enum class Kit(val id: String) {
  * [ceiling]; past it the engine moves to [harder], which is what ADDENDUM-03 Part 1
  * means by progressing by variant.
  */
+/**
+ * Whether the phone can count this one on its own.
+ *
+ * Only for movements where the phone moves with the body: a stand lifts it a long
+ * way, a step lifts it a little. Everything else is counted by the person tapping,
+ * which is the honest answer rather than a sensor guessing.
+ */
+enum class Sensed {
+    None,
+    Steps,
+    Stands,
+}
+
 data class Movement(
     val id: String,
     val name: String,
@@ -87,6 +100,8 @@ data class Movement(
     val excludedBy: Set<Exclusion> = emptySet(),
     /** Roughly how long one set takes, for planning a four to eight minute session. */
     val seconds: Int = 45,
+    /** Whether the accelerometer can count this without anybody tapping. */
+    val sensedBy: Sensed = Sensed.None,
 ) {
     val isWalk: Boolean get() = counted == Counted.Minutes
 }

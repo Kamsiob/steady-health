@@ -1,124 +1,103 @@
 package com.kamsiob.steadyhealth.ui.onboarding
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.kamsiob.steadyhealth.domain.GettingAround
+import com.kamsiob.steadyhealth.R
+import com.kamsiob.steadyhealth.session.SessionPlan
+import com.kamsiob.steadyhealth.ui.session.SessionHost
+import com.kamsiob.steadyhealth.ui.session.SessionViewModel
 
 /**
- * Setup, in order, with the back button working at every step.
+ * The whole first run: five screens, one of which is a session.
  *
- * The order is ONBOARDING.md's, with two conditional skips it specifies: the
- * readiness screen goes straight on when every answer is no, and naming the first
- * walk only happens when the walking ladder is visible, which it is not for
- * somebody who is mostly in bed.
+ * There is no navigation graph here on purpose. Onboarding is a straight line with a
+ * stored position, so the step in the database is the only source of truth about
+ * where somebody is, and closing the app halfway resumes exactly there rather than
+ * starting again.
  */
 @Composable
 fun OnboardingFlow(onFinished: () -> Unit) {
     val viewModel: OnboardingViewModel = viewModel()
+    val sessionViewModel: SessionViewModel = viewModel()
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val plan by viewModel.firstPlan.collectAsStateWithLifecycle()
+    val fallback = stringResource(R.string.o3_default)
+
     when (state.step) {
-        OnboardingStep.Welcome -> WelcomeScreen(
+        Step.Hook -> HookScreen(
             state = state,
             onLanguage = viewModel::setLanguage,
-            onNext = { viewModel.go(OnboardingStep.ThreeThings) },
+            onNext = { viewModel.go(Step.HowYouGetAround) },
         )
 
-        OnboardingStep.ThreeThings -> ThreeThingsScreen(
-            onNext = { viewModel.go(OnboardingStep.HowYouGetAround) },
-        )
+        Step.HowYouGetAround -> HowYouGetAroundScreen(onChoose = viewModel::setGettingAround)
 
-        OnboardingStep.HowYouGetAround -> HowYouGetAroundScreen(
-            state = state,
-            onChoose = viewModel::setGettingAround,
-            onTherapist = viewModel::setWithTherapist,
-            onBack = { viewModel.go(OnboardingStep.ThreeThings) },
-            onNext = { viewModel.go(OnboardingStep.AboutYou) },
-        )
-
-        OnboardingStep.AboutYou -> AboutYouScreen(
-            state = state,
-            onUnits = viewModel::setUnits,
-            onHeight = viewModel::setHeight,
-            onAge = viewModel::setAge,
-            onBack = { viewModel.go(OnboardingStep.HowYouGetAround) },
-            onNext = { viewModel.go(OnboardingStep.WhereYouAreStarting) },
-        )
-
-        OnboardingStep.WhereYouAreStarting -> WhereYouAreStartingScreen(
-            state = state,
-            onChair = viewModel::setChair,
-            onStairs = viewModel::setStairs,
-            onWalk = viewModel::setWalk,
-            onFloor = viewModel::setFloor,
-            onPem = viewModel::setPem,
-            onBack = { viewModel.go(OnboardingStep.AboutYou) },
-            onNext = { viewModel.go(OnboardingStep.LeaveOut) },
-        )
-
-        OnboardingStep.LeaveOut -> LeaveOutScreen(
-            state = state,
-            onToggle = viewModel::toggleExclusion,
-            onNothing = {
-                viewModel.clearExclusions()
-                viewModel.go(OnboardingStep.Readiness)
-            },
-            onBack = { viewModel.go(OnboardingStep.WhereYouAreStarting) },
-            onNext = { viewModel.go(OnboardingStep.Readiness) },
-        )
-
-        OnboardingStep.Readiness -> ReadinessScreen(
-            state = state,
-            onAnswer = viewModel::setReadiness,
-            onBack = { viewModel.go(OnboardingStep.LeaveOut) },
-            onNext = { viewModel.go(OnboardingStep.WhatYouWant) },
-        )
-
-        OnboardingStep.WhatYouWant -> WhatYouWantScreen(
+        Step.TheirWords -> TheirWordsScreen(
             state = state,
             onTyped = viewModel::setTyped,
-            onAdd = viewModel::addWanted,
-            onRemove = viewModel::removeWanted,
-            onBack = { viewModel.go(OnboardingStep.Readiness) },
-            onNext = { viewModel.go(OnboardingStep.RateThem) },
+            onKeep = viewModel::keep,
+            onNext = { viewModel.go(Step.FirstSession) },
+            onSkip = { viewModel.skipWanted(fallback) },
         )
 
-        OnboardingStep.RateThem -> RateThemScreen(
-            state = state,
-            onRate = viewModel::rateWanted,
-            onBack = { viewModel.go(OnboardingStep.WhatYouWant) },
-            onNext = { viewModel.go(OnboardingStep.Anchor) },
+        Step.FirstSession -> FirstSession(
+            plan = plan,
+            sessionViewModel = sessionViewModel,
+            onDone = viewModel::sessionFinished,
         )
 
-        OnboardingStep.Anchor -> AnchorScreen(
+        Step.AfterTheSession -> AfterTheSessionScreen(
             state = state,
-            onAnchor = viewModel::setAnchor,
-            onBack = { viewModel.go(OnboardingStep.RateThem) },
-            onNext = { viewModel.go(OnboardingStep.FirstWeighIn) },
-        )
-
-        OnboardingStep.FirstWeighIn -> FirstWeighInScreen(
-            state = state,
-            onWeight = viewModel::setFirstWeight,
-            onBack = { viewModel.go(OnboardingStep.Anchor) },
-            onSave = {
-                viewModel.saveFirstWeighIn {
-                    // Naming a walk only makes sense where there is one to name.
-                    if (state.gettingAround == GettingAround.InBed) {
-                        viewModel.finish(onFinished)
-                    } else {
-                        viewModel.go(OnboardingStep.NameFirstWalk)
-                    }
-                }
-            },
-        )
-
-        OnboardingStep.NameFirstWalk -> NameFirstWalkScreen(
-            state = state,
-            onName = viewModel::setFirstWalkName,
-            onBack = { viewModel.go(OnboardingStep.FirstWeighIn) },
-            onSave = { viewModel.finish(onFinished) },
+            onExclusion = viewModel::toggleExclusion,
+            onNothing = viewModel::clearExclusions,
+            onChair = viewModel::setChair,
+            onDone = { viewModel.finish(onFinished) },
         )
     }
+}
+
+/**
+ * O4, in two halves: what you are about to do, then doing it.
+ *
+ * The session itself is the ordinary session machinery with an ordinary plan of one
+ * movement. Nothing about the first session is a special case in the engine, which is
+ * why the first thing somebody ever does in this app is a real session and is saved
+ * as one.
+ */
+@Composable
+private fun FirstSession(
+    plan: SessionPlan?,
+    sessionViewModel: SessionViewModel,
+    onDone: () -> Unit,
+) {
+    var running by rememberSaveable { mutableStateOf(false) }
+    val started = remember { mutableStateOf(false) }
+
+    if (!running) {
+        FirstSessionScreen(
+            movement = plan?.steps?.firstOrNull()?.movement,
+            onStart = { running = true },
+        )
+        return
+    }
+
+    // Starting is a side effect. Doing it in the click handler would run it again on
+    // every recomposition after a rotation.
+    LaunchedEffect(plan) {
+        val ready = plan ?: return@LaunchedEffect
+        if (!started.value) {
+            started.value = true
+            sessionViewModel.start(ready, first = true)
+        }
+    }
+
+    SessionHost(viewModel = sessionViewModel, onFinished = onDone)
 }

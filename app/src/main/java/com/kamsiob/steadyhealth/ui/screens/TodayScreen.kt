@@ -43,6 +43,7 @@ import com.kamsiob.steadyhealth.ui.components.TalkGlyph
 import com.kamsiob.steadyhealth.ui.components.TravelGlyph
 import com.kamsiob.steadyhealth.ui.components.WeekRow
 import com.kamsiob.steadyhealth.ui.components.WeighGlyph
+import com.kamsiob.steadyhealth.ui.help.Place
 import com.kamsiob.steadyhealth.ui.theme.Ability
 import com.kamsiob.steadyhealth.ui.theme.SteadyPalette
 import com.kamsiob.steadyhealth.ui.theme.SteadyShapes
@@ -128,7 +129,7 @@ fun TodayScreen(
     onNotice: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    SteadyScreen(title = null, onBack = null, modifier = modifier) {
+    SteadyScreen(title = null, onBack = null, modifier = modifier, help = Place.Today) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(top = SteadySpacing.ListGap),
             verticalAlignment = Alignment.CenterVertically,

@@ -9,7 +9,7 @@
     <string name="summary_numbers">The numbers</string>
     <string name="summary_provenance">Written on your phone from what you logged between %1$s and %2$s. Nothing was sent anywhere.</string>
     <string name="summary_loading">Reading back through your months.</string>
-    <string name="summary_fallback">The written summary could not be produced this time. The numbers below are complete.</string>
+    <string name="summary_fallback">The written summary could not be produced this time. The numbers below are all here.</string>
     <string name="summary_export">Export as a PDF</string>
     <string name="summary_regenerate">Regenerate</string>
 

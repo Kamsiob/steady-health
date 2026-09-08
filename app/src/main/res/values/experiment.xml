@@ -40,7 +40,7 @@
 
     <!-- Settings. -->
     <string name="settings_try">Try it and see</string>
-    <string name="settings_try_sub">Offers a two-week test now and then</string>
+    <string name="settings_try_sub">Offers something to try for two weeks, now and then</string>
 
     <string name="condition_mornings">Mornings</string>
     <string name="condition_evenings">Evenings</string>

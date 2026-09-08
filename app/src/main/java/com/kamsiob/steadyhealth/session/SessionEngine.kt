@@ -171,6 +171,29 @@ object SessionEngine {
         )
     }
 
+    /**
+     * The first session, run before anything optional has been asked.
+     *
+     * One movement, no warm up, no cool down. It deliberately needs nothing in the
+     * room, because O5 asks about the chair afterwards and a first session that opens
+     * with "find a sturdy chair" is a first session a lot of people never finish.
+     */
+    fun first(inputs: SessionInputs): SessionPlan {
+        val available = Movements.available(inputs.way, inputs.exclusions, inputs.kit, inputs.sore)
+        val main = available.filter { it.piece == Piece.Main }
+        val bare = main.filter { it.kit == setOf(Kit.None) }
+        val one = Movements.first(inputs.way)?.takeIf { it in available }
+            ?: bare.minByOrNull { it.startTarget }
+            ?: main.firstOrNull()
+            ?: return SessionPlan(emptyList(), Adaptation(Adaptation.Kind.None))
+        return SessionPlan(
+            steps = listOf(step(one, inputs)),
+            adaptation = Adaptation(Adaptation.Kind.None),
+            small = true,
+            feeds = listOf(one.domain),
+        )
+    }
+
     /** Ninety seconds, and it counts as a session. */
     private fun small(available: List<Movement>, inputs: SessionInputs): SessionPlan {
         val one = available.firstOrNull { it.piece == Piece.Main && it.seconds <= NINETY }

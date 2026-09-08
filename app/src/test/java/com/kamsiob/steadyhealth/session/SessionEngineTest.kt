@@ -16,6 +16,21 @@ import org.junit.Test
 class SessionEngineTest {
 
     @Test
+    fun everyWayOfGettingAroundHasAFirstSessionThatNeedsNothingInTheRoom() {
+        GettingAround.entries.forEach { way ->
+            val plan = SessionEngine.first(SessionInputs(way = way))
+            assertWithMessage("first session for $way").that(plan.steps).hasSize(1)
+            val movement = plan.steps.first().movement
+            assertWithMessage("$way opens with ${movement.id}, which needs kit")
+                .that(movement.kit)
+                .isEqualTo(setOf(Kit.None))
+            assertWithMessage("$way opens with a warm up or cool down")
+                .that(movement.piece)
+                .isEqualTo(Piece.Main)
+        }
+    }
+
+    @Test
     fun anOrdinarySessionIsBetweenFourAndEightMinutes() {
         val plan = SessionEngine.plan(onFeet())
         assertThat(plan.minutes).isAtLeast(FOUR)

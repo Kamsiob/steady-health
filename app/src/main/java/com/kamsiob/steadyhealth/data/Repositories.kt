@@ -334,12 +334,52 @@ class ProfileRepository(private val db: SteadyDatabase) {
 
     private suspend fun get(key: String): String? = db.profile().get(key)
 
+    /**
+     * Whether a one-time sand block has been read.
+     *
+     * Stored under its own key rather than in a list, so a screen added later cannot
+     * arrive already dismissed and nothing has to be migrated when one is removed.
+     */
+    suspend fun seen(key: String): Boolean = get(key).toBoolean()
+
+    suspend fun markSeen(key: String) = put(key, true.toString())
+
     suspend fun onboardingComplete(): Boolean = get(ONBOARDED).toBoolean()
 
     suspend fun setOnboardingComplete() = put(ONBOARDED, true.toString())
 
     suspend fun gettingAround(): GettingAround =
         get(GETTING_AROUND)?.let(GettingAround::fromId) ?: GettingAround.OnFeet
+
+    /**
+     * The same answer, without the default.
+     *
+     * Onboarding needs to tell "not asked yet" from "on my feet", because the first
+     * session is planned from it and planning one before the question is answered is
+     * how somebody in a wheelchair gets offered heel raises.
+     */
+    suspend fun gettingAroundOrNull(): GettingAround? =
+        get(GETTING_AROUND)?.let(GettingAround::fromId)
+
+    /**
+     * Where the first run stopped, so closing the app halfway resumes there.
+     *
+     * Kept as the plain name rather than the enum, because the screens are a user
+     * interface concern and the data layer has no business importing one.
+     */
+    suspend fun onboardingStep(): String? = get(ONBOARDING_STEP)
+
+    suspend fun setOnboardingStep(name: String) = put(ONBOARDING_STEP, name)
+
+    /** A chair with arms is still a chair; it changes the variant, not the movement. */
+    suspend fun chairHasArms(): Boolean = get(CHAIR_ARMS).toBoolean()
+
+    suspend fun setChairHasArms(value: Boolean) = put(CHAIR_ARMS, value.toString())
+
+    /** The day the person started, for "since you began" and for nothing else. */
+    suspend fun anchorDay(): Long? = get(ANCHOR_DAY)?.toLongOrNull()
+
+    suspend fun setAnchorDay(day: Long) = put(ANCHOR_DAY, day.toString())
 
     suspend fun setGettingAround(value: GettingAround) = put(GETTING_AROUND, value.id)
 
@@ -487,6 +527,9 @@ class ProfileRepository(private val db: SteadyDatabase) {
     companion object {
         const val ONBOARDED = "onboarding_complete"
         const val GETTING_AROUND = "getting_around"
+        const val ONBOARDING_STEP = "onboarding_step"
+        const val CHAIR_ARMS = "chair_arms"
+        const val ANCHOR_DAY = "anchor_day"
         const val WITH_THERAPIST = "with_therapist"
         const val UNITS = "units"
         const val HEIGHT = "height_cm"
