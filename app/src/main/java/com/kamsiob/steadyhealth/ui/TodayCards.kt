@@ -13,6 +13,7 @@ import com.kamsiob.steadyhealth.domain.Exclusion
 import com.kamsiob.steadyhealth.domain.GettingAround
 import com.kamsiob.steadyhealth.session.Adaptation
 import com.kamsiob.steadyhealth.session.Kit
+import com.kamsiob.steadyhealth.session.LookBacks
 import com.kamsiob.steadyhealth.session.Movements
 import com.kamsiob.steadyhealth.session.Noticed
 import com.kamsiob.steadyhealth.session.Piece
@@ -21,6 +22,9 @@ import com.kamsiob.steadyhealth.session.SessionInputs
 import com.kamsiob.steadyhealth.session.Week
 import com.kamsiob.steadyhealth.ui.components.SessionCardState
 import com.kamsiob.steadyhealth.ui.screens.LibraryRow
+import com.kamsiob.steadyhealth.ui.screens.WeekBar
+import java.time.LocalDate
+import java.time.ZoneId
 
 /**
  * The two things on Today that come from the session engine.
@@ -209,6 +213,51 @@ class TodayCards(private val application: Application, private val db: SteadyDat
         Kit.Weights in kit -> R.string.library_needs_weight
         else -> R.string.library_needs_nothing
     }
+
+    /**
+     * The last four weeks, each against the number the person chose. Part 10.
+     *
+     * Four separate answers. Nothing joins them and nothing totals them, which is
+     * what makes this a picture of a month rather than a run of days.
+     */
+    suspend fun weekBars(): List<WeekBar> = fourWeeks().mapIndexed { at, week ->
+        WeekBar(
+            done = week.done,
+            wanted = week.wanted,
+            spoken = string(R.string.weeks_bar, at + 1, week.done, week.wanted),
+        )
+    }
+
+    /**
+     * One sentence about those four weeks, and never about a run of them.
+     *
+     * "Three good weeks and one quiet one. That's what most months look like." The
+     * second half is the whole point: it says a quiet week is ordinary rather than a
+     * thing that went wrong.
+     */
+    suspend fun weeksSaid(): String {
+        val weeks = fourWeeks()
+        val met = weeks.count { it.met }
+        val quiet = weeks.size - met
+        return when {
+            quiet == 0 -> string(R.string.weeks_all)
+            met == 0 -> string(R.string.weeks_none)
+            quiet == 1 -> plural(R.plurals.weeks_most, met, met, quiet)
+            else -> plural(R.plurals.weeks_some, met, met, quiet)
+        }
+    }
+
+    /** The same thing then and now, in their own history. Part 9. */
+    suspend fun lookBackLine(): String? {
+        val back = LookBacks.of(runs.history(), todayEpochDay()) ?: return null
+        val name = Movements.byId(back.movementId)?.name ?: return null
+        return string(R.string.look_back_line, name, back.then, back.now)
+    }
+
+    private suspend fun fourWeeks(): List<Week> =
+        Week.fourWeeks(runs.history(), todayEpochDay(), profile.weekTarget())
+
+    private fun todayEpochDay(): Long = LocalDate.now(ZoneId.systemDefault()).toEpochDay()
 
     private fun string(@StringRes id: Int, vararg args: Any): String =
         application.getString(id, *args)

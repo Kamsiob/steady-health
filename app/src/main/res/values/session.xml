@@ -219,4 +219,28 @@
     -->
     <string name="no_phone_asked" tools:ignore="PluralsCandidate">Asked for %1$d</string>
 
+
+    <!--
+      Consistency, ADDENDUM-03 Part 10, and the look back, Part 9. Four separate weeks
+      and one comparison with themselves. Nothing here is a run of anything.
+    -->
+    <string name="weeks_title">The last four weeks</string>
+    <string name="weeks_all">Four weeks, all of them met. That takes doing.</string>
+    <plurals name="weeks_most">
+        <item quantity="one">One good week and one quiet one. That\'s what most months look like.</item>
+        <item quantity="other">%1$d good weeks and one quiet one. That\'s what most months look like.</item>
+    </plurals>
+    <plurals name="weeks_some">
+        <item quantity="one">One good week and %2$d quiet ones. That\'s what most months look like.</item>
+        <item quantity="other">%1$d good weeks and %2$d quiet ones. That\'s what most months look like.</item>
+    </plurals>
+    <string name="weeks_none">Four quiet weeks. The next one starts whenever you like.</string>
+    <string name="weeks_bar">Week %1$d: %2$d of %3$d</string>
+    <string name="look_back_title">Then and now</string>
+    <!--
+      "Heel raises: 8 in June, 15 now." Two counts of the same thing, and the words
+      between them agree with neither.
+    -->
+    <string name="look_back_line" tools:ignore="PluralsCandidate">%1$s: %2$d when you started, %3$d now.</string>
+
 </resources>

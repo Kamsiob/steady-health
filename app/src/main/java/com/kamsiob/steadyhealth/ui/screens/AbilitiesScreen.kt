@@ -1,20 +1,35 @@
 package com.kamsiob.steadyhealth.ui.screens
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.unit.dp
 import com.kamsiob.steadyhealth.R
 import com.kamsiob.steadyhealth.domain.AbilityDomain
 import com.kamsiob.steadyhealth.domain.AbilityState
 import com.kamsiob.steadyhealth.ui.components.AbilityRow
 import com.kamsiob.steadyhealth.ui.components.ListItem
+import com.kamsiob.steadyhealth.ui.components.NoteBlock
 import com.kamsiob.steadyhealth.ui.components.Paragraph
 import com.kamsiob.steadyhealth.ui.components.SectionTitle
 import com.kamsiob.steadyhealth.ui.components.SteadyScreen
 import com.kamsiob.steadyhealth.ui.components.TextLink
 import com.kamsiob.steadyhealth.ui.help.Place
 import com.kamsiob.steadyhealth.ui.theme.SteadyPalette
+import com.kamsiob.steadyhealth.ui.theme.SteadySpacing
 import com.kamsiob.steadyhealth.ui.theme.SteadyText
 import com.kamsiob.steadyhealth.ui.theme.SteadyType
 
@@ -42,7 +57,19 @@ data class AbilitiesUiState(
      * read-back is what this tab is for. Today is for today.
      */
     val week: List<String> = emptyList(),
+
+    /** The last four weeks, oldest first, each against the number chosen. Part 10. */
+    val weeks: List<WeekBar> = emptyList(),
+
+    /** One sentence about those four weeks, and never about a run of them. */
+    val weeksSaid: String = "",
+
+    /** The same thing then and now, in their own history. Part 9. */
+    val lookBack: String? = null,
 )
+
+/** One week, as a bar. Nothing here joins it to the week beside it. */
+data class WeekBar(val done: Int, val wanted: Int, val spoken: String)
 
 /**
  * Abilities, from the grid, screen 8. The tab that replaced History.
@@ -63,12 +90,30 @@ fun AbilitiesScreen(
     tryOffer: Boolean = false,
     tryResult: Boolean = false,
 ) {
-    SteadyScreen(title = null, onBack = null, modifier = modifier, help = Place.Abilities) {
+    SteadyScreen(title = null, onBack = null, modifier = modifier, help = Place.Progress) {
         SteadyText(
             text = stringResource(R.string.abilities_title),
             style = SteadyType.Greeting,
             color = SteadyPalette.Navy,
         )
+
+        // ADDENDUM-03 Part 10. Four bars, each its own week, with nothing joining them.
+        if (state.weeks.isNotEmpty()) {
+            SectionTitle(stringResource(R.string.weeks_title))
+            Row(
+                modifier = Modifier.fillMaxWidth().height(BAR_AREA),
+                horizontalArrangement = Arrangement.spacedBy(SteadySpacing.ListGap),
+                verticalAlignment = Alignment.Bottom,
+            ) {
+                state.weeks.forEach { week -> WeekColumn(week, Modifier.weight(1f)) }
+            }
+            Paragraph(state.weeksSaid)
+        }
+
+        state.lookBack?.let {
+            SectionTitle(stringResource(R.string.look_back_title))
+            NoteBlock(it)
+        }
 
         state.abilities.forEach { ability ->
             AbilityRow(
@@ -133,6 +178,53 @@ fun AbilitiesScreen(
         }
     }
 }
+
+/**
+ * One week, drawn against the number the person chose.
+ *
+ * The bar is how much of that week's own number was met and nothing else. There is no
+ * line joining it to the week beside it and no total across the four, because there
+ * is no such thing here as carrying anything over.
+ */
+@Composable
+private fun WeekColumn(week: WeekBar, modifier: Modifier = Modifier) {
+    val filled = if (week.wanted <= 0) 0f else (week.done.toFloat() / week.wanted).coerceIn(0f, 1f)
+    Column(
+        modifier = modifier.semantics { contentDescription = week.spoken },
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Bottom,
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(BAR_AREA - BAR_LABEL)
+                .clip(RoundedCornerShape(SteadySpacing.Tight))
+                .background(SteadyPalette.Sand),
+            contentAlignment = Alignment.BottomCenter,
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxHeight(filled.coerceAtLeast(EMPTY_SLIVER))
+                    .clip(RoundedCornerShape(SteadySpacing.Tight))
+                    .background(SteadyPalette.Green),
+            )
+        }
+        SteadyText(
+            text = "${week.done}",
+            style = SteadyType.Caption,
+            color = SteadyPalette.Ink3Text,
+            modifier = Modifier.height(BAR_LABEL),
+        )
+    }
+}
+
+/** Tall enough to read from across a room, short enough not to be the screen. */
+private val BAR_AREA = 120.dp
+private val BAR_LABEL = 24.dp
+
+/** A week with nothing in it still draws something, so four bars are always four. */
+private const val EMPTY_SLIVER = 0.04f
 
 private fun labelFor(state: AbilityState) = when (state) {
     AbilityState.Better -> R.string.state_better

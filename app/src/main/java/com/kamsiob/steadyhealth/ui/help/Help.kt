@@ -30,6 +30,7 @@ enum class Place {
     Today,
     Session,
     Sessions,
+    Progress,
     Move,
     Abilities,
     Settings,
@@ -86,6 +87,16 @@ object Help {
             questions = listOf(
                 Question(R.string.help_move_q1, R.string.help_move_a1),
                 Question(R.string.help_move_q2, R.string.help_move_a2),
+            ),
+        )
+
+        Place.Progress -> Topic(
+            says = R.string.says_progress,
+            what = R.string.help_abilities_what,
+            points = listOf(R.string.help_abilities_p1, R.string.help_abilities_p2),
+            questions = listOf(
+                Question(R.string.help_abilities_q1, R.string.help_abilities_a1),
+                Question(R.string.help_abilities_q2, R.string.help_abilities_a2),
             ),
         )
 

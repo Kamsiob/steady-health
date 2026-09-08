@@ -31,6 +31,20 @@ data class Week(val done: Int, val wanted: Int) {
          * Two sessions in one day is one day. Otherwise somebody who does three on a
          * Sunday has met the week, which is not what the week is for.
          */
+        /** How many weeks the consistency view shows. Four, and never a fifth. */
+        const val SHOWN = 4
+
+        /**
+         * The last four weeks, oldest first, each against the same number.
+         *
+         * ADDENDUM-03 Part 10. Four separate weeks and not a run of them: nothing
+         * here adds up across weeks and nothing here can be broken. A quiet week is a
+         * week with a small bar beside three larger ones, which is what a month looks
+         * like.
+         */
+        fun fourWeeks(history: List<Done>, today: Long, wanted: Int): List<Week> =
+            (SHOWN - 1 downTo 0).map { back -> of(history, today - back * DAYS, wanted) }
+
         fun of(history: List<Done>, today: Long, wanted: Int): Week {
             val since = today - DAYS + 1
             val days = history.map { it.epochDay }.filter { it in since..today }.distinct()

@@ -856,6 +856,9 @@ class SteadyViewModel(application: Application) : AndroidViewModel(application) 
             },
             waiting = true,
             week = weekNote(),
+            weeks = cards.weekBars(),
+            weeksSaid = cards.weeksSaid(),
+            lookBack = cards.lookBackLine(),
         )
     }
 
