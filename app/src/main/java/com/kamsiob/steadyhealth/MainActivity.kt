@@ -5,8 +5,15 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.lifecycle.lifecycleScope
+import com.kamsiob.steadyhealth.data.DailyPromptRepository
+import com.kamsiob.steadyhealth.data.SteadyDatabase
+import com.kamsiob.steadyhealth.remind.Reminding
 import com.kamsiob.steadyhealth.ui.SteadyApp
 import com.kamsiob.steadyhealth.ui.theme.SteadyTheme
+import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.ZoneId
 
 /**
  * The only activity.
@@ -21,10 +28,27 @@ class MainActivity : ComponentActivity() {
         installSplashScreen()
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        recordOpenedFromPrompt()
         setContent {
             SteadyTheme {
                 SteadyApp()
             }
+        }
+    }
+
+    /**
+     * The daily prompt was tapped rather than ignored.
+     *
+     * The only thing this app ever records about a notification, and it records it so
+     * the prompt knows when to stop asking. Nothing counts it, nothing shows it, and
+     * nothing anywhere is a streak of them.
+     */
+    private fun recordOpenedFromPrompt() {
+        if (intent?.getBooleanExtra(Reminding.FROM_DAILY, false) != true) return
+        intent.removeExtra(Reminding.FROM_DAILY)
+        val today = LocalDate.now(ZoneId.systemDefault()).toEpochDay()
+        lifecycleScope.launch {
+            DailyPromptRepository(SteadyDatabase.get(applicationContext)).opened(today)
         }
     }
 }

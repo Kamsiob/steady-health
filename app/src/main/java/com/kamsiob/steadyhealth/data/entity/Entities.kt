@@ -337,6 +337,19 @@ data class RunMovementEntity(
 )
 
 /**
+ * One daily prompt that went out, and whether it was opened.
+ *
+ * One row a day at most, which is what the day being the key says. Whether it was
+ * opened is the only thing the app ever asks about a notification, and it is asked so
+ * the app can stop rather than so it can count anything.
+ */
+@Entity(tableName = "daily_prompts")
+data class DailyPromptEntity(
+    @PrimaryKey val epochDay: Long,
+    val opened: Boolean = false,
+)
+
+/**
  * An area somebody said hurts, and the week it is left out for.
  *
  * Kept as rows rather than a setting because the same area can be reported more than

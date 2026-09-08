@@ -7,11 +7,18 @@ import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import androidx.work.WorkerParameters
+import com.kamsiob.steadyhealth.R
+import com.kamsiob.steadyhealth.data.DailyPromptRepository
 import com.kamsiob.steadyhealth.data.ProfileRepository
 import com.kamsiob.steadyhealth.data.ReminderRepository
+import com.kamsiob.steadyhealth.data.RunRepository
 import com.kamsiob.steadyhealth.data.SteadyDatabase
+import com.kamsiob.steadyhealth.engine.DailyPrompt
+import com.kamsiob.steadyhealth.engine.Prompt
 import com.kamsiob.steadyhealth.engine.ReminderKind
 import com.kamsiob.steadyhealth.engine.Reminders
+import com.kamsiob.steadyhealth.session.SessionEngine
+import com.kamsiob.steadyhealth.session.SessionInputs
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.ZoneId
@@ -43,6 +50,11 @@ class ReminderWorker(
         val reminders = ReminderRepository(db)
         val now = System.currentTimeMillis()
 
+        // The one daily prompt goes first and outside the ceiling. The ceiling is
+        // what keeps everything else from adding up to noise; this is the one the
+        // app is for, and it stops itself when it is being ignored.
+        if (daily(context, db, profile)) return Result.success()
+
         if (!Reminders.maySend(reminders.sentSince(now - A_WEEK), now)) return Result.success()
 
         val today = LocalDate.now(ZoneId.systemDefault())
@@ -61,7 +73,95 @@ class ReminderWorker(
         return Result.success()
     }
 
+    /**
+     * The daily prompt, if it is on and if today is a day for it.
+     *
+     * Returns true when it sent something, so nothing else goes out on top of it.
+     * One notification a day is one notification a day.
+     */
+    @RequiresPermission(Reminding.POST_NOTIFICATIONS)
+    private suspend fun daily(
+        context: Context,
+        db: SteadyDatabase,
+        profile: ProfileRepository,
+    ): Boolean {
+        if (!profile.reminderOn(ReminderKind.Daily)) return false
+
+        val prompts = DailyPromptRepository(db)
+        val today = LocalDate.now(ZoneId.systemDefault()).toEpochDay()
+        return when (DailyPrompt.today(prompts.history(), today)) {
+            Prompt.Quiet -> false
+
+            Prompt.TurnItOff -> {
+                profile.setReminderOn(ReminderKind.Daily, false)
+                profile.setDailyGaveUp(true)
+                false
+            }
+
+            Prompt.StillHere ->
+                sendDaily(context, prompts, today, context.getString(R.string.daily_still_here))
+
+            Prompt.Ordinary ->
+                sendDaily(context, prompts, today, rotating(context, db, today))
+        }
+    }
+
+    @RequiresPermission(Reminding.POST_NOTIFICATIONS)
+    private suspend fun sendDaily(
+        context: Context,
+        prompts: DailyPromptRepository,
+        today: Long,
+        words: String,
+    ): Boolean {
+        val sent = Reminding.send(context, words, daily = true)
+        if (sent) prompts.sent(today)
+        return sent
+    }
+
+    /**
+     * Which of the three daily lines today gets.
+     *
+     * Chosen by the day itself, so nothing has to be stored and the same day says the
+     * same thing however many times this runs. The third names today's session, which
+     * is the one that makes somebody open it; when there is no session to name, the
+     * rotation falls back to one that is always true.
+     */
+    private suspend fun rotating(context: Context, db: SteadyDatabase, today: Long): String =
+        when ((today % THREE_LINES).toInt()) {
+            0 -> context.getString(R.string.daily_ready)
+            1 -> context.getString(R.string.daily_short)
+            else -> named(context, db, today) ?: context.getString(R.string.daily_ready)
+        }
+
+    private suspend fun named(context: Context, db: SteadyDatabase, today: Long): String? {
+        val profile = ProfileRepository(db)
+        val runs = RunRepository(db)
+        val plan = SessionEngine.plan(
+            SessionInputs(
+                way = profile.gettingAround(),
+                exclusions = profile.exclusions(),
+                kit = profile.kit(),
+                sore = runs.soreAreas(today),
+                history = runs.history(),
+                lastFelt = runs.lastFelt(),
+                feltBefore = runs.feltBefore(),
+                today = today,
+                lastSessionDay = runs.lastSessionDay(),
+                strengthRunLength = runs.strengthRunLength(),
+            ),
+        )
+        val first = plan.main.firstOrNull()?.movement?.name ?: return null
+        return context.resources.getQuantityString(
+            R.plurals.daily_named,
+            plan.minutes,
+            first,
+            plan.minutes,
+        )
+    }
+
     companion object {
+        private const val THREE_LINES = 3
+
         private const val WORK = "steady-reminders"
         private const val A_WEEK = 7L * 24 * 60 * 60 * 1000
 

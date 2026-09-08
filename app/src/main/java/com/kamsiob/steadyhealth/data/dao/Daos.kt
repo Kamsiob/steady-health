@@ -9,6 +9,7 @@ import com.kamsiob.steadyhealth.data.entity.BloodPressureEntity
 import com.kamsiob.steadyhealth.data.entity.CheckEntity
 import com.kamsiob.steadyhealth.data.entity.CheckInEntity
 import com.kamsiob.steadyhealth.data.entity.CheckInTagEntity
+import com.kamsiob.steadyhealth.data.entity.DailyPromptEntity
 import com.kamsiob.steadyhealth.data.entity.ExclusionEntity
 import com.kamsiob.steadyhealth.data.entity.ExperimentEntity
 import com.kamsiob.steadyhealth.data.entity.ItemRatingEntity
@@ -376,6 +377,21 @@ interface ProfileDao {
 
     @Query("DELETE FROM settings")
     suspend fun deleteAllSettings()
+}
+
+@Dao
+interface DailyPromptDao {
+    @Upsert
+    suspend fun put(row: DailyPromptEntity)
+
+    @Query("SELECT * FROM daily_prompts ORDER BY epochDay")
+    suspend fun all(): List<DailyPromptEntity>
+
+    @Query("SELECT * FROM daily_prompts WHERE epochDay = :day")
+    suspend fun forDay(day: Long): DailyPromptEntity?
+
+    @Query("DELETE FROM daily_prompts")
+    suspend fun clear()
 }
 
 @Dao

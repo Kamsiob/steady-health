@@ -4,6 +4,7 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.kamsiob.steadyhealth.R
+import com.kamsiob.steadyhealth.data.DailyPromptRepository
 import com.kamsiob.steadyhealth.data.DataRepository
 import com.kamsiob.steadyhealth.data.ProfileRepository
 import com.kamsiob.steadyhealth.data.ReminderRepository
@@ -101,6 +102,8 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
             envelopeMinutes = envelope.minutes,
             envelopeDays = envelope.daysPerWeek,
             weekTarget = profile.weekTarget(),
+            dailyGaveUp = profile.dailyGaveUp(),
+            dailyOn = profile.reminderOn(ReminderKind.Daily),
         )
     }
 
@@ -170,6 +173,13 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
      */
     fun setReminder(kind: ReminderKind, on: Boolean) = viewModelScope.launch {
         profile.setReminderOn(kind, on)
+        // Turning the daily one back on starts from nothing, which is what on means.
+        // Otherwise it would be off again in a day, having counted the week somebody
+        // was away as eight more dismissals.
+        if (kind == ReminderKind.Daily && on) {
+            profile.setDailyGaveUp(false)
+            DailyPromptRepository(db).forget()
+        }
         val context = getApplication<Application>()
         if (profile.anyReminderOn()) {
             ReminderWorker.schedule(context)

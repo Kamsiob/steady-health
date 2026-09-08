@@ -2,6 +2,14 @@ package com.kamsiob.steadyhealth.engine
 
 /** The four things the app may ever send a notification about. LOGIC.md section 12. */
 enum class ReminderKind(val id: String) {
+    /**
+     * The one daily prompt. ADDENDUM-03 Part 13.
+     *
+     * On by default and outside the ceiling below, because the ceiling is what keeps
+     * everything else from adding up to noise and this is the one the app is for.
+     */
+    Daily("daily"),
+
     /** At the habit the person named, and never about a day they missed. */
     Walk("walk"),
 
@@ -59,10 +67,21 @@ object Reminders {
      */
     fun pick(due: Set<ReminderKind>): ReminderKind? = ORDER.firstOrNull { it in due }
 
-    private val ORDER = listOf(
+    /**
+     * The kinds this ceiling governs, in the order one is chosen.
+     *
+     * The daily prompt is deliberately not here. It is one a day by design, it stops
+     * itself when it is ignored, and counting it against the two would mean an app
+     * that says its one useful thing twice a week. ADDENDUM-03 Part 13 says
+     * "everything else capped at two a week combined", and this list is everything
+     * else.
+     */
+    val CAPPED = listOf(
         ReminderKind.StepReady,
         ReminderKind.Walk,
         ReminderKind.WeekNote,
         ReminderKind.Photo,
     )
+
+    private val ORDER = CAPPED
 }

@@ -40,6 +40,7 @@ import com.kamsiob.steadyhealth.engine.StepMeasure
 import com.kamsiob.steadyhealth.engine.WayOfGettingAround
 import com.kamsiob.steadyhealth.engine.WaysOfGettingAround
 import com.kamsiob.steadyhealth.engine.WeightEngine
+import com.kamsiob.steadyhealth.remind.ReminderWorker
 import com.kamsiob.steadyhealth.session.Area
 import com.kamsiob.steadyhealth.ui.screens.AbilitiesUiState
 import com.kamsiob.steadyhealth.ui.screens.AbilityRowState
@@ -155,7 +156,13 @@ class SteadyViewModel(application: Application) : AndroidViewModel(application) 
         viewModelScope.launch {
             val done = profile.onboardingComplete()
             _onboardingComplete.value = done
-            if (done) refresh()
+            if (done) {
+                // Idempotent: the work is unique and enqueued with KEEP, so this is
+                // how the one daily prompt survives a reinstall or a cleared job
+                // queue without anybody having to visit Settings.
+                ReminderWorker.schedule(getApplication())
+                refresh()
+            }
         }
     }
 
@@ -172,6 +179,7 @@ class SteadyViewModel(application: Application) : AndroidViewModel(application) 
 
     fun onboardingFinished() = viewModelScope.launch {
         _onboardingComplete.value = true
+        ReminderWorker.schedule(getApplication())
         refresh()
     }
 

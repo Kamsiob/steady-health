@@ -10,6 +10,7 @@ import com.kamsiob.steadyhealth.ai.WeightDirection
 import com.kamsiob.steadyhealth.data.entity.CheckEntity
 import com.kamsiob.steadyhealth.data.entity.CheckInEntity
 import com.kamsiob.steadyhealth.data.entity.CheckInTagEntity
+import com.kamsiob.steadyhealth.data.entity.DailyPromptEntity
 import com.kamsiob.steadyhealth.data.entity.ExclusionEntity
 import com.kamsiob.steadyhealth.data.entity.ExperimentEntity
 import com.kamsiob.steadyhealth.data.entity.ItemRatingEntity
@@ -60,6 +61,7 @@ import com.kamsiob.steadyhealth.engine.PacingEngine
 import com.kamsiob.steadyhealth.engine.Pattern
 import com.kamsiob.steadyhealth.engine.PatternMeasure
 import com.kamsiob.steadyhealth.engine.Patterns
+import com.kamsiob.steadyhealth.engine.Prompted
 import com.kamsiob.steadyhealth.engine.Reading
 import com.kamsiob.steadyhealth.engine.ReminderKind
 import com.kamsiob.steadyhealth.engine.Reminders
@@ -472,10 +474,23 @@ class ProfileRepository(private val db: SteadyDatabase) {
      * Whether one kind of reminder is on. All four are off until somebody says
      * otherwise, which LOGIC.md section 12 makes a default and not a suggestion.
      */
-    suspend fun reminderOn(kind: ReminderKind): Boolean = get("remind_${kind.id}").toBoolean()
+    /**
+     * Whether one kind of reminder is on.
+     *
+     * The daily prompt is the only one on by default, which is ADDENDUM-03 Part 13.
+     * Everything else is off until somebody turns it on, and all of them together are
+     * capped at two a week.
+     */
+    suspend fun reminderOn(kind: ReminderKind): Boolean =
+        get("remind_${kind.id}")?.toBoolean() ?: (kind == ReminderKind.Daily)
 
     suspend fun setReminderOn(kind: ReminderKind, value: Boolean) =
         put("remind_${kind.id}", value.toString())
+
+    /** True when the daily prompt turned itself off, so Settings can say why. */
+    suspend fun dailyGaveUp(): Boolean = get(DAILY_GAVE_UP).toBoolean()
+
+    suspend fun setDailyGaveUp(value: Boolean) = put(DAILY_GAVE_UP, value.toString())
 
     suspend fun anyReminderOn(): Boolean = ReminderKind.entries.any { reminderOn(it) }
 
@@ -544,6 +559,7 @@ class ProfileRepository(private val db: SteadyDatabase) {
         const val CHAIR_ARMS = "chair_arms"
         const val ANCHOR_DAY = "anchor_day"
         const val WEEK_TARGET = "week_target"
+        const val DAILY_GAVE_UP = "daily_gave_up"
         const val WITH_THERAPIST = "with_therapist"
         const val UNITS = "units"
         const val HEIGHT = "height_cm"
@@ -1144,6 +1160,27 @@ class ExperimentRepository(private val db: SteadyDatabase) {
  * already speaks: [Done] rows for its history, and the areas somebody said hurt with
  * their seven days still running.
  */
+/**
+ * The daily prompt's own history: one row a day, and whether it was opened.
+ *
+ * Separate from the reminders table because the two answer different questions. That
+ * one is a ceiling on how much the app may say; this one is how the app knows to stop
+ * saying it.
+ */
+class DailyPromptRepository(private val db: SteadyDatabase) {
+
+    suspend fun history(): List<Prompted> =
+        db.dailyPrompts().all().map { Prompted(it.epochDay, it.opened) }
+
+    suspend fun sent(day: Long) = db.dailyPrompts().put(DailyPromptEntity(day, opened = false))
+
+    /** Somebody tapped it. That clears the run of dismissals on its own. */
+    suspend fun opened(day: Long) = db.dailyPrompts().put(DailyPromptEntity(day, opened = true))
+
+    /** Turning it back on starts again from nothing, which is what "on" means. */
+    suspend fun forget() = db.dailyPrompts().clear()
+}
+
 class RunRepository(private val db: SteadyDatabase) {
 
     /** Save one session, however it ended. Nothing here can lose what was done. */

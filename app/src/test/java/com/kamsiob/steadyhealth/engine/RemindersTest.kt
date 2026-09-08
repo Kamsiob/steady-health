@@ -60,10 +60,19 @@ class RemindersTest {
     }
 
     @Test
-    fun everyKindCanBePickedWhenItIsTheOnlyOneDue() {
-        ReminderKind.entries.forEach {
+    fun everyCappedKindCanBePickedWhenItIsTheOnlyOneDue() {
+        Reminders.CAPPED.forEach {
             assertWithMessage(it.id).that(Reminders.pick(setOf(it))).isEqualTo(it)
         }
+    }
+
+    @Test
+    fun theDailyPromptIsNotOneOfTheTwoAWeek() {
+        // ADDENDUM-03 Part 13: one a day, and everything else capped at two a week
+        // combined. Counting the daily one against the two would mean an app that
+        // says its one useful thing twice a week.
+        assertThat(Reminders.CAPPED).doesNotContain(ReminderKind.Daily)
+        assertThat(Reminders.pick(setOf(ReminderKind.Daily))).isNull()
     }
 
     private companion object {

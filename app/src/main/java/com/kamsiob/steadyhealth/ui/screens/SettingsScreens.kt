@@ -46,6 +46,9 @@ data class SettingsUiState(
     val envelopeDays: Int = 0,
     /** Three, four or five sessions a week. ADDENDUM-03 Part 10. */
     val weekTarget: Int = Week.DEFAULT,
+    /** True when the daily prompt stopped itself, so the screen can say why. */
+    val dailyGaveUp: Boolean = false,
+    val dailyOn: Boolean = true,
 )
 
 /**
@@ -68,6 +71,7 @@ data class SettingsActions(
     val onTryItAndSee: (Boolean) -> Unit,
     val onAsk: () -> Unit,
     val onWeekTarget: (Int) -> Unit,
+    val onDaily: (Boolean) -> Unit,
 )
 
 /**
@@ -107,6 +111,14 @@ fun SettingsScreen(
 
         // Set once and changeable, which is what makes it a choice rather than a
         // number the app decided for somebody.
+        SwitchRow(
+            label = stringResource(R.string.settings_daily),
+            subtitle = stringResource(R.string.settings_daily_sub),
+            checked = state.dailyOn,
+            onChange = actions.onDaily,
+        )
+        if (state.dailyGaveUp) NoteBlock(stringResource(R.string.settings_daily_off))
+
         SectionTitle(stringResource(R.string.settings_week))
         Paragraph(stringResource(R.string.settings_week_sub))
         ThreeUpChoice(

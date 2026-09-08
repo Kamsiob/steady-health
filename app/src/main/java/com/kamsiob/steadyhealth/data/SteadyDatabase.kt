@@ -9,6 +9,7 @@ import com.kamsiob.steadyhealth.data.dao.AbilityDao
 import com.kamsiob.steadyhealth.data.dao.BodyDao
 import com.kamsiob.steadyhealth.data.dao.CheckDao
 import com.kamsiob.steadyhealth.data.dao.CheckInDao
+import com.kamsiob.steadyhealth.data.dao.DailyPromptDao
 import com.kamsiob.steadyhealth.data.dao.LadderDao
 import com.kamsiob.steadyhealth.data.dao.NotesDao
 import com.kamsiob.steadyhealth.data.dao.NoticeDao
@@ -22,6 +23,7 @@ import com.kamsiob.steadyhealth.data.entity.BloodPressureEntity
 import com.kamsiob.steadyhealth.data.entity.CheckEntity
 import com.kamsiob.steadyhealth.data.entity.CheckInEntity
 import com.kamsiob.steadyhealth.data.entity.CheckInTagEntity
+import com.kamsiob.steadyhealth.data.entity.DailyPromptEntity
 import com.kamsiob.steadyhealth.data.entity.ExclusionEntity
 import com.kamsiob.steadyhealth.data.entity.ExperimentEntity
 import com.kamsiob.steadyhealth.data.entity.ItemRatingEntity
@@ -79,6 +81,7 @@ import net.zetetic.database.sqlcipher.driver.SQLCipherDriver
         RunEntity::class,
         RunMovementEntity::class,
         SoreAreaEntity::class,
+        DailyPromptEntity::class,
         PatternEntity::class,
         ExperimentEntity::class,
         VisitSummaryEntity::class,
@@ -90,9 +93,9 @@ import net.zetetic.database.sqlcipher.driver.SQLCipherDriver
     ],
     // Version 2 adds the three tables ADDENDUM-03's session needs. Purely additive,
     // so the migration is generated rather than written, and nobody's rows move.
-    version = 2,
+    version = 3,
     exportSchema = true,
-    autoMigrations = [AutoMigration(from = 1, to = 2)],
+    autoMigrations = [AutoMigration(from = 1, to = 2), AutoMigration(from = 2, to = 3)],
 )
 abstract class SteadyDatabase : RoomDatabase() {
 
@@ -109,6 +112,7 @@ abstract class SteadyDatabase : RoomDatabase() {
     abstract fun runs(): RunDao
     abstract fun notices(): NoticeDao
     abstract fun reminders(): ReminderDao
+    abstract fun dailyPrompts(): DailyPromptDao
     abstract fun profile(): ProfileDao
 
     companion object {

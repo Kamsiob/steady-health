@@ -406,6 +406,22 @@
     <string name="remind_week">Your week is written up.</string>
     <string name="remind_step">A longer walk is ready.</string>
 
+    <!--
+      The one daily prompt, from ADDENDUM-03 Part 13. Under ten words, rotating, and
+      never about a day nobody did anything. The rotation is by the day of the year,
+      so it is the same for everybody on the same day and nothing has to be stored.
+    -->
+    <string name="daily_ready">Ready when you are.</string>
+    <string name="daily_short">Today\'s is a short one.</string>
+    <plurals name="daily_named">
+        <item quantity="one">%1$s, about a minute.</item>
+        <item quantity="other">%1$s, about %2$d minutes.</item>
+    </plurals>
+    <string name="daily_still_here">Still here whenever you want it.</string>
+    <string name="settings_daily">The daily one</string>
+    <string name="settings_daily_sub">One a day, at your usual time. Under ten words.</string>
+    <string name="settings_daily_off">It turned itself off after being dismissed eight times. Turn it back on whenever you like.</string>
+
     <string name="settings_reminders">Reminders</string>
     <string name="settings_reminders_off">Off</string>
     <plurals name="settings_reminders_left">

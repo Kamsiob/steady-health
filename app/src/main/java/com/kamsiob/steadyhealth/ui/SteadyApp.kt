@@ -28,6 +28,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.kamsiob.steadyhealth.domain.Exclusion
+import com.kamsiob.steadyhealth.engine.ReminderKind
 import com.kamsiob.steadyhealth.remind.Reminding
 import com.kamsiob.steadyhealth.ui.components.SteadyTabBar
 import com.kamsiob.steadyhealth.ui.nav.Route
@@ -685,6 +686,7 @@ private fun settingsActions(
         navController.navigate(Route.ASK)
     },
     onWeekTarget = viewModel::setWeekTarget,
+    onDaily = { viewModel.setReminder(ReminderKind.Daily, it) },
 )
 
 private fun NavGraphBuilder.settingsRoutes(
