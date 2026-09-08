@@ -150,6 +150,42 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
         start(SessionEngine.plan(inputs), first = runs.history().isEmpty())
     }
 
+    /**
+     * One movement, on its own, chosen from the library.
+     *
+     * Planned through the same engine as everything else, so the number it asks for
+     * is the number it would have asked for inside a session.
+     */
+    fun startOne(movementId: String) = viewModelScope.launch {
+        val movement = Movements.byId(movementId) ?: return@launch
+        val inputs = inputsFor(profile, runs)
+        val plan = SessionPlan(
+            steps = listOf(SessionEngine.stepFor(movement, inputs)),
+            adaptation = Adaptation(Adaptation.Kind.None),
+            small = true,
+            feeds = listOf(movement.domain),
+        )
+        start(plan, first = runs.history().isEmpty())
+    }
+
+    /**
+     * A session somebody has already done, offered again.
+     *
+     * The movements are theirs; the numbers are today's, because doing March again
+     * with March's numbers is not what "do this again" means.
+     */
+    fun repeat(runId: Long) = viewModelScope.launch {
+        val movements = runs.movementsOf(runId).mapNotNull { Movements.byId(it) }
+        if (movements.isEmpty()) return@launch
+        val inputs = inputsFor(profile, runs)
+        val plan = SessionPlan(
+            steps = movements.map { SessionEngine.stepFor(it, inputs) },
+            adaptation = Adaptation(Adaptation.Kind.None),
+            feeds = movements.map { it.domain }.distinct(),
+        )
+        start(plan, first = runs.history().isEmpty())
+    }
+
     /** Run a session somebody already has, for the offer card and the extras. */
     fun start(plan: SessionPlan, first: Boolean = false) {
         startedAt = System.currentTimeMillis()

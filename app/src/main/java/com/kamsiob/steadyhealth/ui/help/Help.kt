@@ -29,6 +29,7 @@ data class Topic(
 enum class Place {
     Today,
     Session,
+    Sessions,
     Move,
     Abilities,
     Settings,
@@ -65,6 +66,16 @@ object Help {
                 Question(R.string.help_session_q1, R.string.help_session_a1),
                 Question(R.string.help_session_q2, R.string.help_session_a2),
                 Question(R.string.help_session_q3, R.string.help_session_a3),
+            ),
+        )
+
+        Place.Sessions -> Topic(
+            says = R.string.says_sessions,
+            what = R.string.help_move_what,
+            points = listOf(R.string.help_move_p1, R.string.help_move_p2),
+            questions = listOf(
+                Question(R.string.help_move_q1, R.string.help_move_a1),
+                Question(R.string.help_move_q2, R.string.help_move_a2),
             ),
         )
 

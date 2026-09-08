@@ -49,10 +49,18 @@ class RoutesTest {
     }
 
     @Test
-    fun thereAreOnlyEverThreeTabs() {
-        // MASTER_SPEC section 5 makes this a rule rather than a layout. A fourth
-        // would be somewhere for a feature to hide instead of belonging.
-        assertThat(Tab.entries).hasSize(3)
+    fun thereAreOnlyEverFourTabs() {
+        // MASTER_SPEC section 5, from ADDENDUM-03 Part 20, makes this a rule rather
+        // than a layout. A fifth would be somewhere for a feature to hide instead of
+        // belonging to one of these four.
+        assertThat(Tab.entries).hasSize(4)
+    }
+
+    @Test
+    fun theTabsAreTheOnesTheSpecificationNames() {
+        assertThat(Tab.entries.map { it.route })
+            .containsExactly("today", "sessions", "progress", "you")
+            .inOrder()
     }
 
     private fun source(relative: String): String {

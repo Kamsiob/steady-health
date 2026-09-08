@@ -10,12 +10,15 @@ import com.kamsiob.steadyhealth.data.SteadyDatabase
 import com.kamsiob.steadyhealth.domain.Exclusion
 import com.kamsiob.steadyhealth.domain.GettingAround
 import com.kamsiob.steadyhealth.session.Adaptation
+import com.kamsiob.steadyhealth.session.Kit
 import com.kamsiob.steadyhealth.session.Movements
 import com.kamsiob.steadyhealth.session.Noticed
+import com.kamsiob.steadyhealth.session.Piece
 import com.kamsiob.steadyhealth.session.SessionEngine
 import com.kamsiob.steadyhealth.session.SessionInputs
 import com.kamsiob.steadyhealth.session.Week
 import com.kamsiob.steadyhealth.ui.components.SessionCardState
+import com.kamsiob.steadyhealth.ui.screens.LibraryRow
 
 /**
  * The two things on Today that come from the session engine.
@@ -149,6 +152,40 @@ class TodayCards(private val application: Application, private val db: SteadyDat
 
             is Noticed.DayNumber -> string(R.string.noticed_day, noticed.day)
         }
+
+    /**
+     * The library: everything this person could be offered, and what each one needs.
+     *
+     * Suppressed areas are shown rather than hidden, marked as left out for now, so
+     * nobody has to wonder where a movement they know went. Movements for another way
+     * of getting around are not here at all, because they are not theirs.
+     */
+    suspend fun library(way: GettingAround, exclusions: Set<Exclusion>, today: Long): List<LibraryRow> {
+        val sore = runs.soreAreas(today)
+        val kit = profile.kit()
+        val mine = Movements.all.filter { way in it.ways && it.piece == Piece.Main }
+        return mine.map { movement ->
+            LibraryRow(
+                id = movement.id,
+                name = movement.name,
+                feeds = string(R.string.library_for, string(Labels.forAbility(movement.domain))),
+                needs = string(needs(movement.kit)),
+                leftOut = movement.area in sore ||
+                    movement.excludedBy.any { it in exclusions } ||
+                    !movement.kit.all { it == Kit.None || it in kit },
+            )
+        }
+    }
+
+    private fun needs(kit: Set<Kit>): Int = when {
+        Kit.Chair in kit -> R.string.library_needs_chair
+        Kit.Step in kit -> R.string.library_needs_step
+        Kit.Wall in kit -> R.string.library_needs_wall
+        Kit.Floor in kit -> R.string.library_needs_floor
+        Kit.Band in kit -> R.string.library_needs_band
+        Kit.Weights in kit -> R.string.library_needs_weight
+        else -> R.string.library_needs_nothing
+    }
 
     private fun string(@StringRes id: Int, vararg args: Any): String =
         application.getString(id, *args)

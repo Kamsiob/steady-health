@@ -82,7 +82,7 @@ data class SettingsActions(
 fun SettingsScreen(
     state: SettingsUiState,
     actions: SettingsActions,
-    onBack: () -> Unit,
+    onBack: (() -> Unit)?,
     modifier: Modifier = Modifier,
 ) {
     SteadyScreen(

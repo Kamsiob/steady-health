@@ -43,7 +43,7 @@ import com.kamsiob.steadyhealth.ui.screens.CheckMeasureScreen
 import com.kamsiob.steadyhealth.ui.screens.DataScreen
 import com.kamsiob.steadyhealth.ui.screens.GettingAroundScreen
 import com.kamsiob.steadyhealth.ui.screens.LeaveOutSettingsScreen
-import com.kamsiob.steadyhealth.ui.screens.MoveScreen
+import com.kamsiob.steadyhealth.ui.screens.LogPastScreen
 import com.kamsiob.steadyhealth.ui.screens.OfferScreen
 import com.kamsiob.steadyhealth.ui.screens.PacingScreen
 import com.kamsiob.steadyhealth.ui.screens.PatternScreen
@@ -51,6 +51,7 @@ import com.kamsiob.steadyhealth.ui.screens.QuieterScreen
 import com.kamsiob.steadyhealth.ui.screens.RateAgainScreen
 import com.kamsiob.steadyhealth.ui.screens.RemindersScreen
 import com.kamsiob.steadyhealth.ui.screens.SayHowScreen
+import com.kamsiob.steadyhealth.ui.screens.SessionsScreen
 import com.kamsiob.steadyhealth.ui.screens.SettingsActions
 import com.kamsiob.steadyhealth.ui.screens.SettingsScreen
 import com.kamsiob.steadyhealth.ui.screens.SummaryScreen
@@ -83,6 +84,7 @@ fun SteadyApp() {
     val summaryViewModel: SummaryViewModel = viewModel()
     val tryViewModel: TryViewModel = viewModel()
     val sessionViewModel: SessionViewModel = viewModel()
+    val sessionsViewModel: SessionsViewModel = viewModel()
     val onboarded by viewModel.onboardingComplete.collectAsStateWithLifecycle()
 
     when (onboarded) {
@@ -97,11 +99,13 @@ fun SteadyApp() {
             summaryViewModel,
             tryViewModel,
             sessionViewModel,
+            sessionsViewModel,
         )
     }
 }
 
 @Composable
+@Suppress("LongParameterList") // Four tabs, nine view models, one place.
 private fun Tabs(
     viewModel: SteadyViewModel,
     askViewModel: AskViewModel,
@@ -111,6 +115,7 @@ private fun Tabs(
     summaryViewModel: SummaryViewModel,
     tryViewModel: TryViewModel,
     sessionViewModel: SessionViewModel,
+    sessionsViewModel: SessionsViewModel,
 ) {
     val navController = rememberNavController()
     var tab by rememberSaveable { mutableStateOf(Tab.Today) }
@@ -127,17 +132,31 @@ private fun Tabs(
                         TabBody(
                             tab = tab,
                             viewModel = viewModel,
+                            askViewModel = askViewModel,
                             settingsViewModel = settingsViewModel,
                             checkViewModel = checkViewModel,
                             abilityViewModel = abilityViewModel,
                             summaryViewModel = summaryViewModel,
                             tryViewModel = tryViewModel,
                             sessionViewModel = sessionViewModel,
+                            sessionsViewModel = sessionsViewModel,
                             navController = navController,
                         )
                     }
 
                     dailyRoutes(viewModel, navController, back)
+
+                    composable(Route.LOG_PAST) {
+                        val state by sessionsViewModel.logPast.collectAsStateWithLifecycle()
+                        LogPastScreen(
+                            state = state,
+                            onDay = sessionsViewModel::chooseLogDay,
+                            onMovement = sessionsViewModel::toggleLogMovement,
+                            onSave = { sessionsViewModel.saveLogPast(back) },
+                            onBack = back,
+                        )
+                    }
+
                     askRoutes(askViewModel, navController, back)
                     checkRoutes(checkViewModel, navController, back) {
                         summaryViewModel.open()
@@ -147,6 +166,7 @@ private fun Tabs(
                     summaryRoutes(summaryViewModel, back)
                     tryRoutes(tryViewModel, back)
                     sessionRoutes(sessionViewModel, back)
+
                     settingsRoutes(
                         viewModel = settingsViewModel,
                         askViewModel = askViewModel,
@@ -323,12 +343,14 @@ private fun NavGraphBuilder.dailyRoutes(
 private fun TabBody(
     tab: Tab,
     viewModel: SteadyViewModel,
+    askViewModel: AskViewModel,
     settingsViewModel: SettingsViewModel,
     checkViewModel: CheckViewModel,
     abilityViewModel: AbilityViewModel,
     summaryViewModel: SummaryViewModel,
     tryViewModel: TryViewModel,
     sessionViewModel: SessionViewModel,
+    sessionsViewModel: SessionsViewModel,
     navController: NavHostController,
 ) {
     when (tab) {
@@ -362,33 +384,55 @@ private fun TabBody(
                 onBringBack = { yes ->
                     state.bringBack?.let { viewModel.bringBack(it.area, yes) }
                 },
-                onSettings = {
-                    settingsViewModel.openSettings()
-                    navController.navigate(Route.SETTINGS)
-                },
                 onNotice = viewModel::dismissNotice,
             )
         }
 
-        Tab.Move -> {
-            val state by viewModel.move.collectAsStateWithLifecycle()
-            LaunchedEffect(Unit) { viewModel.refresh() }
-            MoveScreen(
+        Tab.Sessions -> {
+            val state by sessionsViewModel.state.collectAsStateWithLifecycle()
+            LifecycleResumeEffect(Unit) {
+                sessionsViewModel.refresh()
+                onPauseOrDispose { }
+            }
+            SessionsScreen(
                 state = state,
                 onGo = {
                     sessionViewModel.startTodays()
                     navController.navigate(Route.SESSION)
                 },
-                // Weight came off Today with the reframe, so its way in lives here
-                // until Phase 2 rebuilds this tab as the library and history.
-                onWeighIn = {
-                    viewModel.openWeighIn()
-                    navController.navigate(Route.WEIGH_IN)
+                onSomethingSmall = {
+                    sessionViewModel.startSomethingSmall()
+                    navController.navigate(Route.SESSION)
+                },
+                onMovement = { id: String ->
+                    sessionViewModel.startOne(id)
+                    navController.navigate(Route.SESSION)
+                },
+                onRepeat = { runId: Long ->
+                    sessionViewModel.repeat(runId)
+                    navController.navigate(Route.SESSION)
+                },
+                onLogPast = {
+                    sessionsViewModel.openLogPast()
+                    navController.navigate(Route.LOG_PAST)
                 },
             )
         }
 
-        Tab.Abilities -> {
+        Tab.You -> {
+            val state by settingsViewModel.settings.collectAsStateWithLifecycle()
+            LifecycleResumeEffect(Unit) {
+                settingsViewModel.openSettings()
+                onPauseOrDispose { }
+            }
+            SettingsScreen(
+                state = state,
+                actions = settingsActions(settingsViewModel, askViewModel, navController),
+                onBack = null,
+            )
+        }
+
+        Tab.Progress -> {
             val state by viewModel.abilitiesState.collectAsStateWithLifecycle()
             LaunchedEffect(Unit) { viewModel.refresh() }
             val tryOffer by tryViewModel.offer.collectAsStateWithLifecycle()
@@ -614,6 +658,35 @@ private fun NavGraphBuilder.askRoutes(
     }
 }
 
+/**
+ * What Settings can do, in one place.
+ *
+ * Built here rather than inline because the You tab and the older Settings route both
+ * show the same screen, and two copies of eleven callbacks is how one of them ends up
+ * missing a row.
+ */
+private fun settingsActions(
+    viewModel: SettingsViewModel,
+    askViewModel: AskViewModel,
+    navController: NavHostController,
+) = SettingsActions(
+    onGettingAround = { navController.navigate(Route.GETTING_AROUND) },
+    onTherapist = viewModel::setTherapist,
+    onWeighsIn = viewModel::setWeighsIn,
+    onShowNumbers = viewModel::setShowNumbers,
+    onExclusions = { navController.navigate(Route.LEAVE_OUT) },
+    onPattern = { navController.navigate(Route.PATTERN) },
+    onPacing = { navController.navigate(Route.PACING) },
+    onData = { navController.navigate(Route.DATA) },
+    onReminders = { navController.navigate(Route.REMINDERS) },
+    onTryItAndSee = viewModel::setTryItAndSee,
+    onAsk = {
+        askViewModel.openAsk()
+        navController.navigate(Route.ASK)
+    },
+    onWeekTarget = viewModel::setWeekTarget,
+)
+
 private fun NavGraphBuilder.settingsRoutes(
     viewModel: SettingsViewModel,
     askViewModel: AskViewModel,
@@ -626,23 +699,7 @@ private fun NavGraphBuilder.settingsRoutes(
         val state by viewModel.settings.collectAsStateWithLifecycle()
         SettingsScreen(
             state = state,
-            actions = SettingsActions(
-                onGettingAround = { navController.navigate(Route.GETTING_AROUND) },
-                onTherapist = viewModel::setTherapist,
-                onWeighsIn = viewModel::setWeighsIn,
-                onShowNumbers = viewModel::setShowNumbers,
-                onExclusions = { navController.navigate(Route.LEAVE_OUT) },
-                onPattern = { navController.navigate(Route.PATTERN) },
-                onPacing = { navController.navigate(Route.PACING) },
-                onData = { navController.navigate(Route.DATA) },
-                onReminders = { navController.navigate(Route.REMINDERS) },
-                onTryItAndSee = viewModel::setTryItAndSee,
-                onAsk = {
-                    askViewModel.openAsk()
-                    navController.navigate(Route.ASK)
-                },
-                onWeekTarget = viewModel::setWeekTarget,
-            ),
+            actions = settingsActions(viewModel, askViewModel, navController),
             onBack = back,
         )
     }

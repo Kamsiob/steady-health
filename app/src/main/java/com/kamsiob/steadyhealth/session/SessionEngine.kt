@@ -194,6 +194,14 @@ object SessionEngine {
         )
     }
 
+    /**
+     * One movement as a step, with the number today would ask for.
+     *
+     * Public so the library and "do this again" ask for what the engine would have
+     * asked, rather than for whatever the movement starts everybody on.
+     */
+    fun stepFor(movement: Movement, inputs: SessionInputs): Step = step(movement, inputs)
+
     /** Ninety seconds, and it counts as a session. */
     private fun small(available: List<Movement>, inputs: SessionInputs): SessionPlan {
         val one = available.firstOrNull { it.piece == Piece.Main && it.seconds <= NINETY }

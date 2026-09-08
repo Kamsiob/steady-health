@@ -1,6 +1,5 @@
 package com.kamsiob.steadyhealth.ui.screens
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,16 +9,12 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.unit.dp
 import com.kamsiob.steadyhealth.R
 import com.kamsiob.steadyhealth.domain.AbilityDomain
 import com.kamsiob.steadyhealth.session.Area
@@ -140,7 +135,6 @@ fun TodayScreen(
     onGo: () -> Unit,
     onSomethingSmall: () -> Unit,
     onBringBack: (Boolean) -> Unit,
-    onSettings: () -> Unit,
     onNotice: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -158,11 +152,6 @@ fun TodayScreen(
                     modifier = Modifier.semantics { heading() },
                 )
             }
-            RoundAction(
-                icon = R.drawable.ic_settings,
-                spoken = stringResource(R.string.action_settings),
-                onClick = onSettings,
-            )
         }
 
         state.session?.let {
@@ -252,23 +241,6 @@ private fun AbilityGrid(abilities: List<AbilityTileState>, onAbility: (AbilityDo
     }
 }
 
-@Composable
-private fun RoundAction(icon: Int, spoken: String, onClick: () -> Unit) {
-    Box(
-        modifier = Modifier
-            .size(SteadySpacing.TapTarget)
-            .clickable(role = Role.Button, onClickLabel = spoken, onClick = onClick),
-        contentAlignment = Alignment.Center,
-    ) {
-        Icon(
-            painter = painterResource(icon),
-            contentDescription = spoken,
-            tint = SteadyPalette.Navy,
-            modifier = Modifier.size(ACTION_ICON),
-        )
-    }
-}
-
 /** The tint for an ability, from DESIGN.md section 2. They never swap. */
 fun tintFor(domain: AbilityDomain) = when (domain) {
     AbilityDomain.GetUp -> Ability.GetUp.tint
@@ -292,4 +264,3 @@ fun AbilityGlyph(domain: AbilityDomain, modifier: Modifier = Modifier) {
 }
 
 private const val ALL_THREE = 3
-private val ACTION_ICON = 24.dp

@@ -1,0 +1,149 @@
+package com.kamsiob.steadyhealth.ui
+
+import android.app.Application
+import androidx.annotation.PluralsRes
+import androidx.annotation.StringRes
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import com.kamsiob.steadyhealth.R
+import com.kamsiob.steadyhealth.data.ProfileRepository
+import com.kamsiob.steadyhealth.data.RunRepository
+import com.kamsiob.steadyhealth.data.SteadyDatabase
+import com.kamsiob.steadyhealth.data.entity.RunEntity
+import com.kamsiob.steadyhealth.session.Ending
+import com.kamsiob.steadyhealth.session.Felt
+import com.kamsiob.steadyhealth.session.Result
+import com.kamsiob.steadyhealth.session.Week
+import com.kamsiob.steadyhealth.ui.screens.HistoryRow
+import com.kamsiob.steadyhealth.ui.screens.LogPastUiState
+import com.kamsiob.steadyhealth.ui.screens.PastDay
+import com.kamsiob.steadyhealth.ui.screens.SessionsUiState
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.ZoneId
+
+/**
+ * The Sessions tab, and logging a session that already happened.
+ *
+ * Its own view model rather than more of SteadyViewModel, which has now grown past
+ * detekt's size rule four times. The split works for the same reason the others did:
+ * this tab reloads what it needs when it comes back into view rather than being told
+ * to by whoever changed something.
+ */
+class SessionsViewModel(application: Application) : AndroidViewModel(application) {
+
+    private val db get() = SteadyDatabase.get(getApplication())
+    private val runs get() = RunRepository(db)
+    private val profile get() = ProfileRepository(db)
+    private val cards get() = TodayCards(getApplication(), db)
+
+    private val _state = MutableStateFlow(SessionsUiState())
+    val state: StateFlow<SessionsUiState> = _state.asStateFlow()
+
+    private val _logPast = MutableStateFlow(LogPastUiState())
+    val logPast: StateFlow<LogPastUiState> = _logPast.asStateFlow()
+
+    fun refresh() = viewModelScope.launch {
+        val today = today()
+        val way = profile.gettingAround()
+        val exclusions = profile.exclusions()
+        _state.value = SessionsUiState(
+            session = cards.sessionCard(today, way, exclusions),
+            library = cards.library(way, exclusions, today),
+            history = history(today),
+        )
+    }
+
+    /** Open the log screen with the last seven days on it, today included. */
+    fun openLogPast() = viewModelScope.launch {
+        val today = today()
+        _logPast.value = LogPastUiState(
+            days = (0 until Week.DAYS).map { back ->
+                PastDay(epochDay = today - back, label = whenSaid(back.toLong()))
+            },
+            chosenDay = today,
+            movements = cards
+                .library(profile.gettingAround(), profile.exclusions(), today)
+                .filterNot { it.leftOut },
+        )
+    }
+
+    fun chooseLogDay(day: Long) = _logPast.update { it.copy(chosenDay = day) }
+
+    fun toggleLogMovement(id: String) = _logPast.update { state ->
+        state.copy(chosen = if (id in state.chosen) state.chosen - id else state.chosen + id)
+    }
+
+    /**
+     * Write a session that already happened. ADDENDUM-03 Part 14.
+     *
+     * Every movement is recorded as self reported with no number, because somebody
+     * logging Tuesday's walk on Thursday does not remember how many, and being asked
+     * would turn three taps into an interrogation. It counts as a session everywhere
+     * a session counts.
+     */
+    fun saveLogPast(onDone: () -> Unit) = viewModelScope.launch {
+        val state = _logPast.value
+        val day = state.chosenDay ?: return@launch
+        if (state.chosen.isEmpty()) return@launch
+        val at = System.currentTimeMillis()
+        runs.save(
+            epochDay = day,
+            startedAt = at,
+            endedAt = at,
+            ending = Ending.Finished.name,
+            felt = null,
+            small = false,
+            results = state.chosen.map { id ->
+                Result(movementId = id, target = 0, count = 0, selfReported = true)
+            },
+        )
+        _logPast.value = LogPastUiState()
+        refresh()
+        onDone()
+    }
+
+    /**
+     * What has been done, newest first, said the way somebody would say it.
+     *
+     * "Yesterday" rather than a date, because that is how anybody talks about the
+     * session before this one, and a date is only useful much further back.
+     */
+    private suspend fun history(today: Long): List<HistoryRow> =
+        runs.sessions().map { (run, movements) ->
+            val kept = movements.filterNot { it.skipped }
+            HistoryRow(
+                runId = run.id,
+                whenIt = whenSaid(today - run.epochDay),
+                what = plural(R.plurals.history_movements, kept.size, kept.size),
+                how = howItWent(run),
+            )
+        }
+
+    private fun whenSaid(daysAgo: Long): String = when (daysAgo) {
+        0L -> string(R.string.history_today)
+        1L -> string(R.string.history_yesterday)
+        else -> string(R.string.history_days_ago, daysAgo.toInt())
+    }
+
+    private fun howItWent(run: RunEntity): String? = when {
+        run.ending == Ending.Hurt.name -> string(R.string.history_something_hurt)
+        run.felt == Felt.Easy.id -> string(R.string.history_felt_easy)
+        run.felt == Felt.AboutRight.id -> string(R.string.history_felt_right)
+        run.felt == Felt.Hard.id -> string(R.string.history_felt_hard)
+        run.ending == Ending.EnoughForToday.name -> string(R.string.history_stopped_early)
+        else -> null
+    }
+
+    private fun today(): Long = LocalDate.now(ZoneId.systemDefault()).toEpochDay()
+
+    private fun string(@StringRes id: Int, vararg args: Any): String =
+        getApplication<Application>().getString(id, *args)
+
+    private fun plural(@PluralsRes id: Int, count: Int, vararg args: Any): String =
+        getApplication<Application>().resources.getQuantityString(id, count, *args)
+}

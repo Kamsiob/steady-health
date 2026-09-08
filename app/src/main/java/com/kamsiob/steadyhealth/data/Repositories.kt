@@ -1196,6 +1196,18 @@ class RunRepository(private val db: SteadyDatabase) {
         )
     }
 
+    /** The movements of one session, in the order they were done. */
+    suspend fun movementsOf(runId: Long): List<String> =
+        db.runs().movementsFor(runId).filterNot { it.skipped }.map { it.movementId }
+
+    /** Every session, newest first, with its movements, for the history list. */
+    suspend fun sessions(): List<Pair<RunEntity, List<RunMovementEntity>>> {
+        val movements = db.runs().allMovementsOnce().groupBy { it.runId }
+        return db.runs().allOnce()
+            .sortedByDescending { it.epochDay }
+            .map { run -> run to movements[run.id].orEmpty() }
+    }
+
     /** Everything done, in the shape the engine plans from. Skipped rows are not history. */
     suspend fun history(): List<Done> {
         val days = db.runs().allOnce().associate { it.id to it.epochDay }

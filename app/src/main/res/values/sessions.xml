@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <!--
+      The Sessions tab. MASTER_SPEC 5, from ADDENDUM-03 Part 20: today's session and
+      a way to change it, the library, and everything already done.
+    -->
+
+    <string name="sessions_today">Today</string>
+    <string name="sessions_library">Everything you can do</string>
+    <string name="sessions_library_sub">Tap any of these to read it, or start it on its own.</string>
+    <string name="sessions_history">What you have done</string>
+    <string name="sessions_history_empty">Nothing yet. The first session is on Today.</string>
+    <string name="sessions_try_this">Try this now</string>
+    <string name="sessions_again">Do this again</string>
+    <string name="sessions_log_past">Add a session you already did</string>
+    <string name="sessions_log_sub">Anything from the last week</string>
+
+    <!-- One row in the library. -->
+    <string name="library_for">For %1$s</string>
+    <string name="library_needs_chair">Needs a chair</string>
+    <string name="library_needs_step">Needs a step</string>
+    <string name="library_needs_wall">Needs a wall</string>
+    <string name="library_needs_floor">Needs the floor</string>
+    <string name="library_needs_band">Needs a band</string>
+    <string name="library_needs_weight">Needs something to hold</string>
+    <string name="library_needs_nothing">Needs nothing</string>
+    <string name="library_left_out">Left out for now</string>
+
+    <!-- One row in the history. -->
+    <plurals name="history_movements">
+        <item quantity="one">One movement</item>
+        <item quantity="other">%1$d movements</item>
+    </plurals>
+    <string name="history_today">Today</string>
+    <string name="history_yesterday">Yesterday</string>
+    <!--
+      "3 days ago". The number is a count of days and the words after it do not agree
+      with it in any language this app speaks, because the one and two cases have
+      their own strings above.
+    -->
+    <string name="history_days_ago" tools:ignore="PluralsCandidate">%1$d days ago</string>
+    <string name="history_felt_easy">Felt easy</string>
+    <string name="history_felt_right">Felt about right</string>
+    <string name="history_felt_hard">Felt hard</string>
+    <string name="history_stopped_early">Stopped early</string>
+    <string name="history_something_hurt">Something hurt</string>
+
+
+    <!--
+      Logging a session that already happened. ADDENDUM-03 Part 14: three taps, and
+      nothing anywhere treats it as worth less than one the phone watched.
+    -->
+    <string name="log_title">Add a session you already did</string>
+    <string name="log_when">When was it?</string>
+    <string name="log_what">What did you do?</string>
+    <string name="log_save">Add it</string>
+    <string name="log_done">Added.</string>
+    <string name="log_none_picked">Pick at least one movement.</string>
+
+</resources>

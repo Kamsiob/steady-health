@@ -15,6 +15,9 @@
     <string name="tab_today">Today</string>
     <string name="tab_move">Move</string>
     <string name="tab_abilities">Abilities</string>
+    <string name="tab_sessions">Sessions</string>
+    <string name="tab_progress">Progress</string>
+    <string name="tab_you">You</string>
 
     <!-- ===================== The four abilities ===================== -->
     <string name="ability_get_up">Get up</string>

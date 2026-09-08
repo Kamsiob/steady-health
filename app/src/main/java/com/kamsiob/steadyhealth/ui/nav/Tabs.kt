@@ -5,12 +5,16 @@ import androidx.annotation.StringRes
 import com.kamsiob.steadyhealth.R
 
 /**
- * The three tabs, and there is never a fourth.
+ * The four tabs, and there is never a fifth.
  *
- * MASTER_SPEC section 5 makes this a rule rather than a layout: Today, Move,
- * Abilities, a question mark and a gear on Today, and nothing else is a
- * destination. The visit summary is reached from inside Abilities for exactly
- * this reason.
+ * MASTER_SPEC section 5, from ADDENDUM-03 Part 20, replacing the earlier three.
+ * Today is what to do now; Sessions is everything you can do and everything you
+ * have done; Progress is what changed; You is your list, your settings and how
+ * the app works. Nothing else is a destination.
+ *
+ * Settings moved out from behind a gear on Today, because a tab called You is
+ * where somebody looks for their own things and a gear is where somebody looks
+ * for a switch they already know exists.
  */
 enum class Tab(
     val route: String,
@@ -18,8 +22,9 @@ enum class Tab(
     @param:DrawableRes val icon: Int,
 ) {
     Today("today", R.string.tab_today, R.drawable.ic_today),
-    Move("move", R.string.tab_move, R.drawable.ic_move),
-    Abilities("abilities", R.string.tab_abilities, R.drawable.ic_abilities),
+    Sessions("sessions", R.string.tab_sessions, R.drawable.ic_move),
+    Progress("progress", R.string.tab_progress, R.drawable.ic_abilities),
+    You("you", R.string.tab_you, R.drawable.ic_settings),
 }
 
 /**
@@ -55,4 +60,5 @@ object Route {
     const val TRY_OFFER = "try-offer"
     const val TRY_RESULT = "try-result"
     const val SESSION = "session"
+    const val LOG_PAST = "log-past"
 }
