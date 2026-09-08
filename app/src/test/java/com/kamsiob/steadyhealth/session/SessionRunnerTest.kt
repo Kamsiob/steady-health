@@ -94,10 +94,48 @@ class SessionRunnerTest {
         var runner = liveOf("heel_raises")
         val target = runner.step?.target ?: 0
         repeat(target) { runner = runner.rep() }
-        repeat(SessionRunner.STOPPED_SECONDS * 3) { runner = runner.tick() }
+        repeat(SessionRunner.STOPPED_SECONDS * 2) { runner = runner.tick() }
 
         assertWithMessage("ended a set nobody asked it to end")
             .that(runner.stage).isEqualTo(Stage.Live)
+    }
+
+    @Test
+    fun aSetWithNothingHappeningAtAllDoesNotWaitForever() {
+        var runner = liveOf("heel_raises")
+        runner = runner.rep().rep()
+        repeat(SessionRunner.STALLED_SECONDS) { runner = runner.tick() }
+
+        assertThat(runner.stage).isNotEqualTo(Stage.Live)
+        assertWithMessage("lost what was already counted")
+            .that(runner.results.single().count).isEqualTo(2)
+    }
+
+    @Test
+    fun awholeSessionRunsToTheEndWithNobodyTouchingTheScreen() {
+        // The Phase 1 gate's face-down session, as a rule rather than as a run. The
+        // only input is the clock and the accelerometer; nothing here presses
+        // anything, and the session still has to reach the end.
+        var runner = SessionRunner(plan())
+        var seconds = 0
+        while (!runner.finished && seconds < AN_HOUR) {
+            runner = runner.tick()
+            // The accelerometer counting somebody who stops when the app says the
+            // number is reached, which is what somebody doing this actually does.
+            val sensed = runner.movement?.sensedBy
+            val counting = sensed != null && sensed != Sensed.None
+            if (runner.stage == Stage.Live && counting && !runner.reachedTarget) {
+                runner = runner.rep()
+            }
+            seconds++
+        }
+
+        assertWithMessage("a session with nobody touching it never ended")
+            .that(runner.finished).isTrue()
+        assertWithMessage("it ended without recording anything")
+            .that(runner.results).isNotEmpty()
+        assertWithMessage("nothing was marked as left out when nothing was skipped")
+            .that(runner.results.none { it.skipped }).isTrue()
     }
 
     @Test
@@ -294,6 +332,7 @@ class SessionRunnerTest {
     }
 
     private companion object {
+        const val AN_HOUR = 3600
         const val FOREVER = 10_000
     }
 }

@@ -468,6 +468,13 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
         }
         if (before.stage is Stage.Rest && stage !is Stage.Rest) buzz.restOver()
 
+        // Halfway to giving up on a set nothing is happening in, said once. The set
+        // ends on its own a little later, and somebody who has put the phone down and
+        // walked off should hear why rather than find it finished.
+        if (stage is Stage.Live && after.sinceLastRep == SessionRunner.STALLED_SECONDS / 2) {
+            speech.say(string(R.string.say_still_there))
+        }
+
         // The pacing cue: "up... and down", on for the first three sessions of any
         // new movement and then off unless kept. It is the difference between
         // counting what happened and leading it.

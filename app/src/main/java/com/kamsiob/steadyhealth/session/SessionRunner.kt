@@ -225,15 +225,20 @@ data class SessionRunner(
      * number is reached and the person has stopped, because otherwise a session done
      * with the phone in a pocket has no way to end: the button that ends it is on a
      * screen nobody is looking at. More repetitions keep it going, which is the point
-     * of waiting rather than stopping on the number. A set counted by hand waits, for
-     * the same reason it always did.
+     * of waiting rather than stopping on the number.
+     *
+     * A set counted by hand still waits for the person, but not forever. After a
+     * minute and a half with nothing happening it takes what was counted and moves on,
+     * because the alternative is a session left open on a phone in a pocket.
      */
     private val setIsOver: Boolean
         get() = when {
-            !reachedTarget -> false
-            timed -> true
-            countsItself -> sinceLastRep >= STOPPED_SECONDS
-            else -> false
+            timed -> reachedTarget
+            countsItself && reachedTarget -> sinceLastRep >= STOPPED_SECONDS
+            // Nothing at all for a minute and a half. Whatever happened, the session
+            // is not going to end on its own otherwise, and a session that cannot end
+            // is worse than one that ends early with what was actually done.
+            else -> sinceLastRep >= STALLED_SECONDS
         }
 
     private fun rest(): SessionRunner = if (next == null) {
@@ -279,6 +284,9 @@ data class SessionRunner(
 
         /** Long enough without a repetition to call a counted set finished. */
         const val STOPPED_SECONDS = 8
+
+        /** Long enough with nothing happening at all to stop waiting. */
+        const val STALLED_SECONDS = 90
 
         /** How much the ask comes down when there is no easier movement to swap to. */
         const val A_THIRD = 1.0 / 3
