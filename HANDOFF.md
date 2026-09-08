@@ -155,6 +155,31 @@ summary are their own view models now, and the split works because Today, Move a
 Abilities each reload the profile when they come back into view rather than being
 told to.
 
+**A gate script of fixed coordinates and sleeps.** The first attempt at timing
+install to a finished first session tapped by coordinate every 0.9 seconds. Its
+first tap landed before the app had drawn, was swallowed, and the run carried on
+pressing whatever happened to be at those coordinates while reporting a time that
+meant nothing. `tools/drive.py` waits for the text it is aiming at and taps the
+middle of it, and fails loudly when it never appears.
+
+**Two device scripts at once.** Both drive the same phone, and one of them clears
+the app's data while the other is halfway through a session. It also makes
+`uiautomator dump` come back empty, which reads as "the screen is blank" rather
+than "something else is dumping". Kill the previous run before starting another.
+
+**`am start` straight after `am force-stop`.** The activity can land in a process
+that is still being torn down, and what comes up is a half-drawn screen: the tab
+bar, and every piece of state still at its default. A second between them is
+enough. Today now also refreshes on every resume rather than once, so a screen
+whose one load did not finish is not stuck that way.
+
+**Piping a long-running script to `tail`.** No output at all until it exits, which
+looks exactly like a hang. Write to a file and read the file.
+
+**Reading `./gradlew ... | tail -2`.** It cuts off the line that says BUILD FAILED,
+so a broken build reads as a successful one and the next `adb install` quietly
+installs the previous APK. Grep for BUILD and FAILED instead.
+
 **Holding the database in a `lazy`.** Deleting everything closes it, and every
 view model then threw "Database is closed" on its next write. It crashed on the
 first screen of setup, immediately after somebody had deleted everything. The

@@ -59,6 +59,48 @@ class SessionRunnerTest {
     }
 
     @Test
+    fun aSetThePhoneCountsEndsItselfOnceThePersonStops() {
+        var runner = liveOf("sit_to_stand")
+        val target = runner.step?.target ?: 0
+        repeat(target) { runner = runner.rep() }
+        assertThat(runner.stage).isEqualTo(Stage.Live)
+
+        repeat(SessionRunner.STOPPED_SECONDS - 1) { runner = runner.tick() }
+        assertWithMessage("ended before the person had stopped")
+            .that(runner.stage).isEqualTo(Stage.Live)
+
+        runner = runner.tick()
+        assertThat(runner.stage).isNotEqualTo(Stage.Live)
+        assertThat(runner.results.single().count).isEqualTo(target)
+    }
+
+    @Test
+    fun moreRepetitionsKeepACountedSetGoing() {
+        var runner = liveOf("sit_to_stand")
+        val target = runner.step?.target ?: 0
+        repeat(target) { runner = runner.rep() }
+
+        repeat(SessionRunner.STOPPED_SECONDS - 1) { runner = runner.tick() }
+        runner = runner.rep()
+        repeat(SessionRunner.STOPPED_SECONDS - 1) { runner = runner.tick() }
+
+        assertWithMessage("stopped somebody who was still going")
+            .that(runner.stage).isEqualTo(Stage.Live)
+        assertThat(runner.count).isEqualTo(target + 1)
+    }
+
+    @Test
+    fun aSetCountedByHandWaitsForThePerson() {
+        var runner = liveOf("heel_raises")
+        val target = runner.step?.target ?: 0
+        repeat(target) { runner = runner.rep() }
+        repeat(SessionRunner.STOPPED_SECONDS * 3) { runner = runner.tick() }
+
+        assertWithMessage("ended a set nobody asked it to end")
+            .that(runner.stage).isEqualTo(Stage.Live)
+    }
+
+    @Test
     fun theCountInIsThreeSeconds() {
         val runner = start().ready()
         assertThat(runner.stage).isEqualTo(Stage.CountIn(SessionRunner.COUNT_IN))
@@ -151,9 +193,25 @@ class SessionRunnerTest {
     }
 
     @Test
-    fun makingItEasierWithNoEasierVariantChangesNothing() {
-        val started = liveOf("sit_to_stand_high").rep()
-        assertThat(started.makeItEasier()).isEqualTo(started)
+    fun makingItEasierWithNoEasierMovementBringsTheAskDownInstead() {
+        val runner = liveOf("heel_raises")
+        val asked = runner.step?.target ?: 0
+        val eased = runner.makeItEasier()
+
+        assertWithMessage("the movement changed when there was nothing to change to")
+            .that(eased.movement?.id).isEqualTo("heel_raises")
+        assertThat(eased.step?.target).isLessThan(asked)
+        assertThat(eased.step?.target).isAtLeast(1)
+    }
+
+    @Test
+    fun makingItEasierNeverAsksForLessThanIsAlreadyDone() {
+        var runner = liveOf("heel_raises")
+        val asked = runner.step?.target ?: 0
+        repeat(asked - 1) { runner = runner.rep() }
+
+        val eased = runner.makeItEasier()
+        assertThat(eased.step?.target).isEqualTo(asked - 1)
     }
 
     @Test

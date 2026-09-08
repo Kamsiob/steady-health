@@ -61,6 +61,8 @@ data class SessionRunner(
     val easedIds: Set<String> = emptySet(),
     /** Seconds spent on the ready screen, so a session can be done face down. */
     val waited: Int = 0,
+    /** Seconds since the last repetition, for a set the phone is counting itself. */
+    val sinceLastRep: Int = 0,
 ) {
     val step: Step? get() = plan.steps.getOrNull(at)
     val movement: Movement? get() = step?.movement
@@ -100,7 +102,7 @@ data class SessionRunner(
     // --- moving through the session ------------------------------------------
 
     fun ready(): SessionRunner =
-        copy(stage = Stage.CountIn(COUNT_IN), count = 0, elapsed = 0, waited = 0)
+        copy(stage = Stage.CountIn(COUNT_IN), count = 0, elapsed = 0, waited = 0, sinceLastRep = 0)
 
     /** Skip the count in, which S6 allows between movements. */
     fun go(): SessionRunner = copy(stage = Stage.Live)
@@ -128,10 +130,8 @@ data class SessionRunner(
             }
 
             Stage.Live -> {
-                val next = copy(elapsed = elapsed + 1)
-                // A hold or a walk ends itself at its target; reps wait for the person,
-                // because somebody who can do two more should be allowed to.
-                if (next.timed && next.reachedTarget) next.endSet() else next
+                val next = copy(elapsed = elapsed + 1, sinceLastRep = sinceLastRep + 1)
+                if (next.setIsOver) next.endSet() else next
             }
 
             is Stage.Rest -> {
@@ -147,7 +147,8 @@ data class SessionRunner(
     }
 
     /** One repetition, from the camera, the motion sensor, or a tap. */
-    fun rep(): SessionRunner = if (paused || stage != Stage.Live) this else copy(count = count + 1)
+    fun rep(): SessionRunner =
+        if (paused || stage != Stage.Live) this else copy(count = count + 1, sinceLastRep = 0)
 
     fun pause(): SessionRunner = copy(paused = true)
 
@@ -165,16 +166,29 @@ data class SessionRunner(
      *
      * What was counted so far is kept, because it happened. The set continues under
      * the easier movement's name and the result is recorded against it.
+     *
+     * When there is nothing easier than this movement, the ask comes down instead.
+     * The button has to do something: a person who presses it is telling the app
+     * they are struggling, and a screen that answers by changing nothing is the app
+     * saying no.
      */
     fun makeItEasier(): SessionRunner {
         val current = movement ?: return this
-        val easier = current.easier?.let(Movements::byId) ?: return this
+        val here = step ?: return this
         val steps = plan.steps.toMutableList()
-        steps[at] = Step(easier, target = easier.startTarget, lastResult = step?.lastResult)
-        return copy(
-            plan = plan.copy(steps = steps),
-            easedIds = easedIds + easier.id,
-        )
+        val easier = current.easier?.let(Movements::byId)
+
+        if (easier != null) {
+            steps[at] = Step(easier, target = easier.startTarget, lastResult = here.lastResult)
+            return copy(plan = plan.copy(steps = steps), easedIds = easedIds + easier.id)
+        }
+
+        // Never below what they have already done, because that happened, and never
+        // below one, because nought is not a smaller ask, it is no ask.
+        val lower = maxOf(reached, (here.target * (1 - A_THIRD)).toInt(), 1)
+        if (lower >= here.target) return this
+        steps[at] = here.copy(target = lower)
+        return copy(plan = plan.copy(steps = steps), easedIds = easedIds + current.id)
     }
 
     /** "Skip this one": on to the next movement, nothing recorded for this one. */
@@ -200,6 +214,28 @@ data class SessionRunner(
     private val timed: Boolean
         get() = movement?.counted == Counted.Hold || movement?.counted == Counted.Minutes
 
+    /** True when the phone counts this one, so nobody has to press anything to end it. */
+    private val countsItself: Boolean
+        get() = movement?.sensedBy != null && movement?.sensedBy != Sensed.None
+
+    /**
+     * Whether a live set has ended on its own.
+     *
+     * A hold or a walk ends at its target. A set the phone is counting ends once the
+     * number is reached and the person has stopped, because otherwise a session done
+     * with the phone in a pocket has no way to end: the button that ends it is on a
+     * screen nobody is looking at. More repetitions keep it going, which is the point
+     * of waiting rather than stopping on the number. A set counted by hand waits, for
+     * the same reason it always did.
+     */
+    private val setIsOver: Boolean
+        get() = when {
+            !reachedTarget -> false
+            timed -> true
+            countsItself -> sinceLastRep >= STOPPED_SECONDS
+            else -> false
+        }
+
     private fun rest(): SessionRunner = if (next == null) {
         copy(stage = Stage.Done, ending = ending ?: Ending.Finished)
     } else {
@@ -211,7 +247,7 @@ data class SessionRunner(
         return if (to >= plan.steps.size) {
             copy(stage = Stage.Done, ending = ending ?: Ending.Finished)
         } else {
-            copy(at = to, stage = Stage.Ready, count = 0, elapsed = 0, waited = 0)
+            copy(at = to, stage = Stage.Ready, count = 0, elapsed = 0, waited = 0, sinceLastRep = 0)
         }
     }
 
@@ -240,6 +276,12 @@ data class SessionRunner(
 
         /** The wait on every ready screen after it. */
         const val READY_SECONDS = 10
+
+        /** Long enough without a repetition to call a counted set finished. */
+        const val STOPPED_SECONDS = 8
+
+        /** How much the ask comes down when there is no easier movement to swap to. */
+        const val A_THIRD = 1.0 / 3
         private const val SECONDS_PER_MINUTE = 60
     }
 }
