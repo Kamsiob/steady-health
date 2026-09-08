@@ -124,6 +124,18 @@
     <string name="noticed_day">Day %1$d.</string>
 
     <!--
+      What you said you want, and where you are on the way to it. ADDENDUM-03 Part 9.
+      Their sentence first, in their words, then one number of their own. The app does
+      not say how far there is to go, because it does not know and would be guessing.
+    -->
+    <string name="want_yours">You said: %1$s</string>
+    <!--
+      "Stands from a high seat: 11 last time." The number is a count and "last time"
+      agrees with nothing, so a plural would give identical items in every language.
+    -->
+    <string name="want_where" tools:ignore="PluralsCandidate">%1$s: %2$d last time.</string>
+
+    <!--
       The week. ADDENDUM-03 Part 10: a count against a number the person chose, never
       a run of days, and nothing that can be broken.
     -->

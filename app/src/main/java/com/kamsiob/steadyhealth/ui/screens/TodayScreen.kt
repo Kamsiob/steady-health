@@ -100,6 +100,12 @@ data class TodayUiState(
     /** Where the week is against the number the person chose. ADDENDUM-03 Part 10. */
     val week: String = "",
 
+    /** What they said they want, in their words. Above everything else. */
+    val want: String? = null,
+
+    /** One number of their own on the way to it, when there is one. */
+    val towards: String? = null,
+
     /** Said once, ever, when the same area has hurt twice in a month. */
     val worthAWord: String? = null,
 
@@ -152,6 +158,12 @@ fun TodayScreen(
                     modifier = Modifier.semantics { heading() },
                 )
             }
+        }
+
+        // Their own sentence first. It is the reason any of this is happening and the
+        // app should not be the only one who remembers it.
+        state.want?.let {
+            NoteBlock(text = listOfNotNull(it, state.towards).joinToString("\n"))
         }
 
         state.session?.let {

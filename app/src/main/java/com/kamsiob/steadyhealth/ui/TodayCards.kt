@@ -4,9 +4,11 @@ import android.app.Application
 import androidx.annotation.PluralsRes
 import androidx.annotation.StringRes
 import com.kamsiob.steadyhealth.R
+import com.kamsiob.steadyhealth.data.AbilityRepository
 import com.kamsiob.steadyhealth.data.ProfileRepository
 import com.kamsiob.steadyhealth.data.RunRepository
 import com.kamsiob.steadyhealth.data.SteadyDatabase
+import com.kamsiob.steadyhealth.domain.AbilityDomain
 import com.kamsiob.steadyhealth.domain.Exclusion
 import com.kamsiob.steadyhealth.domain.GettingAround
 import com.kamsiob.steadyhealth.session.Adaptation
@@ -123,6 +125,27 @@ class TodayCards(private val application: Application, private val db: SteadyDat
             week.toGo == 1 -> plural(R.plurals.week_one_more, week.done, week.done, 1, week.wanted)
             else -> plural(R.plurals.week_so_far, week.done, week.done, week.toGo, week.wanted)
         }
+    }
+
+    /**
+     * What they said they want, in their words, and one number of their own.
+     *
+     * ADDENDUM-03 Part 9's "next thing", built from what is actually known. The app
+     * does not say how far there is to go: the thresholds for that are research
+     * MASTER_SPEC 11 marks open, and a made up one would be the app inventing a
+     * finish line for somebody else's life.
+     */
+    suspend fun theNextThing(): Pair<String, String?>? {
+        val item = AbilityRepository(db).items().firstOrNull() ?: return null
+        val yours = string(R.string.want_yours, item.text)
+        val domain = AbilityDomain.entries.firstOrNull { it.id == item.domain }
+            ?: return yours to null
+        val last = runs.history()
+            .filter { Movements.byId(it.movementId)?.domain == domain }
+            .maxByOrNull { it.epochDay }
+            ?: return yours to null
+        val name = Movements.byId(last.movementId)?.name ?: return yours to null
+        return yours to string(R.string.want_where, name, last.result)
     }
 
     suspend fun noticedLines(today: Long): List<String> =

@@ -287,6 +287,7 @@ class SteadyViewModel(application: Application) : AndroidViewModel(application) 
         // saying the same sentence twice.
         val walkName = if (way.way == GettingAround.InBed) "" else nextThingName(walkStep)
         val weighsIn = way.weighsIn && profile.weighsIn()
+        val nextThing = cards.theNextThing()
 
         _today.value = TodayUiState(
             date = date.format(DateTimeFormatter.ofPattern("EEEE, MMMM d", Locale.getDefault())),
@@ -318,6 +319,8 @@ class SteadyViewModel(application: Application) : AndroidViewModel(application) 
             session = cards.sessionCard(date.toEpochDay(), way.way, exclusions),
             noticed = cards.noticedLines(date.toEpochDay()),
             week = cards.weekLine(date.toEpochDay()),
+            want = nextThing?.first,
+            towards = nextThing?.second,
             worthAWord = worthAWord(today),
             bringBack = bringBackQuestion(today),
         )
