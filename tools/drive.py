@@ -19,12 +19,18 @@ owner's phone storage.
     d.tap("Show me")
     d.tap("On my feet")
 """
+import os
 import re
 import subprocess
 import sys
 import time
 
 PACKAGE = "com.kamsiob.steadyhealth"
+
+# Which device to drive. Set STEADY_SERIAL when an emulator is up as well as the
+# phone, because a bare adb command with two devices attached fails rather than
+# picking one, and the one it would not pick is the one that matters.
+SERIAL = os.environ.get("STEADY_SERIAL")
 NODE = re.compile(r'text="([^"]*)"[^>]*?bounds="\[(\d+),(\d+)\]\[(\d+),(\d+)\]"')
 
 
@@ -38,7 +44,8 @@ class Device:
         self.timeout = timeout
 
     def _adb(self, *args, binary=False):
-        out = subprocess.run(["adb", *args], capture_output=True, timeout=40)
+        prefix = ["adb"] + (["-s", SERIAL] if SERIAL else [])
+        out = subprocess.run([*prefix, *args], capture_output=True, timeout=40)
         return out.stdout if binary else out.stdout.decode("utf-8", "replace")
 
     def screen(self):
@@ -77,6 +84,40 @@ class Device:
     def clear(self):
         """Wipe this app's own data. Never anything else on the device."""
         self._adb("shell", "pm", "clear", self.package)
+
+
+def onboard(device, reps=10, pace=0.35):
+    """Take a cleared app all the way through the first run to Today.
+
+    Used by the gate scripts that need a person who exists. The first session is
+    tapped through at machine speed on purpose: what is being measured here is not
+    how long it takes, which gate-first-run.py measures properly.
+    """
+    device.clear()
+    device.launch()
+    device.tap("Show me")
+    device.tap("On my feet")
+    device.tap("Stairs without stopping")
+    device.tap("Continue")
+    device.tap("Start")
+    device.tap("I'm ready")
+    label, ring = device.wait("of ", timeout=20)
+    for _ in range(int(label.split()[-1])):
+        device.tap_point(*ring)
+        time.sleep(pace)
+    device.tap("Done with this one")
+    device.tap("About right")
+    device.tap("Save")
+    device.tap("Yes")
+    device.tap("Done")
+    device.wait("Today's session", timeout=20)
+
+
+def back_to_today(device):
+    """Leave whatever is on screen and start again at Today."""
+    device._adb("shell", "am", "force-stop", device.package)
+    device.launch()
+    device.wait("Today's session", timeout=25)
 
 
 if __name__ == "__main__":

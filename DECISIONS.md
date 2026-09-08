@@ -970,3 +970,77 @@ Worth recording because it cost two build cycles. ktlint puts `java.`, `javax.` 
 `kotlin.` last, in that order. `kotlinx` is not `kotlin.`, and a prefix check on
 "kotlin" sorts kotlinx.coroutines after net.zetetic. A tuple of three booleans also
 sorts kotlin before java, because false sorts before true. It needs a single rank.
+
+### Phase 1b, and what was decided while building it
+
+**The first session's movement is named, not derived.** O4 has to need nothing in the
+room, be over in about two minutes, and look like something rather than like a warm
+up. A rule that picked "the shortest available movement" got one of those three
+right, so `Movements.first(way)` names one per way of getting around: heel raises on
+feet or with a walker, an overhead reach in a wheelchair, sitting up to the edge in
+bed. `SessionEngine.first` still falls back to the smallest ask if the named one is
+excluded, so nobody ever reaches a first session with nothing in it.
+
+**The chair is asked about after the first session, not before.** O5 asks it, which
+means the first session cannot assume a chair exists. That is why the named first
+movements all need nothing but the floor.
+
+**The phone counts stands and steps.** `Sensed` is a field on a movement rather than
+a heuristic: a stand lifts the phone a long way and a step lifts it a little, and
+everything else is counted by the person tapping, which is the honest answer rather
+than a sensor guessing. The listener is started and stopped from the session state
+rather than from each button, because there are eight ways out of a live set and one
+forgotten would leave the accelerometer running.
+
+**The ring is the button.** `onTap` existed in `SessionActions` and nothing called
+it, so a rep-counted movement could not be counted by hand at all. The ring is now
+the tap target, with a line under it saying so, because a separate "add one" control
+beside a circle that size is a second thing to aim at while standing up from a chair.
+
+**Two sets of adaptation sentences.** `adapt_*` says it in the present for Today's
+card; `next_*` says it in the future for the done screen. Two sets rather than one
+because "today" and "next time" are not the same sentence and a screen that says the
+wrong one reads as a bug rather than a tense.
+
+**The done screen said nothing on an easy day.** It read only the main movements to
+describe the next session, and an easy day has none, so answering "hard" appeared to
+change nothing at the exact moment the app most needs to show that it listened. It
+now falls back to the first step of whatever the plan is.
+
+**"The last two felt easy" after one session.** The done screen passed the answer
+just given as both the last and the one before it. It now reads the session before
+this one, so the rule needs two real sessions.
+
+**Weight came off Today.** MASTER_SPEC 6.1 says weight is not on Today and never has
+its own tab. The hero and the weigh-in card are gone from Today; the way in sits on
+Move until Phase 2 rebuilds that tab. Asking a question moved to Settings, because
+the help dot owns the top right corner of every screen now and two question marks on
+one screen is one too many.
+
+**The card lists the main movements only.** A six line list of every step including
+the warm up and the cool down is a list rather than a card, and nobody reads the
+sixth. The bookends are one line under them.
+
+**Screens without a help topic have no help dot.** Five places are written: Today,
+the session, Move, Abilities and Settings. A dot that opens onto nothing is worse
+than no dot, so the rest get one when their screen is rebuilt in a later phase.
+
+**Two tools that should have existed earlier.** `tools/banned-words.py` reads the
+text of every string resource and every literal in the movement library and proves
+no banned word is in user-facing copy. It found eight on its first run, all fixed.
+Four strings are exempt, each with its reason written in the script: the card whose
+whole subject is that there are no calories here, which CONTENT.md ships as written.
+`tools/tidy-imports.py` sorts imports the way ktlint wants them, which is the rule
+this project has now got wrong three times.
+
+**The talk test card is renamed.** CONTENT.md already recorded that ADDENDUM-03 adds
+"test" to the banned list and the card had to change. The title it suggested, "How
+hard should it feel?", uses "should", which is also on the list. It is now "How a
+good pace feels" and the body no longer contains the phrase. Source and substance
+unchanged.
+
+**A driver that reads the screen.** `tools/drive.py` finds what it taps by text and
+bounds from `uiautomator dump /dev/tty`, streamed rather than written to the phone's
+storage. The first attempt at the timed gate was a script of fixed coordinates and
+sleeps; its first tap landed before the app had drawn, was swallowed, and the run
+carried on pressing the wrong things while reporting a time that meant nothing.

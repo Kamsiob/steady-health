@@ -7,128 +7,109 @@ it cannot see the reasoning for, or breaking something it does not understand.
 Read this in full. Then DECISIONS.md. Then MASTER_SPEC.md and DESIGN.md. Then
 `git log`.
 
-**Last updated:** 2026-09-06, at the point the app was handed over for testing.
-Phases 0 to 5 are done, Phase 6 is most of the way, and all of it was driven on
-the Pixel 8 rather than asserted. 178 unit tests and 15 device tests, all passing;
-CI green; debug APK 41.7 MB.
+**Last updated:** 2026-09-08, during Phase 1b of the ADDENDUM-03 plan.
 
 ---
 
 ## 1. Where the work stands
 
-**The project was reset on 2026-09-06.** An earlier weight-tracking version of
-this app existed, was built to roughly Phase 3, and was deleted. The capability
-specification in this folder replaces it entirely and the old tree is not a
-starting point. The repository history was rewritten: the root commit is
-`dd4c3bd` and nothing before it is reachable. Details in DECISIONS.md under "The
-reset".
+**Read ADDENDUM-03-experience.md first.** It is the final structural overhaul and it
+supersedes every earlier phase plan, onboarding, navigation and session
+specification. It has been folded into MASTER_SPEC.md, DESIGN.md, LOGIC.md, AI.md,
+ONBOARDING.md, COMPLIANCE.md and CONTENT.md, and the merge is recorded in
+DECISIONS.md with the commit hash and every superseded decision. The phases below
+are Part 21's, not the old section 9's.
 
-**Phases 0 to 5 are done and verified on the phone. Phase 6 is most of the way.
-Phase 7 has not started.**
+**The project was reset on 2026-09-06.** An earlier weight-tracking version existed,
+was built to roughly Phase 3, and was deleted. The repository history was rewritten:
+the root commit is `dd4c3bd`. Details in DECISIONS.md under "The reset".
 
-What runs on the phone right now: setup; all four versions of the app; the daily
-three; walks with the talk test and the offer; the monthly check with the phone
-counting chair stands from its motion sensor; the four abilities with measured
-life sentences and Better, Same or Quieter; the ability and weight pages; the tag
-grid; the Sunday write-up; Ask a question; the visit summary with its validator
-and a PDF export; settings with seven working rows; reminders with the two-a-week
-ceiling; numbers-off; and export and delete.
+**A whole app to the old plan was built and tested on the Pixel between 2026-09-06
+and 2026-09-07**, phases 0 to 5 and most of 6, and a 7.5 MB release APK was
+delivered. Most of that code is still here and still works. ADDENDUM-03 then
+reorganised what the app is around: the session rather than the daily three.
 
-What is proven rather than assumed:
+### Done to the new plan
 
-- The encrypted database opens, holds a row, and the file on disk is not readable
-  as plain SQLite. Instrumented, on device.
-- Deleting leaves no database file and no Keystore key. Instrumented, on device.
-- Vico renders a line chart. Instrumented, on device.
-- Every colour pair in the palette meets its contrast threshold, and nothing in
-  the palette is red. Unit test.
-- Every shipped string passes the banned word list, the dash rule and the
-  no-shouting rule. Unit test, reading the real resource file.
+**Phase 1a is done.** The session engine, the pure state machine, the seven screens,
+audio with pacing, haptics, the warm up and the cool down, pause, the three exits,
+the pain button, and the accelerometer counting stands and steps. All of it runs on
+the phone.
 
-Driven on the Pixel 8, not asserted: setup, twice, including once immediately
-after deleting everything; a weigh-in; a check-in with tags that survive a save
-and a reopen; two qualifying walks producing the offer, accepting it, and the next
-walk reading four minutes; switching to a wheelchair and to the bed version and
-back from settings; a bed session with its three parts and "How do you feel" in
-place of the talk test; pacing mode on from the pattern question and off from its
-own screen; asking a question and reading a card; a whole monthly check including
-the thirty second measure finishing on its own; Today afterwards carrying measured
-sentences instead of the person's own words; the visit summary and its PDF through
-the share sheet; the export zip, opened and read back; delete, with an empty
-database directory afterwards; numbers off and on again; and turning a reminder on,
-including the permission prompt.
+**Phase 1b is done apart from the rest of its gate.** Onboarding is the five screens
+of Part 3, with the first session in the middle of them. The help system is the three
+layers of Part 4: a sand block per screen shown once, a question mark in the same
+place on every screen that has a topic, and hand written sheets behind it. Today
+leads with the session card and carries one noticed line.
 
-The engine is pure and has about a hundred and sixty unit tests, plus fifteen on
-the device. The ones worth knowing about:
+### The Phase 1 acceptance gate
 
-- The job 6 validator against 37 deliberately bad paragraphs, every one of which
-  it catches, and six honest ones, every one of which survives.
-- Forty-eight generated visit briefs whose template summaries all pass that same
-  validator.
-- A repetition counter that is allowed to be low and never high, across four rep
-  counts and three cadences.
-- The tag validator against a 37-sentence corpus.
-- Every route having a screen, read out of the source, because one did not.
-- The accessibility floor in the semantics tree, at normal and at twice the text
-  size.
+Run before anything past 1b, on the phone, and recorded in DECISIONS.md. Where it
+stands:
 
-**The very next concrete step:** the months path (grid 20), then import, then the
-camera counting wall push-ups. None of them is on the critical path for somebody
-testing the app; all of them are named in the specification.
+| Gate item | Result |
+| --- | --- |
+| Install to a finished first session under 90 seconds | **Pass**, 48 seconds, `tools/gate-first-run.py` |
+| The next session visibly differs after answering "hard" | **Pass**, verified on the phone |
+| No banned word in any string | **Pass**, `tools/banned-words.py` |
+| The three exits and the pain button, on the device | in progress, `tools/gate-exits.py` |
+| A whole session face down, audio only | not yet run |
+| One obvious action per screen, by screenshot | not yet run |
+| Pause across a call and a screen lock | not yet run |
+| 200% font scale and TalkBack | not yet run, and it belongs on the emulator |
+
+The exits from every point are already proved by `SessionRunnerTest`, which presses
+each of the three and the pain button from every stage of the pure machine. The
+device run is the same four things once each on the real screen.
+
+**The two settings-dependent gate items belong on an emulator.** Both 200% font
+scale and TalkBack mean changing a system setting, and the standing rule for this
+project is that nothing on the owner's phone is touched beyond installing and testing
+this one app. An AVD named `steady-gate` is created for it.
 
 ### What is uncommitted or mid-flight
 
-Nothing at the last commit. Check `git status` before assuming.
+Check `git status` before assuming. At the last commit, the gate scripts and the
+DECISIONS.md entries for Phase 1b are in; the gate results table above is not
+finished.
 
 ### What would break if somebody assumed it was finished
 
-- **Try it and see offers one variable**, when the strength set happens. The
-  other five in LOGIC.md 9b are in the enum and are not offered. Its patterns are
-  also not yet passed into the visit-summary brief, so the co-occurrence section
-  of the brief is still empty.
-- **The months path does not exist.** Grid 20. Vico is proven and unused.
-- **The model is not integrated.** No dependency, no INTERNET permission. The tag
-  grid, the Sunday note, the cards and the visit summary all run without it, and
-  that is the shipped path; the reader is an optional 3.66 GB download.
-- **Wall push-ups are counted by hand, not by the camera.** Grid 11 says the
-  camera counts full reps on the phone. MediaPipe is not integrated, the measure
-  works with a tap per repetition, and no permission is requested.
-- **Import does not exist.** Export does, and LOGIC.md section 14 asks for both.
-- **Health Connect is not integrated.**
-- **Step names and instructions are English literals in Ladders.kt**, and the
-  week writer's sentences and the measure names are too. They move to resources
-  with the translations.
+- **Most of the app is still the old plan's screens.** Move is the walk-first screen
+  and Abilities is the old grid. Phase 2 rebuilds them as the library and history,
+  and MASTER_SPEC 5 wants four tabs where there are three.
+- **The library has fifty movements, not "sixty or so".** Adding one is a table
+  entry in `Movements.kt`.
+- **Only five screens have a help topic.** A screen with no topic has no dot, which
+  is honest but incomplete. Each gets one as its screen is rebuilt.
+- **The model is not integrated.** No dependency, no INTERNET permission.
+- **MedGemma is required again** by ADDENDUM-03 Part 7, reversing the Phase 0
+  decision not to use it. Nothing is built for it and it stays behind a flag until an
+  attorney has reviewed the boundary. See BLOCKED.
+- **The camera counts nothing.** MediaPipe is not integrated.
+- **Import does not exist.** Export does.
 - **strings.xml is English only.** Four locales are declared and three are empty.
-  The switching mechanism works and the picker hides itself until there is a
-  choice; see BLOCKED in DECISIONS.md for what the translations need.
-- **The chair-stand count has never been checked against a human counting.**
-  MASTER_SPEC section 10 asks for that as a device test and it cannot be
-  automated: somebody has to stand up out of a chair ten times with the phone in
-  their pocket and compare. It is the one measurement in the app whose accuracy
-  is unverified.
+- **The movement library's copy is English literals in Kotlin**, by design until the
+  translations land in Phase 8.
+- **The chair-stand count has never been checked against a human counting.** It is
+  the one measurement in the app whose accuracy is unverified, and it now matters
+  more, because the accelerometer counts reps inside a session.
+- **Kotlin is pinned to 2.4.10 and 2.4.20 is stable.** `lintRelease` failed on the
+  upgrade and it was left alone rather than chased mid-phase.
 
 ---
 
 ## 2. The next concrete steps, in order
 
-1. **The months path**, grid 20, with the milestones renamed. Vico is proven.
-2. **Import**, to match the export that exists.
-3. **Feeding Try it and see's patterns into the visit-summary brief**, which
-   LOGIC.md 13b's co-occurrence section asks for and which is a few lines now that
-   both halves exist.
-4. **The other five experiment variables**, which are table entries.
-5. **The camera counting wall push-ups**, MediaPipe Pose, grid 11.
-6. **Health Connect.**
-7. **Phase 7**, hardening and release, plus `store-assets/` and `LAUNCH.md`.
-
-The reader itself can be wired at any point: its validator, its fixtures and its
-fallbacks are all built, and every feature it touches already works without it. It
-is deliberately not on the critical path.
-
-**Ask the owner about the translations before doing anything else on them.** They
-are on the BLOCKED list with the reasoning.
-
----
+1. **Finish the Phase 1 gate.** The four items still marked not run, two of them on
+   the emulator, and the results written into DECISIONS.md.
+2. **Phase 2**: Today in full including motivation, the week and consistency, the
+   library and history, correction and phone-free sessions, the daily prompt and the
+   widget. This is where the four tabs arrive.
+3. **Phase 3**: the camera and the therapist's plan, with its gate.
+4. **Phase 4**: report and letter reading with MedGemma, behind the flag.
+5. **Phases 5 to 8** as written in ADDENDUM-03 Part 21.
+6. **TEST-ME.md**, Part 22, which is the last thing produced.
 
 ## 3. Everything tried that did not work
 
@@ -229,10 +210,11 @@ green-text `#287855`, and the primary button is filled orange-d.
 
 ## 5. Remaining work, by phase
 
-What is left of MASTER_SPEC.md section 9 is the tail of Phase 5, some of Phase 6,
-and all of Phase 7. The screens are numbered 1 to 22 in
-`design/screen-grid-v2-capability.html`. Of those, 14, 15 and 20 are not built,
-and 11 is built with the person tapping rather than the camera counting.
+The phases are ADDENDUM-03 Part 21's, repeated in MASTER_SPEC 9. Phase 1a and most
+of 1b are done; Phases 2 to 8 are not started. The old screen grid in
+`design/screen-grid-v2-capability.html` is still a useful reference for the screens
+that carry over, but it is not the plan any more: the addendum's own screen
+descriptions win where they disagree.
 
 Not yet created, and required by the template before release: `store-assets/` and
 `LAUNCH.md`.
@@ -262,6 +244,12 @@ All in DECISIONS.md, with reasoning:
 
 The BLOCKED list is at the end of DECISIONS.md and is the authoritative version.
 In short: publishing PRIVACY.md at kamsiob.com, the Play Console manual steps,
-reviewing the twelve cards in CONTENT.md, and the two research items MASTER_SPEC
-section 11 marks open (Springer per-cell norms and the Cooper category bands),
-both of which ship without the unverified part until somebody checks a source.
+reviewing the cards in CONTENT.md, the two research items MASTER_SPEC 11 marks open
+(Springer per-cell norms and the Cooper category bands), the three translations, and
+the one ADDENDUM-03 added: **a health tech attorney has to review the HAI-DEF
+Clinical Use boundary** before the report reading of Part 7 can be turned on. Phase 4
+builds it behind a flag that stays off until that clears.
+
+One thing needs the owner rather than a lawyer: **standing up out of a chair ten
+times with the phone in a pocket and comparing the count.** The accelerometer now
+counts reps inside a session and nobody has checked it against a person.
