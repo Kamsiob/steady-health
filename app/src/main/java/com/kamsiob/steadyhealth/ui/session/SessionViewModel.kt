@@ -6,10 +6,15 @@ import androidx.annotation.StringRes
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.kamsiob.steadyhealth.R
+import com.kamsiob.steadyhealth.data.ProfileRepository
+import com.kamsiob.steadyhealth.data.RunRepository
+import com.kamsiob.steadyhealth.data.SteadyDatabase
 import com.kamsiob.steadyhealth.session.Area
 import com.kamsiob.steadyhealth.session.Counted
 import com.kamsiob.steadyhealth.session.Ending
 import com.kamsiob.steadyhealth.session.Felt
+import com.kamsiob.steadyhealth.session.SessionEngine
+import com.kamsiob.steadyhealth.session.SessionInputs
 import com.kamsiob.steadyhealth.session.SessionPlan
 import com.kamsiob.steadyhealth.session.SessionRunner
 import com.kamsiob.steadyhealth.session.Speech
@@ -21,6 +26,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.ZoneId
 
 /**
  * Running one session.
@@ -37,6 +44,9 @@ import kotlinx.coroutines.launch
 class SessionViewModel(application: Application) : AndroidViewModel(application) {
 
     private val speech = Speech(application)
+    private val db get() = SteadyDatabase.get(getApplication())
+    private val runs get() = RunRepository(db)
+    private val profile get() = ProfileRepository(db)
 
     private val _runner = MutableStateFlow<SessionRunner?>(null)
     val runner: StateFlow<SessionRunner?> = _runner.asStateFlow()
@@ -54,11 +64,26 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
 
     /** When the session was paused, so an hour away can be noticed. */
     private var pausedAt = 0L
+    private var startedAt = 0L
+    private var saved = false
 
     var speaking: Boolean = true
         private set
 
+    /**
+     * Plan today's session from what is actually stored, and run it.
+     *
+     * The one entry point, so nothing anywhere else has to know how a session is put
+     * together.
+     */
+    fun startTodays() = viewModelScope.launch {
+        val inputs = inputsFor(profile, runs)
+        start(SessionEngine.plan(inputs), first = runs.history().isEmpty())
+    }
+
+    /** Run a session somebody already has, for the offer card and the extras. */
     fun start(plan: SessionPlan, first: Boolean = false) {
+        startedAt = System.currentTimeMillis()
         _runner.value = SessionRunner(plan)
         _done.value = DoneUiState(first = first)
         _askingWhereItHurts.value = false
@@ -174,13 +199,80 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
         finish()
     }
 
-    fun hurtsIn(area: Area?) {
-        area?.let { _runner.value = _runner.value?.hurtsIn(it) }
+    fun hurtsIn(area: Area?) = viewModelScope.launch {
         _askingWhereItHurts.value = false
+        val chosen = area ?: return@launch
+        _runner.value = _runner.value?.hurtsIn(chosen)
+        val today = LocalDate.now(ZoneId.systemDefault()).toEpochDay()
+        runs.reportSore(chosen, today)
     }
 
-    fun setFelt(felt: Felt) {
+    /**
+     * The one question, and what it changes.
+     *
+     * The next session is re-planned here and shown on the same screen, because the
+     * whole point of asking is that the answer changes something and the person
+     * should be able to see that it did.
+     */
+    fun setFelt(felt: Felt) = viewModelScope.launch {
         _done.value = _done.value.copy(felt = felt)
+        runs.saveFelt(felt)
+        _done.value = _done.value.copy(nextTime = nextTimeLine(felt))
+    }
+
+    private suspend fun nextTimeLine(felt: Felt): String {
+        val next = SessionEngine.plan(
+            inputsFor(profile, runs).copy(lastFelt = felt, feltBefore = runs.lastFelt()),
+        )
+        val first = next.main.firstOrNull() ?: return ""
+        return string(R.string.done_next_line, first.target, first.movement.name.lowercase())
+    }
+
+    /**
+     * Everything the engine needs, read back from storage.
+     *
+     * One place, so the session somebody is offered and the session the done screen
+     * predicts are planned from exactly the same inputs.
+     */
+    private suspend fun inputsFor(
+        profile: ProfileRepository,
+        runs: RunRepository,
+    ): SessionInputs {
+        val today = LocalDate.now(ZoneId.systemDefault()).toEpochDay()
+        return SessionInputs(
+            way = profile.gettingAround(),
+            exclusions = profile.exclusions(),
+            kit = profile.kit(),
+            sore = runs.soreAreas(today),
+            history = runs.history(),
+            lastFelt = runs.lastFelt(),
+            feltBefore = runs.feltBefore(),
+            today = today,
+            lastSessionDay = runs.lastSessionDay(),
+            strengthRunLength = runs.strengthRunLength(),
+        )
+    }
+
+    /**
+     * Keep what was done, once, whatever ended the session.
+     *
+     * Guarded rather than trusted: the done screen can be reached by four different
+     * paths and none of them should write a second row.
+     */
+    private fun save(runner: SessionRunner) = viewModelScope.launch {
+        if (saved) return@launch
+        saved = true
+        val today = LocalDate.now(ZoneId.systemDefault()).toEpochDay()
+        runs.save(
+            epochDay = today,
+            startedAt = startedAt,
+            endedAt = System.currentTimeMillis(),
+            ending = runner.ending?.name.orEmpty(),
+            felt = null,
+            small = runner.plan.small,
+            results = runner.results,
+        )
+        runner.hurtArea?.let { runs.reportSore(it, today) }
     }
 
     fun toggleSpeaker() {
@@ -246,6 +338,7 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
         clock?.cancel()
         clock = null
         val runner = _runner.value ?: return
+        save(runner)
         if (runner.ending != Ending.Hurt) speech.say(string(R.string.say_session_done))
         speech.stop()
 

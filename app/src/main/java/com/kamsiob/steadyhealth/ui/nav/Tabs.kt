@@ -54,4 +54,5 @@ object Route {
     const val REMINDERS = "reminders"
     const val TRY_OFFER = "try-offer"
     const val TRY_RESULT = "try-result"
+    const val SESSION = "session"
 }

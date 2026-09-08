@@ -19,8 +19,11 @@ import com.kamsiob.steadyhealth.data.entity.NoticeEntity
 import com.kamsiob.steadyhealth.data.entity.PersonSynonymEntity
 import com.kamsiob.steadyhealth.data.entity.ReadinessEntity
 import com.kamsiob.steadyhealth.data.entity.ReminderSentEntity
+import com.kamsiob.steadyhealth.data.entity.RunEntity
+import com.kamsiob.steadyhealth.data.entity.RunMovementEntity
 import com.kamsiob.steadyhealth.data.entity.SessionEntity
 import com.kamsiob.steadyhealth.data.entity.SettingEntity
+import com.kamsiob.steadyhealth.data.entity.SoreAreaEntity
 import com.kamsiob.steadyhealth.data.entity.StepNameEntity
 import com.kamsiob.steadyhealth.data.entity.TrackedItemEntity
 import com.kamsiob.steadyhealth.data.entity.WeeklyNoteEntity
@@ -67,6 +70,13 @@ import com.kamsiob.steadyhealth.engine.VisitSummaryEngine
 import com.kamsiob.steadyhealth.engine.WeekOfDays
 import com.kamsiob.steadyhealth.engine.WeightEngine
 import com.kamsiob.steadyhealth.export.Sheet
+import com.kamsiob.steadyhealth.session.Area
+import com.kamsiob.steadyhealth.session.Done
+import com.kamsiob.steadyhealth.session.Felt
+import com.kamsiob.steadyhealth.session.Kit
+import com.kamsiob.steadyhealth.session.Movements
+import com.kamsiob.steadyhealth.session.Piece
+import com.kamsiob.steadyhealth.session.Result
 import java.time.LocalDate
 
 /**
@@ -426,6 +436,21 @@ class ProfileRepository(private val db: SteadyDatabase) {
 
     suspend fun setStrengthInTheEvening(value: Boolean) = put(EVENING_SET, value.toString())
 
+    /**
+     * What is in the room. ADDENDUM-03 Part 15.
+     *
+     * Nothing needing equipment somebody does not have is ever suggested, so the
+     * default is the three things almost every home has and the rest is opt-in.
+     */
+    suspend fun kit(): Set<Kit> {
+        val stored = get(KIT)?.split(",")?.mapNotNull { id ->
+            Kit.entries.firstOrNull { it.id == id.trim() }
+        }
+        return (stored?.toSet() ?: DEFAULT_KIT) + Kit.None
+    }
+
+    suspend fun setKit(value: Set<Kit>) = put(KIT, value.joinToString(",") { it.id })
+
     suspend fun showNumbers(): Boolean = get(SHOW_NUMBERS)?.toBoolean() ?: true
 
     suspend fun setShowNumbers(value: Boolean) = put(SHOW_NUMBERS, value.toString())
@@ -473,6 +498,10 @@ class ProfileRepository(private val db: SteadyDatabase) {
         const val PEM = "pem"
         const val ANCHOR = "anchor"
         const val SHOW_NUMBERS = "show_numbers"
+        const val KIT = "kit"
+
+        /** A chair and a wall. Nearly every home has both, and nothing else is assumed. */
+        val DEFAULT_KIT = setOf(Kit.None, Kit.Chair, Kit.Wall)
         const val TRY_IT = "try_it_and_see"
         const val EVENING_SET = "strength_in_the_evening"
         const val WEIGHS_IN = "weighs_in"
@@ -886,6 +915,9 @@ class DataRepository(private val db: SteadyDatabase) {
         db.abilities().deleteAllRatings()
         db.checks().deleteAllChecks()
         db.checks().deleteAllMeasures()
+        db.runs().deleteAllRuns()
+        db.runs().deleteAllRunMovements()
+        db.runs().deleteAllSore()
         db.notes().deleteAllNotes()
         db.notes().deleteAllPatterns()
         db.notices().deleteAll()
@@ -1045,5 +1077,151 @@ class ExperimentRepository(private val db: SteadyDatabase) {
         const val ARM_DAYS = Experiment.WEEKS_PER_ARM * Experiment.DAYS_IN_WEEK
         const val DAYS_IN_WEEK = 7
         const val DECLINED = "try_declined_until"
+    }
+}
+
+/**
+ * Sessions: what was planned, what was done, and what hurts.
+ *
+ * The three things the session engine needs back from storage, in the shapes it
+ * already speaks: [Done] rows for its history, and the areas somebody said hurt with
+ * their seven days still running.
+ */
+class RunRepository(private val db: SteadyDatabase) {
+
+    /** Save one session, however it ended. Nothing here can lose what was done. */
+    suspend fun save(
+        epochDay: Long,
+        startedAt: Long,
+        endedAt: Long,
+        ending: String,
+        felt: Felt?,
+        small: Boolean,
+        results: List<Result>,
+    ): Long {
+        val runId = db.runs().upsertRun(
+            RunEntity(
+                epochDay = epochDay,
+                startedAt = startedAt,
+                endedAt = endedAt,
+                ending = ending,
+                felt = felt?.id,
+                small = small,
+            ),
+        )
+        results.forEach { result ->
+            db.runs().upsertMovement(
+                RunMovementEntity(
+                    runId = runId,
+                    movementId = result.movementId,
+                    target = result.target,
+                    count = result.count,
+                    selfReported = result.selfReported,
+                    madeEasier = result.madeEasier,
+                    skipped = result.skipped,
+                ),
+            )
+        }
+        return runId
+    }
+
+    /** Everything done, in the shape the engine plans from. Skipped rows are not history. */
+    suspend fun history(): List<Done> {
+        val days = db.runs().allOnce().associate { it.id to it.epochDay }
+        return db.runs().allMovementsOnce()
+            .filterNot { it.skipped }
+            .mapNotNull { row ->
+                days[row.runId]?.let {
+                    Done(
+                        movementId = row.movementId,
+                        epochDay = it,
+                        result = row.count,
+                        target = row.target,
+                        selfReported = row.selfReported,
+                    )
+                }
+            }
+    }
+
+    /** The answer to the one question, written after the session row exists. */
+    suspend fun saveFelt(felt: Felt) {
+        val latest = db.runs().latest() ?: return
+        db.runs().upsertRun(latest.copy(felt = felt.id))
+    }
+
+    suspend fun lastFelt(): Felt? = db.runs().latest()?.felt?.let { id ->
+        Felt.entries.firstOrNull { it.id == id }
+    }
+
+    /** The one before last, for the two-easy rule. */
+    suspend fun feltBefore(): Felt? = db.runs().allOnce()
+        .dropLast(1)
+        .lastOrNull()
+        ?.felt
+        ?.let { id -> Felt.entries.firstOrNull { it.id == id } }
+
+    suspend fun lastSessionDay(): Long? = db.runs().latest()?.epochDay
+
+    suspend fun daysThisWeek(mondayEpochDay: Long): Int =
+        db.runs().between(mondayEpochDay, mondayEpochDay + DAYS_IN_WEEK - 1)
+            .map { it.epochDay }
+            .distinct()
+            .size
+
+    /**
+     * How many strength sessions in a row, for the easy-day rule.
+     *
+     * A session counts as strength when at least one of its movements was one, which
+     * is every ordinary session and no easy day.
+     */
+    suspend fun strengthRunLength(): Int {
+        val byRun = db.runs().allMovementsOnce().groupBy { it.runId }
+        var run = 0
+        db.runs().allOnce().reversed().forEach { session ->
+            val strength = byRun[session.id].orEmpty().any { row ->
+                Movements.byId(row.movementId)?.piece == Piece.Main
+            }
+            if (!strength) return run
+            run += 1
+        }
+        return run
+    }
+
+    /** Areas still inside their seven days. ADDENDUM-03 Part 2. */
+    suspend fun soreAreas(today: Long): Set<Area> = db.runs().soreOnce()
+        .filter { today - it.reportedOnDay < SORE_DAYS }
+        .mapNotNull { row -> Area.entries.firstOrNull { it.id == row.area } }
+        .toSet()
+
+    /** An area whose week is up, so the app can ask once whether to bring it back. */
+    suspend fun soreAreaToAskAbout(today: Long): Area? = db.runs().soreOnce()
+        .firstOrNull { today - it.reportedOnDay >= SORE_DAYS }
+        ?.let { row -> Area.entries.firstOrNull { it.id == row.area } }
+
+    suspend fun reportSore(area: Area, today: Long) {
+        db.runs().upsertSore(SoreAreaEntity(area = area.id, reportedOnDay = today))
+    }
+
+    suspend fun clearSore(area: Area, today: Long) {
+        db.runs().soreOnce()
+            .filter { it.area == area.id }
+            .forEach { db.runs().upsertSore(it.copy(clearedOnDay = today)) }
+    }
+
+    /**
+     * True when the same area has been reported twice inside a month.
+     *
+     * The one line the app says about it, once, and never again: "Worth a word with
+     * your doctor about that shoulder." No interpretation and no advice.
+     */
+    suspend fun reportedTwiceInAMonth(area: Area, today: Long): Boolean =
+        db.runs().allSoreOnce()
+            .filter { it.area == area.id && today - it.reportedOnDay <= A_MONTH }
+            .size >= 2
+
+    private companion object {
+        const val DAYS_IN_WEEK = 7
+        const val SORE_DAYS = 7
+        const val A_MONTH = 30
     }
 }

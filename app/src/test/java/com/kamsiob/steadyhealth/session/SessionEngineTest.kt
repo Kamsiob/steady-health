@@ -235,6 +235,34 @@ class SessionEngineTest {
         }
     }
 
+    @Test
+    fun stoppingOneSetEarlyDoesNotDragTheNextTargetDownToIt() {
+        // Somebody who stopped a thirty second warm up after five seconds because the
+        // doorbell went should not be asked for five next time, and then four.
+        val movement = chairStands()
+        val history = listOf(Done(movement.id, 10, result = 9, target = 10))
+        assertThat(SessionEngine.target(movement, onFeet().copy(history = history)))
+            .isEqualTo(10)
+    }
+
+    @Test
+    fun fallingAWayShortBringsTheAskDownToMeetIt() {
+        // A target nobody can reach is not a target, it is a reminder of what they
+        // cannot do.
+        val movement = chairStands()
+        val history = listOf(Done(movement.id, 10, result = 2, target = 10))
+        assertThat(SessionEngine.target(movement, onFeet().copy(history = history)))
+            .isEqualTo(2)
+    }
+
+    @Test
+    fun theTargetNeverFallsBelowOne() {
+        val movement = chairStands()
+        val history = listOf(Done(movement.id, 10, result = 0, target = 10))
+        assertThat(SessionEngine.target(movement, onFeet().copy(history = history)))
+            .isAtLeast(1)
+    }
+
     private fun onFeet() = SessionInputs(
         way = GettingAround.OnFeet,
         kit = setOf(Kit.None, Kit.Chair, Kit.Wall),

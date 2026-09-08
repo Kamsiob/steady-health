@@ -24,6 +24,7 @@ import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.kamsiob.steadyhealth.domain.Exclusion
 import com.kamsiob.steadyhealth.remind.Reminding
@@ -59,6 +60,8 @@ import com.kamsiob.steadyhealth.ui.screens.WalkDoneScreen
 import com.kamsiob.steadyhealth.ui.screens.WalkingScreen
 import com.kamsiob.steadyhealth.ui.screens.WeighInScreen
 import com.kamsiob.steadyhealth.ui.screens.WeightPageScreen
+import com.kamsiob.steadyhealth.ui.session.SessionHost
+import com.kamsiob.steadyhealth.ui.session.SessionViewModel
 import com.kamsiob.steadyhealth.ui.theme.SteadyPalette
 import kotlinx.coroutines.delay
 
@@ -78,6 +81,7 @@ fun SteadyApp() {
     val abilityViewModel: AbilityViewModel = viewModel()
     val summaryViewModel: SummaryViewModel = viewModel()
     val tryViewModel: TryViewModel = viewModel()
+    val sessionViewModel: SessionViewModel = viewModel()
     val onboarded by viewModel.onboardingComplete.collectAsStateWithLifecycle()
 
     when (onboarded) {
@@ -91,6 +95,7 @@ fun SteadyApp() {
             abilityViewModel,
             summaryViewModel,
             tryViewModel,
+            sessionViewModel,
         )
     }
 }
@@ -104,6 +109,7 @@ private fun Tabs(
     abilityViewModel: AbilityViewModel,
     summaryViewModel: SummaryViewModel,
     tryViewModel: TryViewModel,
+    sessionViewModel: SessionViewModel,
 ) {
     val navController = rememberNavController()
     var tab by rememberSaveable { mutableStateOf(Tab.Today) }
@@ -127,6 +133,7 @@ private fun Tabs(
                             abilityViewModel = abilityViewModel,
                             summaryViewModel = summaryViewModel,
                             tryViewModel = tryViewModel,
+                            sessionViewModel = sessionViewModel,
                             navController = navController,
                         )
                     }
@@ -140,6 +147,7 @@ private fun Tabs(
                     abilityRoutes(abilityViewModel, navController, back)
                     summaryRoutes(summaryViewModel, back)
                     tryRoutes(tryViewModel, back)
+                    sessionRoutes(sessionViewModel, back)
                     settingsRoutes(
                         viewModel = settingsViewModel,
                         navController = navController,
@@ -169,14 +177,20 @@ private fun Tabs(
                 }
             }
 
-            SteadyTabBar(
-                selected = tab,
-                onSelect = {
-                    tab = it
-                    navController.popBackStack(Route.TABS, inclusive = false)
-                },
-                modifier = Modifier.navigationBarsPadding(),
-            )
+            // Not during a session. ADDENDUM-03 Part 1 makes the session screens
+            // full screen, and a tab bar under a live set is a fourth way out that
+            // is not one of the three exits and does not save what was done.
+            val entry by navController.currentBackStackEntryAsState()
+            if (entry?.destination?.route != Route.SESSION) {
+                SteadyTabBar(
+                    selected = tab,
+                    onSelect = {
+                        tab = it
+                        navController.popBackStack(Route.TABS, inclusive = false)
+                    },
+                    modifier = Modifier.navigationBarsPadding(),
+                )
+            }
         }
 
         // The offer covers everything while it is up, because it is a thing the app
@@ -316,6 +330,7 @@ private fun TabBody(
     abilityViewModel: AbilityViewModel,
     summaryViewModel: SummaryViewModel,
     tryViewModel: TryViewModel,
+    sessionViewModel: SessionViewModel,
     navController: NavHostController,
 ) {
     when (tab) {
@@ -355,8 +370,10 @@ private fun TabBody(
             MoveScreen(
                 state = state,
                 onGo = {
-                    viewModel.startWalk()
-                    navController.navigate(Route.WALKING)
+                    // Move's Go runs the new session while Today is being rebuilt,
+                    // so Phase 1a is on the device rather than only in tests.
+                    sessionViewModel.startTodays()
+                    navController.navigate(Route.SESSION)
                 },
             )
         }
@@ -390,6 +407,18 @@ private fun TabBody(
                 },
             )
         }
+    }
+}
+
+/**
+ * The session. One route for all seven of its screens.
+ *
+ * No back button anywhere inside it: the exits are how a session ends, and a back
+ * gesture in the middle of a set should not drop somebody onto the screen before.
+ */
+private fun NavGraphBuilder.sessionRoutes(viewModel: SessionViewModel, back: () -> Unit) {
+    composable(Route.SESSION) {
+        SessionHost(viewModel = viewModel, onFinished = back)
     }
 }
 

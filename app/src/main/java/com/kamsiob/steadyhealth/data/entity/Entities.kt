@@ -299,3 +299,54 @@ data class ReadinessEntity(
     val answeredYes: Boolean,
     val answeredAt: Long,
 )
+
+/**
+ * One session, as it was actually run. ADDENDUM-03 Part 1.
+ *
+ * Separate from the older `sessions` table, which recorded a walk on a ladder. That
+ * table is still read by the measures and the summary, so both exist rather than one
+ * being bent into the other's shape.
+ */
+@Entity(tableName = "runs", indices = [Index("epochDay")])
+data class RunEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val epochDay: Long,
+    val startedAt: Long,
+    val endedAt: Long,
+    /** finished, enough_for_today, or hurt. Never "cancelled" and never "incomplete". */
+    val ending: String,
+    /** easy, about_right, or hard. Null when the person did not answer. */
+    val felt: String?,
+    /** True for the ninety second version, which counts the same. */
+    val small: Boolean = false,
+    /** True when a therapist's plan was what ran. */
+    val fromPlan: Boolean = false,
+)
+
+/** One movement inside one session. */
+@Entity(tableName = "run_movements", indices = [Index("runId"), Index("movementId")])
+data class RunMovementEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val runId: Long,
+    val movementId: String,
+    val target: Int,
+    val count: Int,
+    val selfReported: Boolean,
+    val madeEasier: Boolean,
+    val skipped: Boolean,
+)
+
+/**
+ * An area somebody said hurts, and the week it is left out for.
+ *
+ * Kept as rows rather than a setting because the same area can be reported more than
+ * once, and the rule about a second report inside a month needs the dates.
+ */
+@Entity(tableName = "sore_areas", indices = [Index("reportedOnDay")])
+data class SoreAreaEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val area: String,
+    val reportedOnDay: Long,
+    /** Set when the person answered the "bring them back?" question. */
+    val clearedOnDay: Long? = null,
+)

@@ -1,6 +1,7 @@
 package com.kamsiob.steadyhealth.data
 
 import android.content.Context
+import androidx.room3.AutoMigration
 import androidx.room3.Database
 import androidx.room3.Room
 import androidx.room3.RoomDatabase
@@ -13,6 +14,7 @@ import com.kamsiob.steadyhealth.data.dao.NotesDao
 import com.kamsiob.steadyhealth.data.dao.NoticeDao
 import com.kamsiob.steadyhealth.data.dao.ProfileDao
 import com.kamsiob.steadyhealth.data.dao.ReminderDao
+import com.kamsiob.steadyhealth.data.dao.RunDao
 import com.kamsiob.steadyhealth.data.dao.SessionDao
 import com.kamsiob.steadyhealth.data.dao.SynonymDao
 import com.kamsiob.steadyhealth.data.dao.WeighInDao
@@ -31,8 +33,11 @@ import com.kamsiob.steadyhealth.data.entity.PersonSynonymEntity
 import com.kamsiob.steadyhealth.data.entity.PhotoEntity
 import com.kamsiob.steadyhealth.data.entity.ReadinessEntity
 import com.kamsiob.steadyhealth.data.entity.ReminderSentEntity
+import com.kamsiob.steadyhealth.data.entity.RunEntity
+import com.kamsiob.steadyhealth.data.entity.RunMovementEntity
 import com.kamsiob.steadyhealth.data.entity.SessionEntity
 import com.kamsiob.steadyhealth.data.entity.SettingEntity
+import com.kamsiob.steadyhealth.data.entity.SoreAreaEntity
 import com.kamsiob.steadyhealth.data.entity.StepNameEntity
 import com.kamsiob.steadyhealth.data.entity.TrackedItemEntity
 import com.kamsiob.steadyhealth.data.entity.VisitSummaryEntity
@@ -71,6 +76,9 @@ import net.zetetic.database.sqlcipher.driver.SQLCipherDriver
         BloodPressureEntity::class,
         PhotoEntity::class,
         WeeklyNoteEntity::class,
+        RunEntity::class,
+        RunMovementEntity::class,
+        SoreAreaEntity::class,
         PatternEntity::class,
         ExperimentEntity::class,
         VisitSummaryEntity::class,
@@ -80,8 +88,11 @@ import net.zetetic.database.sqlcipher.driver.SQLCipherDriver
         ExclusionEntity::class,
         ReadinessEntity::class,
     ],
-    version = 1,
+    // Version 2 adds the three tables ADDENDUM-03's session needs. Purely additive,
+    // so the migration is generated rather than written, and nobody's rows move.
+    version = 2,
     exportSchema = true,
+    autoMigrations = [AutoMigration(from = 1, to = 2)],
 )
 abstract class SteadyDatabase : RoomDatabase() {
 
@@ -94,6 +105,8 @@ abstract class SteadyDatabase : RoomDatabase() {
     abstract fun checks(): CheckDao
     abstract fun body(): BodyDao
     abstract fun notes(): NotesDao
+
+    abstract fun runs(): RunDao
     abstract fun notices(): NoticeDao
     abstract fun reminders(): ReminderDao
     abstract fun profile(): ProfileDao

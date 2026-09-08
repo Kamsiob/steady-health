@@ -55,6 +55,7 @@
     <string name="felt_about_right">About right</string>
     <string name="felt_hard">Hard</string>
     <string name="done_next_time">Next time</string>
+    <string name="done_next_line">%1$d %2$s.</string>
     <string name="done_save">Save</string>
     <string name="done_change_next">Change next time</string>
     <string name="done_against_last">%1$d, from %2$d</string>

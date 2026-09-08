@@ -112,6 +112,9 @@ object SessionEngine {
     /** How many main movements an ordinary session has. */
     const val MAIN_MOVEMENTS = 3
 
+    /** Managing less than this share of the ask brings the ask down to meet it. */
+    const val WELL_SHORT = 0.6
+
     fun plan(inputs: SessionInputs): SessionPlan {
         val available = Movements.available(inputs.way, inputs.exclusions, inputs.kit, inputs.sore)
         if (available.none { it.piece == Piece.Main }) {
@@ -221,21 +224,39 @@ object SessionEngine {
         return if (harder in allowed) harder else movement
     }
 
-    /** The target for one movement, from what happened last time and how it felt. */
+    /**
+     * The target for one movement.
+     *
+     * It moves from what was asked last time, not from what was managed. Those are
+     * different numbers and the difference matters: somebody who stopped a
+     * thirty-second warm up after five seconds because the doorbell went should not
+     * be asked for five seconds next time, and then four, and then three.
+     *
+     * The exception is falling a long way short. If what somebody actually managed
+     * was well under what was asked, the ask comes down to meet it, because a target
+     * nobody can reach is not a target, it is a reminder of what they cannot do.
+     */
     fun target(movement: Movement, inputs: SessionInputs): Int {
         val last = inputs.history.filter { it.movementId == movement.id }.maxByOrNull { it.epochDay }
-        val base = last?.result ?: movement.startTarget
+        val asked = last?.target ?: movement.startTarget
+        val managed = last?.result
 
         val adjusted = when {
-            inputs.rampingAfterUnwell -> (base * (1 - LIGHTER * 2)).roundToInt()
-            inputs.lastFelt == Felt.Hard -> (base * (1 - LIGHTER)).roundToInt()
-            inputs.lastFelt == Felt.Easy && inputs.feltBefore == Felt.Easy -> base + 1
-            daysAway(inputs) >= SHORTER_AFTER_DAYS -> (base * (1 - LIGHTER)).roundToInt()
-            else -> base
+            inputs.rampingAfterUnwell -> (asked * (1 - LIGHTER * 2)).roundToInt()
+            inputs.lastFelt == Felt.Hard -> (asked * (1 - LIGHTER)).roundToInt()
+            inputs.lastFelt == Felt.Easy && inputs.feltBefore == Felt.Easy -> asked + 1
+            daysAway(inputs) >= SHORTER_AFTER_DAYS -> (asked * (1 - LIGHTER)).roundToInt()
+            else -> asked
+        }
+
+        val metReality = if (managed != null && managed < asked * WELL_SHORT) {
+            minOf(adjusted, managed.coerceAtLeast(1))
+        } else {
+            adjusted
         }
 
         val ceiling = movement.ceiling ?: Int.MAX_VALUE
-        return adjusted.coerceIn(1, ceiling)
+        return metReality.coerceIn(1, ceiling)
     }
 
     private fun step(movement: Movement, inputs: SessionInputs) = Step(

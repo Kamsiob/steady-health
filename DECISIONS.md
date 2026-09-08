@@ -913,3 +913,60 @@ Three of these are already in shipped strings and have to change: the card "What
 talk test is" becomes "How hard should it feel?", the talk-test question keeps its
 wording but loses the name, and the monthly check's "Skip this one" is unaffected. The
 voice test is the thing that will find the rest, and it reads the real resource files.
+
+## Addendum 03, Phase 1a
+
+### Targets move from the last ask, not the last result
+
+Found by running two sessions on the phone rather than by reading the rule. The
+first version took the last result as the base, so a thirty-second warm up that
+somebody stopped after five seconds asked for five next time, and would have asked
+for four after that. A doom loop, from one interrupted set.
+
+Targets now move from what was asked, which is what the adaptation rules in
+ADDENDUM-03 Part 1 actually describe: "targets drop about ten percent" is a
+proportion of the ask. The exception is falling a long way short, under sixty
+percent, where the ask comes down to meet what was managed, because a target nobody
+can reach is not a target, it is a reminder of what they cannot do.
+
+### The session is one route, not seven
+
+The seven screens are one destination whose content changes. A back gesture in the
+middle of a set should not drop somebody onto the count-in screen of the movement
+before, and a session is one thing that is happening rather than a place somebody
+navigated to. The exits are how a session ends, and there is no back button on any
+of the seven.
+
+The tab bar is hidden during a session for the same reason: it is a fourth way out
+that is not one of the three exits and does not save what was done.
+
+### The state machine holds no Android types
+
+`SessionRunner` has no context, no timer and no voice; the view model drives it with
+`tick` and the screens read it. That split is what lets a test walk every state a
+session passes through and press each of the three exits and the pain button from
+all of them. ADDENDUM-03 Part 21 asks for exactly that check, and it is more points
+than anybody would tap through by hand.
+
+### Fifty movements, not sixty
+
+ADDENDUM-03 Part 4 says "sixty or so movements" in the library. There are fifty,
+covering all four abilities across all four ways of getting around with easier and
+harder variants. The remaining ten are content rather than engineering and are
+better written against a real library than guessed at now; adding one is a table
+entry.
+
+### The schema went to version 2
+
+The session needs three tables that did not exist: runs, run movements, and the
+areas somebody said hurt. Purely additive, so the migration is generated rather
+than written and nobody's rows move. This is the first departure from "the whole
+schema is defined at version 1", and it is one the addendum forced rather than one
+that was foreseeable.
+
+### The import sort key was wrong twice
+
+Worth recording because it cost two build cycles. ktlint puts `java.`, `javax.` and
+`kotlin.` last, in that order. `kotlinx` is not `kotlin.`, and a prefix check on
+"kotlin" sorts kotlinx.coroutines after net.zetetic. A tuple of three booleans also
+sorts kotlin before java, because false sorts before true. It needs a single rank.

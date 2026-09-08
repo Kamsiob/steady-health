@@ -20,8 +20,11 @@ import com.kamsiob.steadyhealth.data.entity.PersonSynonymEntity
 import com.kamsiob.steadyhealth.data.entity.PhotoEntity
 import com.kamsiob.steadyhealth.data.entity.ReadinessEntity
 import com.kamsiob.steadyhealth.data.entity.ReminderSentEntity
+import com.kamsiob.steadyhealth.data.entity.RunEntity
+import com.kamsiob.steadyhealth.data.entity.RunMovementEntity
 import com.kamsiob.steadyhealth.data.entity.SessionEntity
 import com.kamsiob.steadyhealth.data.entity.SettingEntity
+import com.kamsiob.steadyhealth.data.entity.SoreAreaEntity
 import com.kamsiob.steadyhealth.data.entity.StepNameEntity
 import com.kamsiob.steadyhealth.data.entity.TrackedItemEntity
 import com.kamsiob.steadyhealth.data.entity.VisitSummaryEntity
@@ -373,4 +376,46 @@ interface ProfileDao {
 
     @Query("DELETE FROM settings")
     suspend fun deleteAllSettings()
+}
+
+@Dao
+interface RunDao {
+    @Upsert
+    suspend fun upsertRun(run: RunEntity): Long
+
+    @Upsert
+    suspend fun upsertMovement(movement: RunMovementEntity)
+
+    @Query("SELECT * FROM runs ORDER BY epochDay")
+    suspend fun allOnce(): List<RunEntity>
+
+    @Query("SELECT * FROM runs ORDER BY epochDay DESC LIMIT 1")
+    suspend fun latest(): RunEntity?
+
+    @Query("SELECT * FROM runs WHERE epochDay BETWEEN :from AND :to ORDER BY epochDay")
+    suspend fun between(from: Long, to: Long): List<RunEntity>
+
+    @Query("SELECT * FROM run_movements ORDER BY id")
+    suspend fun allMovementsOnce(): List<RunMovementEntity>
+
+    @Query("SELECT * FROM run_movements WHERE runId = :runId")
+    suspend fun movementsFor(runId: Long): List<RunMovementEntity>
+
+    @Upsert
+    suspend fun upsertSore(area: SoreAreaEntity)
+
+    @Query("SELECT * FROM sore_areas WHERE clearedOnDay IS NULL ORDER BY reportedOnDay")
+    suspend fun soreOnce(): List<SoreAreaEntity>
+
+    @Query("SELECT * FROM sore_areas ORDER BY reportedOnDay")
+    suspend fun allSoreOnce(): List<SoreAreaEntity>
+
+    @Query("DELETE FROM runs")
+    suspend fun deleteAllRuns()
+
+    @Query("DELETE FROM run_movements")
+    suspend fun deleteAllRunMovements()
+
+    @Query("DELETE FROM sore_areas")
+    suspend fun deleteAllSore()
 }
