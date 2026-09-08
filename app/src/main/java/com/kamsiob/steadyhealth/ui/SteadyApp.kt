@@ -63,6 +63,7 @@ import com.kamsiob.steadyhealth.ui.screens.WalkDoneScreen
 import com.kamsiob.steadyhealth.ui.screens.WalkingScreen
 import com.kamsiob.steadyhealth.ui.screens.WeighInScreen
 import com.kamsiob.steadyhealth.ui.screens.WeightPageScreen
+import com.kamsiob.steadyhealth.ui.session.PhoneFreeScreen
 import com.kamsiob.steadyhealth.ui.session.SessionHost
 import com.kamsiob.steadyhealth.ui.session.SessionViewModel
 import com.kamsiob.steadyhealth.ui.theme.SteadyPalette
@@ -157,6 +158,18 @@ private fun Tabs(
                     }
 
                     dailyRoutes(viewModel, navController, back)
+
+                    composable(Route.PHONE_FREE) {
+                        val state by sessionViewModel.phoneFree.collectAsStateWithLifecycle()
+                        PhoneFreeScreen(
+                            state = state,
+                            onRead = sessionViewModel::readPhoneFree,
+                            onDidIt = sessionViewModel::phoneFreeDone,
+                            onManaged = sessionViewModel::phoneFreeManaged,
+                            onSave = { sessionViewModel.savePhoneFree(back) },
+                            onBack = back,
+                        )
+                    }
 
                     composable(Route.LOG_PAST) {
                         val state by sessionsViewModel.logPast.collectAsStateWithLifecycle()
@@ -393,6 +406,10 @@ private fun TabBody(
                     sessionViewModel.startSomethingSmall()
                     navController.navigate(Route.SESSION)
                 },
+                onWithoutThePhone = {
+                    sessionViewModel.openPhoneFree()
+                    navController.navigate(Route.PHONE_FREE)
+                },
                 onBringBack = { yes ->
                     state.bringBack?.let { viewModel.bringBack(it.area, yes) }
                 },
@@ -415,6 +432,10 @@ private fun TabBody(
                 onSomethingSmall = {
                     sessionViewModel.startSomethingSmall()
                     navController.navigate(Route.SESSION)
+                },
+                onWithoutThePhone = {
+                    sessionViewModel.openPhoneFree()
+                    navController.navigate(Route.PHONE_FREE)
                 },
                 onMovement = { id: String ->
                     sessionViewModel.startOne(id)

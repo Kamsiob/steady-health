@@ -59,6 +59,7 @@ fun SessionsScreen(
     state: SessionsUiState,
     onGo: () -> Unit,
     onSomethingSmall: () -> Unit,
+    onWithoutThePhone: () -> Unit,
     onMovement: (String) -> Unit,
     onRepeat: (Long) -> Unit,
     onLogPast: () -> Unit,
@@ -73,7 +74,12 @@ fun SessionsScreen(
         )
 
         state.session?.let {
-            SessionCard(state = it, onGo = onGo, onSomethingSmall = onSomethingSmall)
+            SessionCard(
+                state = it,
+                onGo = onGo,
+                onSomethingSmall = onSomethingSmall,
+                onWithoutThePhone = onWithoutThePhone,
+            )
         }
 
         SectionTitle(stringResource(R.string.sessions_history))

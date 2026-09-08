@@ -100,6 +100,7 @@
         <item quantity="other">About %1$d minutes</item>
     </plurals>
     <string name="card_go">Start</string>
+    <string name="card_no_phone">Do it without the phone</string>
     <string name="card_done">Done today.</string>
     <string name="card_again">Do another</string>
     <string name="card_feeds">For %1$s</string>
@@ -198,5 +199,24 @@
       items in every language, and there is no word after the number to agree with.
     -->
     <string name="say_number" tools:ignore="PluralsCandidate">%1$d</string>
+
+
+    <!--
+      Doing a session without the phone. ADDENDUM-03 Part 14: the app reads it out,
+      the person does it, and then logs what they managed. The numbers they give are
+      marked as their own and nothing anywhere treats them as worth less.
+    -->
+    <string name="no_phone_title">Without the phone</string>
+    <string name="no_phone_intro">Here is the whole session. Read it, or have it read to you, then put the phone down and do it.</string>
+    <string name="no_phone_read">Read it out</string>
+    <string name="no_phone_stop">Stop reading</string>
+    <string name="no_phone_did_it">I have done it</string>
+    <string name="no_phone_how_many">How many did you manage?</string>
+    <string name="no_phone_save">Save it</string>
+    <!--
+      "Aiming for 8" beside a name. The number is what was asked for and the words
+      before it do not agree with it.
+    -->
+    <string name="no_phone_asked" tools:ignore="PluralsCandidate">Asked for %1$d</string>
 
 </resources>

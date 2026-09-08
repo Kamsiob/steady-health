@@ -140,6 +140,7 @@ fun TodayScreen(
     onSayHow: () -> Unit,
     onGo: () -> Unit,
     onSomethingSmall: () -> Unit,
+    onWithoutThePhone: () -> Unit,
     onBringBack: (Boolean) -> Unit,
     onNotice: () -> Unit,
     modifier: Modifier = Modifier,
@@ -167,7 +168,12 @@ fun TodayScreen(
         }
 
         state.session?.let {
-            SessionCard(state = it, onGo = onGo, onSomethingSmall = onSomethingSmall)
+            SessionCard(
+                state = it,
+                onGo = onGo,
+                onSomethingSmall = onSomethingSmall,
+                onWithoutThePhone = onWithoutThePhone,
+            )
         }
 
         state.bringBack?.let { asking ->

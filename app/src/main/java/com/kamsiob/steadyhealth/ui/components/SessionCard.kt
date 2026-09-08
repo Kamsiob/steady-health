@@ -44,6 +44,7 @@ fun SessionCard(
     state: SessionCardState,
     onGo: () -> Unit,
     onSomethingSmall: () -> Unit,
+    onWithoutThePhone: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -110,5 +111,6 @@ fun SessionCard(
             onClick = onSomethingSmall,
             modifier = Modifier.padding(top = SteadySpacing.Tight),
         )
+        TextLink(label = stringResource(R.string.card_no_phone), onClick = onWithoutThePhone)
     }
 }

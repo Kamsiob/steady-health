@@ -61,4 +61,5 @@ object Route {
     const val TRY_RESULT = "try-result"
     const val SESSION = "session"
     const val LOG_PAST = "log-past"
+    const val PHONE_FREE = "phone-free"
 }

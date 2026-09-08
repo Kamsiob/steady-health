@@ -34,6 +34,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -184,6 +185,93 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
             feeds = movements.map { it.domain }.distinct(),
         )
         start(plan, first = runs.history().isEmpty())
+    }
+
+    // --- a session done away from the phone. ADDENDUM-03 Part 14 ---------------
+
+    private val _phoneFree = MutableStateFlow(PhoneFreeUiState())
+    val phoneFree: StateFlow<PhoneFreeUiState> = _phoneFree.asStateFlow()
+
+    /** Today's session, written out, for somebody who is going to put the phone down. */
+    fun openPhoneFree() = viewModelScope.launch {
+        val plan = SessionEngine.plan(inputsFor(profile, runs))
+        _phoneFree.value = PhoneFreeUiState(
+            rows = plan.steps.map { step ->
+                PhoneFreeRow(
+                    movementId = step.movement.id,
+                    name = step.movement.name,
+                    setup = step.movement.setup,
+                    stopRule = step.movement.stopRule,
+                    asked = step.target,
+                    managed = step.target,
+                )
+            },
+        )
+    }
+
+    /**
+     * Read the whole session out, or stop reading it.
+     *
+     * The same voice the session uses, started and stopped here rather than by a
+     * session, because there is no session running and there is not going to be one.
+     */
+    fun readPhoneFree() {
+        val state = _phoneFree.value
+        if (state.reading) {
+            speech.stop()
+            _phoneFree.value = state.copy(reading = false)
+            return
+        }
+        speech.start { }
+        speech.on = true
+        state.rows.forEachIndexed { at, row ->
+            val said = "${row.name}. ${row.setup} ${row.stopRule}"
+            if (at == 0) speech.say(said) else speech.queue(said)
+        }
+        _phoneFree.value = state.copy(reading = true)
+    }
+
+    fun phoneFreeDone() {
+        speech.stop()
+        _phoneFree.update { it.copy(reading = false, logging = true) }
+    }
+
+    fun phoneFreeManaged(movementId: String, count: Int) = _phoneFree.update { state ->
+        state.copy(
+            rows = state.rows.map {
+                if (it.movementId == movementId) it.copy(managed = count.coerceAtLeast(0)) else it
+            },
+        )
+    }
+
+    /**
+     * Keep it. Every number is marked as the person's own, because it is.
+     *
+     * ADDENDUM-03 Part 14 asks for that to be a footnote rather than a demotion, and
+     * nothing in the engine reads `selfReported` when it plans the next session.
+     */
+    fun savePhoneFree(onDone: () -> Unit) = viewModelScope.launch {
+        val rows = _phoneFree.value.rows
+        if (rows.isEmpty()) return@launch
+        val at = System.currentTimeMillis()
+        runs.save(
+            epochDay = LocalDate.now(ZoneId.systemDefault()).toEpochDay(),
+            startedAt = at,
+            endedAt = at,
+            ending = Ending.Finished.name,
+            felt = null,
+            small = false,
+            results = rows.map { row ->
+                Result(
+                    movementId = row.movementId,
+                    target = row.asked,
+                    count = row.managed,
+                    selfReported = true,
+                )
+            },
+        )
+        _phoneFree.value = PhoneFreeUiState()
+        onDone()
     }
 
     /** Run a session somebody already has, for the offer card and the extras. */
