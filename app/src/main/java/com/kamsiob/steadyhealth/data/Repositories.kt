@@ -1233,6 +1233,22 @@ class RunRepository(private val db: SteadyDatabase) {
         )
     }
 
+    /**
+     * Remove one session and everything in it.
+     *
+     * ADDENDUM-03 Part 14: any past session is deletable. It goes entirely, rather
+     * than being marked as removed, because a row that means "somebody deleted this"
+     * is still a record of them and they asked for it not to be there.
+     */
+    suspend fun remove(runId: Long) {
+        db.runs().movementsFor(runId).forEach { db.runs().deleteMovement(it) }
+        db.runs().deleteRun(runId)
+    }
+
+    /** One session, with its movements, for the screen that edits it. */
+    suspend fun session(runId: Long): Pair<RunEntity, List<RunMovementEntity>>? =
+        db.runs().allOnce().firstOrNull { it.id == runId }?.let { it to db.runs().movementsFor(runId) }
+
     /** The movements of one session, in the order they were done. */
     suspend fun movementsOf(runId: Long): List<String> =
         db.runs().movementsFor(runId).filterNot { it.skipped }.map { it.movementId }

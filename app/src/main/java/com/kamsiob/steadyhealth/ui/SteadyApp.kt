@@ -47,6 +47,7 @@ import com.kamsiob.steadyhealth.ui.screens.LeaveOutSettingsScreen
 import com.kamsiob.steadyhealth.ui.screens.LogPastScreen
 import com.kamsiob.steadyhealth.ui.screens.OfferScreen
 import com.kamsiob.steadyhealth.ui.screens.PacingScreen
+import com.kamsiob.steadyhealth.ui.screens.PastSessionScreen
 import com.kamsiob.steadyhealth.ui.screens.PatternScreen
 import com.kamsiob.steadyhealth.ui.screens.QuieterScreen
 import com.kamsiob.steadyhealth.ui.screens.RateAgainScreen
@@ -158,6 +159,20 @@ private fun Tabs(
                     }
 
                     dailyRoutes(viewModel, navController, back)
+
+                    composable(Route.PAST_SESSION) {
+                        val state by sessionsViewModel.past.collectAsStateWithLifecycle()
+                        PastSessionScreen(
+                            state = state,
+                            onCount = sessionsViewModel::correctPast,
+                            onRepeat = {
+                                sessionViewModel.repeat(state.runId)
+                                navController.navigate(Route.SESSION)
+                            },
+                            onRemove = { sessionsViewModel.removePast(back) },
+                            onBack = back,
+                        )
+                    }
 
                     composable(Route.PHONE_FREE) {
                         val state by sessionViewModel.phoneFree.collectAsStateWithLifecycle()
@@ -442,8 +457,8 @@ private fun TabBody(
                     navController.navigate(Route.SESSION)
                 },
                 onRepeat = { runId: Long ->
-                    sessionViewModel.repeat(runId)
-                    navController.navigate(Route.SESSION)
+                    sessionsViewModel.openPast(runId)
+                    navController.navigate(Route.PAST_SESSION)
                 },
                 onLogPast = {
                     sessionsViewModel.openLogPast()

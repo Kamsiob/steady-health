@@ -1,6 +1,7 @@
 package com.kamsiob.steadyhealth.data.dao
 
 import androidx.room3.Dao
+import androidx.room3.Delete
 import androidx.room3.Insert
 import androidx.room3.OnConflictStrategy
 import androidx.room3.Query
@@ -416,6 +417,12 @@ interface RunDao {
 
     @Query("SELECT * FROM run_movements WHERE runId = :runId")
     suspend fun movementsFor(runId: Long): List<RunMovementEntity>
+
+    @Delete
+    suspend fun deleteMovement(movement: RunMovementEntity)
+
+    @Query("DELETE FROM runs WHERE id = :runId")
+    suspend fun deleteRun(runId: Long)
 
     @Upsert
     suspend fun upsertSore(area: SoreAreaEntity)

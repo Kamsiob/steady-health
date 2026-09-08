@@ -12,11 +12,14 @@ import com.kamsiob.steadyhealth.data.SteadyDatabase
 import com.kamsiob.steadyhealth.data.entity.RunEntity
 import com.kamsiob.steadyhealth.session.Ending
 import com.kamsiob.steadyhealth.session.Felt
+import com.kamsiob.steadyhealth.session.Movements
 import com.kamsiob.steadyhealth.session.Result
 import com.kamsiob.steadyhealth.session.Week
 import com.kamsiob.steadyhealth.ui.screens.HistoryRow
 import com.kamsiob.steadyhealth.ui.screens.LogPastUiState
 import com.kamsiob.steadyhealth.ui.screens.PastDay
+import com.kamsiob.steadyhealth.ui.screens.PastMovement
+import com.kamsiob.steadyhealth.ui.screens.PastSessionUiState
 import com.kamsiob.steadyhealth.ui.screens.SessionsUiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -56,6 +59,46 @@ class SessionsViewModel(application: Application) : AndroidViewModel(application
             library = cards.library(way, exclusions, today),
             history = history(today),
         )
+    }
+
+    private val _past = MutableStateFlow(PastSessionUiState())
+    val past: StateFlow<PastSessionUiState> = _past.asStateFlow()
+
+    /** Open one session already done, to read it, fix it, or remove it. */
+    fun openPast(runId: Long) = viewModelScope.launch {
+        val (run, movements) = runs.session(runId) ?: return@launch
+        _past.value = PastSessionUiState(
+            runId = runId,
+            whenIt = whenSaid(today() - run.epochDay),
+            how = howItWent(run),
+            movements = movements.filterNot { it.skipped }.map {
+                PastMovement(
+                    movementId = it.movementId,
+                    name = Movements.byId(it.movementId)?.name.orEmpty(),
+                    count = it.count,
+                )
+            },
+        )
+    }
+
+    /** A number changed by hand, written straight through. The app says nothing. */
+    fun correctPast(movementId: String, count: Int) = viewModelScope.launch {
+        val state = _past.value
+        val wanted = count.coerceAtLeast(0)
+        runs.correct(state.runId, movementId, wanted)
+        _past.value = state.copy(
+            movements = state.movements.map {
+                if (it.movementId == movementId) it.copy(count = wanted) else it
+            },
+        )
+        refresh()
+    }
+
+    fun removePast(onDone: () -> Unit) = viewModelScope.launch {
+        runs.remove(_past.value.runId)
+        _past.value = PastSessionUiState()
+        refresh()
+        onDone()
     }
 
     /** Open the log screen with the last seven days on it, today included. */

@@ -58,4 +58,14 @@
     <string name="log_done">Added.</string>
     <string name="log_none_picked">Pick at least one movement.</string>
 
+
+    <!--
+      One session already done, opened from the history. ADDENDUM-03 Part 14: any past
+      session is editable or deletable, and the app says nothing about either.
+    -->
+    <string name="past_title">A session you did</string>
+    <string name="past_remove">Remove this session</string>
+    <string name="past_removed">Removed.</string>
+    <string name="past_save">Save the changes</string>
+
 </resources>
