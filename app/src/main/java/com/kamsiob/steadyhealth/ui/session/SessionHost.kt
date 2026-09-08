@@ -58,6 +58,7 @@ fun SessionHost(
         SessionDoneScreen(
             state = done,
             onFelt = viewModel::setFelt,
+            onCorrect = viewModel::correct,
             onSave = onFinished,
             onChangeNext = onFinished,
             modifier = modifier,
@@ -96,6 +97,7 @@ fun SessionHost(
         Stage.Done -> SessionDoneScreen(
             state = done,
             onFelt = viewModel::setFelt,
+            onCorrect = viewModel::correct,
             onSave = onFinished,
             onChangeNext = onFinished,
             modifier = modifier,

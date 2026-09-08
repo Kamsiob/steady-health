@@ -1182,6 +1182,20 @@ class RunRepository(private val db: SteadyDatabase) {
         return runId
     }
 
+    /**
+     * Change what one movement in one session is recorded as.
+     *
+     * ADDENDUM-03 Part 14. The number becomes self reported, because it is: somebody
+     * told the app what happened. Nothing anywhere treats that as worth less, and
+     * nothing anywhere records that it was changed.
+     */
+    suspend fun correct(runId: Long, movementId: String, count: Int) {
+        val row = db.runs().movementsFor(runId).firstOrNull { it.movementId == movementId } ?: return
+        db.runs().upsertMovement(
+            row.copy(count = count.coerceAtLeast(0), selfReported = true, skipped = false),
+        )
+    }
+
     /** Everything done, in the shape the engine plans from. Skipped rows are not history. */
     suspend fun history(): List<Done> {
         val days = db.runs().allOnce().associate { it.id to it.epochDay }

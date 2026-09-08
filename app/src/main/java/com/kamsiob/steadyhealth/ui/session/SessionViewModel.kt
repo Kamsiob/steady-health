@@ -18,6 +18,8 @@ import com.kamsiob.steadyhealth.session.Buzz
 import com.kamsiob.steadyhealth.session.Counted
 import com.kamsiob.steadyhealth.session.Ending
 import com.kamsiob.steadyhealth.session.Felt
+import com.kamsiob.steadyhealth.session.Movements
+import com.kamsiob.steadyhealth.session.Result
 import com.kamsiob.steadyhealth.session.Sensed
 import com.kamsiob.steadyhealth.session.SessionEngine
 import com.kamsiob.steadyhealth.session.SessionInputs
@@ -84,6 +86,9 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
     private var paceUp = true
     private var saved = false
 
+    /** The row this session was written to, so a correction can find it again. */
+    private var savedRunId: Long? = null
+
     var speaking: Boolean = true
         private set
 
@@ -148,6 +153,8 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
     /** Run a session somebody already has, for the offer card and the extras. */
     fun start(plan: SessionPlan, first: Boolean = false) {
         startedAt = System.currentTimeMillis()
+        saved = false
+        savedRunId = null
         _runner.value = SessionRunner(plan)
         _done.value = DoneUiState(first = first)
         _askingWhereItHurts.value = false
@@ -408,7 +415,7 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
         if (saved) return@launch
         saved = true
         val today = LocalDate.now(ZoneId.systemDefault()).toEpochDay()
-        runs.save(
+        savedRunId = runs.save(
             epochDay = today,
             startedAt = startedAt,
             endedAt = System.currentTimeMillis(),
@@ -511,14 +518,41 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
         if (runner.ending != Ending.Hurt) speech.say(string(R.string.say_session_done))
         speech.stop()
 
+        _done.value = _done.value.copy(rows = runner.results.map { row(it, runner.plan) })
+    }
+
+    private fun row(result: Result, plan: SessionPlan) = DoneRow(
+        movementId = result.movementId,
+        name = Movements.byId(result.movementId)?.name.orEmpty(),
+        value = value(result.count, plan, result.movementId),
+        count = result.count,
+        skipped = result.skipped,
+        selfReported = result.selfReported,
+    )
+
+    /**
+     * A number the person changed by hand. ADDENDUM-03 Part 14.
+     *
+     * The screen and the row both change, and the app says nothing about it. It is
+     * written against the saved session rather than the runner, because by the time
+     * the done screen is up the session is already kept.
+     */
+    fun correct(movementId: String, count: Int) = viewModelScope.launch {
+        val runId = savedRunId ?: return@launch
+        val plan = _runner.value?.plan ?: return@launch
+        val wanted = count.coerceAtLeast(0)
+        runs.correct(runId, movementId, wanted)
         _done.value = _done.value.copy(
-            rows = runner.results.map { result ->
-                val movement = com.kamsiob.steadyhealth.session.Movements.byId(result.movementId)
-                DoneRow(
-                    name = movement?.name.orEmpty(),
-                    value = value(result.count, runner.plan, result.movementId),
-                    skipped = result.skipped,
-                )
+            rows = _done.value.rows.map { row ->
+                if (row.movementId != movementId) {
+                    row
+                } else {
+                    row.copy(
+                        value = value(wanted, plan, movementId),
+                        count = wanted,
+                        selfReported = true,
+                    )
+                }
             },
         )
     }

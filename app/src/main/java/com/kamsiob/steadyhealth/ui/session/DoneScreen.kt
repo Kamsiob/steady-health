@@ -17,13 +17,21 @@ import com.kamsiob.steadyhealth.ui.components.PrimaryButton
 import com.kamsiob.steadyhealth.ui.components.SecondaryButton
 import com.kamsiob.steadyhealth.ui.components.SectionTitle
 import com.kamsiob.steadyhealth.ui.components.SteadyScreen
+import com.kamsiob.steadyhealth.ui.components.Stepper
 import com.kamsiob.steadyhealth.ui.components.ThreeUpChoice
 import com.kamsiob.steadyhealth.ui.theme.SteadyPalette
 import com.kamsiob.steadyhealth.ui.theme.SteadyText
 import com.kamsiob.steadyhealth.ui.theme.SteadyType
 
-/** One line of what was done. */
-data class DoneRow(val name: String, val value: String, val skipped: Boolean)
+/** One line of what was done, and the number behind it, which is editable. */
+data class DoneRow(
+    val movementId: String,
+    val name: String,
+    val value: String,
+    val count: Int,
+    val skipped: Boolean,
+    val selfReported: Boolean = false,
+)
 
 /** What the done screen draws. */
 data class DoneUiState(
@@ -48,9 +56,11 @@ data class DoneUiState(
  * whether somebody did everything or stopped after one movement.
  */
 @Composable
+@Suppress("LongParameterList") // One screen, one callback for each thing on it.
 fun SessionDoneScreen(
     state: DoneUiState,
     onFelt: (Felt) -> Unit,
+    onCorrect: (String, Int) -> Unit,
     onSave: () -> Unit,
     onChangeNext: () -> Unit,
     modifier: Modifier = Modifier,
@@ -80,10 +90,31 @@ fun SessionDoneScreen(
 
         if (state.awayTooLong) NoteBlock(stringResource(R.string.session_hour_away))
 
+        // ADDENDUM-03 Part 14: any counted number is editable here, with plus and
+        // minus, and the app says nothing at all about having been corrected.
         state.rows.forEach { row ->
-            ListItem(
-                heading = row.name,
-                value = if (row.skipped) stringResource(R.string.done_skipped) else row.value,
+            if (row.skipped) {
+                ListItem(heading = row.name, value = stringResource(R.string.done_skipped))
+            } else {
+                Stepper(
+                    label = row.name,
+                    value = row.value,
+                    supporting = null,
+                    onDown = { onCorrect(row.movementId, row.count - 1) },
+                    onUp = { onCorrect(row.movementId, row.count + 1) },
+                )
+            }
+        }
+
+        if (state.rows.any { it.selfReported && !it.skipped }) {
+            SteadyText(
+                text = stringResource(
+                    R.string.done_your_own,
+                    state.rows.filter { it.selfReported && !it.skipped }
+                        .joinToString(", ") { it.name.lowercase() },
+                ),
+                style = SteadyType.Caption,
+                color = SteadyPalette.Ink3Text,
             )
         }
 

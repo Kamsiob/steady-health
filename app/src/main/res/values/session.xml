@@ -85,6 +85,7 @@
     <string name="done_against_last">%1$d, from %2$d</string>
     <string name="done_first_time">%1$d, the first time</string>
     <string name="done_skipped">Left out</string>
+    <string name="done_your_own">Your own count: %1$s. That is the same as the phone\'s.</string>
 
     <!-- The offer card on Today. -->
     <string name="offer_today">Today\'s session</string>
