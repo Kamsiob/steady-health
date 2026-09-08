@@ -19,6 +19,8 @@
     <string name="help_what_is">What this is</string>
     <string name="help_on_screen">What each thing means</string>
     <string name="help_dismiss">Tap anywhere to close</string>
+    <string name="explain_this">What this number means</string>
+    <string name="explain_mark" translatable="false">i</string>
 
     <!-- Today. -->
     <string name="help_today_what">Today is one session and one thing the app has noticed. There is never more than one thing to do on this screen.</string>

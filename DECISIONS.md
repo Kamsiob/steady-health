@@ -1044,3 +1044,81 @@ bounds from `uiautomator dump /dev/tty`, streamed rather than written to the pho
 storage. The first attempt at the timed gate was a script of fixed coordinates and
 sleeps; its first tap landed before the app had drawn, was swallowed, and the run
 carried on pressing the wrong things while reporting a time that meant nothing.
+
+### Three judgment calls in Part 3 and Part 4
+
+**O3 has a text field and no microphone button of its own.** Part 3 asks for "a large
+microphone button and a text field, equal size, side by side". A microphone of our own
+means a RECORD_AUDIO permission prompt, and Part 3's own first screen says "no
+permission requests". The system keyboard has a microphone on it, which is the one
+people already use and which asks for nothing. So the field is the field and talking
+is the keyboard's job. If this turns out to be wrong it is a screen with one more
+button on it and a permission asked for at the moment it is used, not before.
+
+**O5 says "both of these are optional" once rather than putting Skip beside each
+question.** Part 3 asks for a visible skip on all three. The word Skip beside every
+question reads as the app expecting to be refused, and "Nothing" is already the
+visible skip for the first one. The Done button ends the screen whatever is answered.
+
+**Numbers inside a live session have no info dot.** Part 4's L3 says no number in
+this app is ever unexplained, and every number on Today goes through `Explained`. The
+count on the live screen does not, because that screen is read from two feet away by
+somebody standing up out of a chair, and an information dot beside the largest type in
+the app is a second thing to aim at. The session's help sheet says what the two
+numbers are instead.
+
+### The Phase 1 acceptance gate, run
+
+ADDENDUM-03 Part 21. Run on the Pixel 8 on 2026-09-08, against the build at the
+commit this entry sits in. The scripts are in `tools/` and every one of them can be
+run again.
+
+**Install to a finished first session in under 90 seconds: pass, 48 seconds.**
+`tools/gate-first-run.py`, which waits for each thing it presses rather than tapping
+by coordinate, so the number is the app's time and not the script's. Sixteen of the
+48 seconds are doing the movement at a human rate.
+
+**A full session with the phone face down, audio only: pass, as a rule.**
+`SessionRunnerTest.awholeSessionRunsToTheEndWithNobodyTouchingTheScreen` walks a
+whole session forward on nothing but the clock and the accelerometer, presses
+nothing, and requires it to reach the end with what was done recorded. Three
+changes were needed to make that true: the ready screen starts on its own, a set the
+phone is counting ends once the person stops, and a set with nothing happening at all
+ends after ninety seconds having said so aloud first. **What the test cannot check is
+whether it sounds right**, which is the first thing to try in TEST-ME.md.
+
+**One obvious action per screen: pass**, by screenshot and by test.
+`tools/gate-screens.py` captures each session screen and asserts exactly one primary
+action on it; `SessionAccessibilityTest.everySessionScreenHasOneObviousNextAction`
+asserts the same thing without a device.
+
+**The three exits from every point, keeping what was done: pass.**
+`SessionRunnerTest.everyExitWorksFromEveryPointAndKeepsWhatWasDone` presses each exit
+from every stage of the pure machine. On the phone, `tools/gate-exits.py`: "That's
+enough for today" kept the one repetition that had been done; "Skip this one" moved
+on and recorded the skipped movement as left out; "Make it easier" brought the ask
+from five to three.
+
+**The pain button in one press: pass.** One press reached "Where does it hurt?", and
+after naming the knee the next session on Today changed from "For Get up, Go, Carry"
+to "For Go, Carry" on its own.
+
+**Pause survives an interruption: pass**, for a screen lock and for pressing home,
+which is how a phone call reaches the app as well. `tools/gate-interrupted.py`. An
+actual incoming call was not simulated: doing that means an emulator, and the code
+path is the same stopped activity. It is listed in TEST-ME.md as something to try.
+
+**200 percent font scale and TalkBack: pass**, as tests rather than as a run.
+`SessionAccessibilityTest` asserts the count, the primary action and all four exits
+are displayed at twice the text size, and that nothing tappable in a session is
+without a label, which is what TalkBack reads. Both are checked in the semantics
+tree rather than by eye, and neither changes a setting on the owner's phone, which
+the standing rules do not allow.
+
+**The next session visibly differs after "hard": pass.** "About 8 minutes, starting
+with stands from a high seat" becomes "About a minute, starting with marching on the
+spot. A bit lighter than today, because that one was hard."
+
+**No banned word: pass.** `tools/banned-words.py` reads the text of every string
+resource and every literal in the movement library. Four exemptions, each with its
+reason written in the script.

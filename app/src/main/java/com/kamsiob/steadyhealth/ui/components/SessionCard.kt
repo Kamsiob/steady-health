@@ -56,10 +56,13 @@ fun SessionCard(
             style = SteadyType.CardTitle,
             color = SteadyPalette.Sand,
         )
-        SteadyText(
+        Explained(
             text = state.length,
+            explanation = stringResource(R.string.card_minutes_explain),
             style = SteadyType.ScreenTitleBig,
-            color = SteadyPalette.White,
+            colour = SteadyPalette.White,
+            tint = SteadyPalette.NavyL,
+            explanationColour = SteadyPalette.Sand,
             modifier = Modifier.semantics { heading() },
         )
 

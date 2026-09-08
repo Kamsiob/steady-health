@@ -106,6 +106,7 @@
     <string name="card_with_warm_up">With a warm up.</string>
     <string name="card_with_cool_down">With a cool down.</string>
     <string name="card_nothing">Nothing is set up for today yet.</string>
+    <string name="card_minutes_explain">How long today\'s session takes if you do all of it, warm up and cool down included. It is worked out from the movements in it, and nothing here is aiming for a number the app chose.</string>
 
     <!-- The one noticed line. The person\'s own history, said back to them. -->
     <!--

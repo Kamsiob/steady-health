@@ -222,6 +222,11 @@ fun AfterTheSessionScreen(
         onBack = null,
         footer = { PrimaryButton(label = stringResource(R.string.o5_done), onClick = onDone) },
     ) {
+        // ADDENDUM-03 Part 3 asks for a visible skip on all three. Saying it once at
+        // the top says it about both without putting the word Skip beside every
+        // question, which reads as the app expecting to be refused.
+        Paragraph(stringResource(R.string.o5_all_optional))
+
         SectionTitle(stringResource(R.string.o5_avoid))
         FlowRow(
             horizontalArrangement = Arrangement.spacedBy(SteadySpacing.ListGap),

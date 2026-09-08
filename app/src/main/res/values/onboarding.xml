@@ -45,6 +45,7 @@
     <string name="o5_chair_arms">Only with arms</string>
     <string name="o5_chair_no">No</string>
     <string name="o5_skip">Skip</string>
+    <string name="o5_all_optional">Both of these are optional. Skip either and the app carries on.</string>
     <string name="o5_done">Done</string>
 
     <!-- The sand blocks. Every screen explains itself once, and never again. -->
