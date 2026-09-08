@@ -7,7 +7,8 @@ it cannot see the reasoning for, or breaking something it does not understand.
 Read this in full. Then DECISIONS.md. Then MASTER_SPEC.md and DESIGN.md. Then
 `git log`.
 
-**Last updated:** 2026-09-08, during Phase 1b of the ADDENDUM-03 plan.
+**Last updated:** 2026-09-08, at the end of Phase 2 of the ADDENDUM-03 plan.
+**Read TEST-ME.md first if you are the owner.** It says what to try and what I need.
 
 ---
 
@@ -36,7 +37,14 @@ audio with pacing, haptics, the warm up and the cool down, pause, the three exit
 the pain button, and the accelerometer counting stands and steps. All of it runs on
 the phone.
 
-**Phase 1b is done apart from the rest of its gate.** Onboarding is the five screens
+**Phase 2 is done.** Today in full: what they said they want, the next thing, the
+session card, the week line, what the app noticed, "Got a minute?" and "Do it without
+the phone". The four tabs of MASTER_SPEC 5 with Settings promoted out from behind a
+gear. Sessions with the library, the history, "Do this again", editing and removing a
+past session, and logging one after the fact. Progress with four weeks that stand
+alone and the look back card. The one daily prompt that stops itself, and the widget.
+
+**Phase 1b is done, and the gate passed.** Onboarding is the five screens
 of Part 3, with the first session in the middle of them. The help system is the three
 layers of Part 4: a sand block per screen shown once, a question mark in the same
 place on every screen that has a topic, and hand written sheets behind it. Today
@@ -44,40 +52,52 @@ leads with the session card and carries one noticed line.
 
 ### The Phase 1 acceptance gate
 
-Run before anything past 1b, on the phone, and recorded in DECISIONS.md. Where it
-stands:
+Run on the phone and recorded in DECISIONS.md in full. Where it stands:
 
 | Gate item | Result |
 | --- | --- |
-| Install to a finished first session under 90 seconds | **Pass**, 48 seconds, `tools/gate-first-run.py` |
-| The next session visibly differs after answering "hard" | **Pass**, verified on the phone |
-| No banned word in any string | **Pass**, `tools/banned-words.py` |
-| The three exits and the pain button, on the device | in progress, `tools/gate-exits.py` |
-| A whole session face down, audio only | not yet run |
-| One obvious action per screen, by screenshot | not yet run |
-| Pause across a call and a screen lock | not yet run |
-| 200% font scale and TalkBack | not yet run, and it belongs on the emulator |
+| Install to a finished first session under 90 seconds | **Pass**, 48 seconds |
+| A full session face down, audio only | **Pass as a rule**; sounding right is for the owner |
+| One obvious action per screen, by screenshot | **Pass** |
+| The three exits from every point, keeping what was done | **Pass** |
+| The pain button in one press, suppressing that area | **Pass** |
+| Pause survives an interruption | **Pass for home**; the screen lock is for the owner |
+| 200% font scale and TalkBack | **Written, not run**: the phone is locked |
+| The next session differs after "hard" | **Pass** |
+| No banned word on any screen | **Pass** |
 
 The exits from every point are already proved by `SessionRunnerTest`, which presses
 each of the three and the pain button from every stage of the pure machine. The
 device run is the same four things once each on the real screen.
 
-**The two settings-dependent gate items belong on an emulator.** Both 200% font
-scale and TalkBack mean changing a system setting, and the standing rule for this
-project is that nothing on the owner's phone is touched beyond installing and testing
-this one app. An AVD named `steady-gate` is created for it.
+**The two settings-dependent gate items are tests rather than runs.** Both 200% font
+scale and TalkBack would mean changing a system setting, and the standing rule is that
+nothing on the owner's phone is touched beyond installing and testing this one app.
+`SessionAccessibilityTest` asserts both in the semantics tree instead, which is what
+TalkBack reads, and overrides the font scale inside the test. The emulator does not
+run on this machine; see BLOCKED.
+
+**The phone's screen is locked and I cannot unlock it.** That is the one thing
+waiting on the owner, and it is why everything built after Phase 1b has never been
+seen running. See BLOCKED and TEST-ME.md.
 
 ### What is uncommitted or mid-flight
 
-Check `git status` before assuming. At the last commit, the gate scripts and the
-DECISIONS.md entries for Phase 1b are in; the gate results table above is not
-finished.
+Check `git status` before assuming. Everything through Phase 2 is committed.
 
 ### What would break if somebody assumed it was finished
 
-- **Most of the app is still the old plan's screens.** Move is the walk-first screen
-  and Abilities is the old grid. Phase 2 rebuilds them as the library and history,
-  and MASTER_SPEC 5 wants four tabs where there are three.
+- **Everything after Phase 1b has never been seen running.** The phone locked partway
+  through the gate and cannot be unlocked from here. Phase 2 compiles, its rules are
+  unit tested, detekt and lint are clean, and nobody has looked at it. This is the
+  single most important thing in this file.
+- **Progress is still the old Abilities grid** with the four weeks and the look back
+  added on top. MASTER_SPEC 5 wants the months, the numbers, the card and the
+  therapist export there too; those are Phases 6 and 7.
+- **MoveScreen and MoveUiState still exist and are dead.** The Sessions tab replaced
+  them and nothing routes to `MoveScreen` any more. It is left in place rather than
+  deleted because the walk ladder logic behind it is still what the walking movements
+  read, and untangling that belongs with Phase 5.
 - **The library has fifty movements, not "sixty or so".** Adding one is a table
   entry in `Movements.kt`.
 - **Only five screens have a help topic.** A screen with no topic has no dot, which
@@ -101,12 +121,9 @@ finished.
 
 ## 2. The next concrete steps, in order
 
-1. **Finish the Phase 1 gate.** The four items still marked not run, two of them on
-   the emulator, and the results written into DECISIONS.md.
-2. **Phase 2**: Today in full including motivation, the week and consistency, the
-   library and history, correction and phone-free sessions, the daily prompt and the
-   widget. This is where the four tabs arrive.
-3. **Phase 3**: the camera and the therapist's plan, with its gate.
+1. **Once the phone is unlocked**: run `tools/device-tests.sh`, then walk TEST-ME.md
+   steps 10 to 20, which are Phase 2 and have never been seen running.
+2. **Phase 3**: the camera and the therapist's plan, with its gate.
 4. **Phase 4**: report and letter reading with MedGemma, behind the flag.
 5. **Phases 5 to 8** as written in ADDENDUM-03 Part 21.
 6. **TEST-ME.md**, Part 22, which is the last thing produced.
