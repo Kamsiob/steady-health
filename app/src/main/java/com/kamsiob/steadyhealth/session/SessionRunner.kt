@@ -59,6 +59,8 @@ data class SessionRunner(
     val hurtArea: Area? = null,
     /** Movements swapped to their easier variant mid set. */
     val easedIds: Set<String> = emptySet(),
+    /** Seconds spent on the ready screen, so a session can be done face down. */
+    val waited: Int = 0,
 ) {
     val step: Step? get() = plan.steps.getOrNull(at)
     val movement: Movement? get() = step?.movement
@@ -84,9 +86,21 @@ data class SessionRunner(
     /** True when the set has reached what it was asked for. */
     val reachedTarget: Boolean get() = step?.let { reached >= it.target } ?: false
 
+    /**
+     * How long the ready screen waits before starting on its own.
+     *
+     * ADDENDUM-03 Part 1 asks for a session somebody can do with the phone face down
+     * on a table. A screen that waits forever for a button they cannot see is where
+     * that stops being true. Longer for the first movement, because they may still be
+     * finding a chair; shorter afterwards, because they have just rested for thirty
+     * seconds and are already standing there.
+     */
+    val readySeconds: Int get() = if (at == 0) FIRST_READY_SECONDS else READY_SECONDS
+
     // --- moving through the session ------------------------------------------
 
-    fun ready(): SessionRunner = copy(stage = Stage.CountIn(COUNT_IN), count = 0, elapsed = 0)
+    fun ready(): SessionRunner =
+        copy(stage = Stage.CountIn(COUNT_IN), count = 0, elapsed = 0, waited = 0)
 
     /** Skip the count in, which S6 allows between movements. */
     fun go(): SessionRunner = copy(stage = Stage.Live)
@@ -106,6 +120,11 @@ data class SessionRunner(
                 } else {
                     copy(stage = Stage.CountIn(stage.secondsLeft - 1))
                 }
+            }
+
+            Stage.Ready -> {
+                val next = copy(waited = waited + 1)
+                if (next.waited >= readySeconds) next.ready() else next
             }
 
             Stage.Live -> {
@@ -192,7 +211,7 @@ data class SessionRunner(
         return if (to >= plan.steps.size) {
             copy(stage = Stage.Done, ending = ending ?: Ending.Finished)
         } else {
-            copy(at = to, stage = Stage.Ready, count = 0, elapsed = 0)
+            copy(at = to, stage = Stage.Ready, count = 0, elapsed = 0, waited = 0)
         }
     }
 
@@ -215,6 +234,12 @@ data class SessionRunner(
     companion object {
         const val COUNT_IN = 3
         const val REST_SECONDS = 30
+
+        /** The wait on the first ready screen of a session. */
+        const val FIRST_READY_SECONDS = 20
+
+        /** The wait on every ready screen after it. */
+        const val READY_SECONDS = 10
         private const val SECONDS_PER_MINUTE = 60
     }
 }

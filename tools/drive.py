@@ -114,8 +114,14 @@ def onboard(device, reps=10, pace=0.35):
 
 
 def back_to_today(device):
-    """Leave whatever is on screen and start again at Today."""
+    """Leave whatever is on screen and start again at Today.
+
+    The pause between stopping and starting is not politeness. Starting straight
+    after a force-stop can land the activity in a process that is still being torn
+    down, and what comes up is a half-drawn screen that no amount of waiting fixes.
+    """
     device._adb("shell", "am", "force-stop", device.package)
+    time.sleep(1.0)
     device.launch()
     device.wait("Today's session", timeout=25)
 

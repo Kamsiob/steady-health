@@ -18,6 +18,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraphBuilder
@@ -333,7 +334,13 @@ private fun TabBody(
     when (tab) {
         Tab.Today -> {
             val state by viewModel.today.collectAsStateWithLifecycle()
-            LaunchedEffect(Unit) { viewModel.refresh() }
+            // On every return rather than once: the date changes overnight, a session
+            // may have been done since, and a screen that only ever loads once has no
+            // way back if that one load did not finish.
+            LifecycleResumeEffect(Unit) {
+                viewModel.refresh()
+                onPauseOrDispose { }
+            }
             TodayScreen(
                 state = state,
                 onAbility = {

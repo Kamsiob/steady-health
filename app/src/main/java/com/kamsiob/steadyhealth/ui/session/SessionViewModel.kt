@@ -76,6 +76,9 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
 
     /** When the session was paused, so an hour away can be noticed. */
     private var pausedAt = 0L
+
+    /** True when the pause was the app's doing rather than the person's. */
+    private var pausedByTheApp = false
     private var startedAt = 0L
     private var pacing = false
     private var paceUp = true
@@ -215,6 +218,7 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
 
     fun pause() {
         val runner = _runner.value ?: return
+        pausedByTheApp = false
         if (runner.paused) {
             _runner.value = runner.resume()
             pausedAt = 0
@@ -223,6 +227,47 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
             pausedAt = SystemClock.elapsedRealtime()
             speech.stop()
         }
+    }
+
+    /**
+     * The phone was locked, or a call came in, or somebody switched away.
+     *
+     * ADDENDUM-03 Part 1 and Part 15b: a session must not keep counting behind a
+     * screen nobody is looking at. Held sets would finish themselves and the person
+     * would come back to a session that had done itself without them.
+     */
+    fun interrupted() {
+        val runner = _runner.value ?: return
+        if (runner.paused || runner.finished) return
+        pausedByTheApp = true
+        _runner.value = runner.pause()
+        pausedAt = SystemClock.elapsedRealtime()
+        speech.stop()
+    }
+
+    /**
+     * Back again, and it picks up where it stopped.
+     *
+     * A pause the person pressed themselves stays pressed, because they meant it.
+     * Only the one the app took is given back. After an hour the session is saved as
+     * far as it got and says so, rather than resuming a set from before lunch.
+     */
+    fun returned() {
+        if (!pausedByTheApp) return
+        val runner = _runner.value ?: return
+        pausedByTheApp = false
+        if (!runner.paused) return
+        if (pausedTooLong()) {
+            _done.value = _done.value.copy(awayTooLong = true)
+            _runner.value = runner.resume().enough()
+            pausedAt = 0
+            finish()
+            return
+        }
+        _runner.value = runner.resume()
+        pausedAt = 0
+        val movement = runner.movement
+        if (movement != null) speech.say("${string(R.string.session_back)} ${movement.name}")
     }
 
     /**
@@ -380,6 +425,9 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
         val runner = _runner.value ?: return
         val movement = runner.movement ?: return
         speech.say("${movement.name}. ${movement.setup} ${movement.stopRule}")
+        // Once, on the first movement. Saying it before every set would be nagging,
+        // and by the second one the person already knows.
+        if (runner.at == 0) speech.queue(string(R.string.say_starts_itself))
     }
 
     private fun sayCountIn() {

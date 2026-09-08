@@ -115,6 +115,15 @@ fun ReadyScreen(
 
         NoteBlock(state.stopRule)
         if (state.eased) NoteBlock(stringResource(R.string.exit_eased), tint = SteadyPalette.GreenL)
+
+        // Said on the screen as well as aloud, because somebody who has never put the
+        // phone down would otherwise be surprised by it starting.
+        SteadyText(
+            text = stringResource(R.string.session_starts_itself),
+            style = SteadyType.Caption,
+            color = SteadyPalette.Ink3Text,
+            modifier = Modifier.fillMaxWidth(),
+        )
     }
 }
 

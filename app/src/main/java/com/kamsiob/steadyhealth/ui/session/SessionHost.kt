@@ -1,9 +1,13 @@
 package com.kamsiob.steadyhealth.ui.session
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.kamsiob.steadyhealth.R
 import com.kamsiob.steadyhealth.session.Felt
@@ -25,6 +29,21 @@ fun SessionHost(
     onFinished: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    // A locked screen or an incoming call pauses the session rather than letting it
+    // run on behind them, and coming back picks it up where it stopped.
+    val owner = LocalLifecycleOwner.current
+    DisposableEffect(owner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_STOP -> viewModel.interrupted()
+                Lifecycle.Event.ON_START -> viewModel.returned()
+                else -> Unit
+            }
+        }
+        owner.lifecycle.addObserver(observer)
+        onDispose { owner.lifecycle.removeObserver(observer) }
+    }
+
     val runner by viewModel.runner.collectAsStateWithLifecycle()
     val done by viewModel.done.collectAsStateWithLifecycle()
     val asking by viewModel.askingWhereItHurts.collectAsStateWithLifecycle()

@@ -5,7 +5,6 @@ import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.printToString
 import com.kamsiob.steadyhealth.domain.AbilityDomain
 import com.kamsiob.steadyhealth.ui.screens.AbilityTileState
-import com.kamsiob.steadyhealth.ui.screens.TodayScreen
 import com.kamsiob.steadyhealth.ui.screens.TodayUiState
 import com.kamsiob.steadyhealth.ui.screens.WeightPageScreen
 import com.kamsiob.steadyhealth.ui.screens.WeightPageUiState
@@ -34,11 +33,9 @@ class NumbersOffTest {
     @get:Rule
     val compose = createComposeRule()
 
-    @Test
-    fun todayShowsNoDigitWhenNumbersAreOff() {
-        compose.setContent { SteadyTheme { TodayScreen(numbersOff, {}, {}, {}, {}, {}, {}, {}) } }
-        assertNoWeightFigure()
-    }
+    // Today's weight case is gone with the weight block itself: MASTER_SPEC 6.1 takes
+    // weight off Today entirely. Numbers off has two new surfaces there instead, the
+    // session card's minutes and the noticed line's counts, and both are Phase 8.
 
     @Test
     fun theWeightPageShowsNoDigitWhenNumbersAreOff() {

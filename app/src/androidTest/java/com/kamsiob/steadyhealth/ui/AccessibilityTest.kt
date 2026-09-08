@@ -10,6 +10,7 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.unit.Density
 import com.kamsiob.steadyhealth.domain.AbilityDomain
+import com.kamsiob.steadyhealth.ui.components.SessionCardState
 import com.kamsiob.steadyhealth.ui.screens.AbilityTileState
 import com.kamsiob.steadyhealth.ui.screens.SettingsActions
 import com.kamsiob.steadyhealth.ui.screens.SettingsScreen
@@ -41,7 +42,7 @@ class AccessibilityTest {
 
     @Test
     fun everyThingOnTodayThatCanBeTappedSaysWhatItIs() {
-        compose.setContent { SteadyTheme { TodayScreen(today, {}, {}, {}, {}, {}, {}, {}) } }
+        compose.setContent { SteadyTheme { TodayScreen(today, {}, {}, {}, {}, {}) } }
 
         // DESIGN.md section 7: TalkBack labels describe meaning, not drawing.
         listOf(
@@ -54,20 +55,27 @@ class AccessibilityTest {
     }
 
     @Test
-    fun theThreeDailyCardsAnnounceWhetherTheyAreDone() {
-        compose.setContent { SteadyTheme { TodayScreen(today, {}, {}, {}, {}, {}, {}, {}) } }
+    fun theSessionCardIsTheOneObviousThingOnToday() {
+        compose.setContent { SteadyTheme { TodayScreen(today, {}, {}, {}, {}, {}) } }
 
-        // Nothing is conveyed by colour alone, so "done" is in the words.
-        compose.onNodeWithContentDescription("Weighed in, done. Takes ten seconds")
-            .assertIsDisplayed()
-        // The one that is not done says what it is, not what it is missing.
-        compose.onNodeWithContentDescription("Say how today went. Talk or type, 20 seconds")
+        compose.onNodeWithText("Today's session").assertIsDisplayed()
+        compose.onNodeWithText("About 6 minutes").assertIsDisplayed()
+        compose.onNodeWithText("Start").assertIsDisplayed().assertHasClickAction()
+    }
+
+    @Test
+    fun whatTheAppNoticedIsSaidPlainlyAndIsNotAButton() {
+        compose.setContent { SteadyTheme { TodayScreen(today, {}, {}, {}, {}, {}) } }
+
+        // A noticed line is the app describing, never the app asking. Making it
+        // tappable would turn an observation into a task.
+        compose.onNodeWithText("Heel raises: 14, from 10 when you started.")
             .assertIsDisplayed()
     }
 
     @Test
     fun nothingTappableIsWithoutALabel() {
-        compose.setContent { SteadyTheme { TodayScreen(today, {}, {}, {}, {}, {}, {}, {}) } }
+        compose.setContent { SteadyTheme { TodayScreen(today, {}, {}, {}, {}, {}) } }
         val tappable = compose.onAllNodes(hasClickAction()).fetchSemanticsNodes()
         assertTrue("Today has things to tap", tappable.isNotEmpty())
         tappable.forEach { node ->
@@ -90,7 +98,7 @@ class AccessibilityTest {
                     fontScale = 2f,
                 ),
             ) {
-                SteadyTheme { TodayScreen(today, {}, {}, {}, {}, {}, {}, {}) }
+                SteadyTheme { TodayScreen(today, {}, {}, {}, {}, {}) }
             }
         }
         compose.onNodeWithText("Get up").assertIsDisplayed()
@@ -106,7 +114,7 @@ class AccessibilityTest {
                         exclusionsLabel = "Nothing",
                         pemLabel = "No",
                     ),
-                    actions = SettingsActions({}, {}, {}, {}, {}, {}, {}, {}, {}, {}),
+                    actions = SettingsActions({}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}),
                     onBack = {},
                 )
             }
@@ -132,18 +140,14 @@ class AccessibilityTest {
                 lifeSentence = "You can do a flight of stairs without stopping now.",
             ),
         ),
-        weightValue = "176.4",
-        weightUnit = "lb",
-        weightExplain = "The scale said 176.4 lb today.",
-        weighedIn = true,
         saidHowItWent = false,
-        moved = false,
-        nextWalkName = "A 4 minute walk",
-        nextLabel = "Your next walk",
-        moveTitle = "Move for two minutes",
-        moveSubtitle = "A short walk counts",
-        dayLetters = listOf("M", "T", "W", "T", "F", "S", "S"),
-        walkedThisWeek = List(7) { false },
+        session = SessionCardState(
+            length = "About 6 minutes",
+            movements = listOf("Stands from a high seat", "A walk", "Wall push ups"),
+            bookends = "With a warm up and a cool down.",
+            feeds = "For Get up, Go, Carry",
+        ),
+        noticed = "Heel raises: 14, from 10 when you started.",
     )
 
     private companion object {

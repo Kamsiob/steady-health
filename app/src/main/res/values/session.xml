@@ -7,6 +7,10 @@
       short and none of them has a subordinate clause in it.
     -->
     <string name="session_start">Start</string>
+    <string name="session_starts_itself">It starts on its own in a moment, so you can put the phone down.</string>
+    <string name="session_back">Back to it.</string>
+    <string name="session_hour_away">You were away a while, so this one is saved as far as it got.</string>
+    <string name="say_starts_itself">Press when you\'re ready, or I\'ll start on my own in a moment.</string>
     <string name="session_change">Change it</string>
     <string name="session_ready">I\'m ready</string>
     <string name="session_go">Go</string>

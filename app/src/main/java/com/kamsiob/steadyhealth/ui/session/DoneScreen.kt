@@ -33,6 +33,8 @@ data class DoneUiState(
     val nextTime: String = "",
     /** True only after the very first session. DESIGN.md 6, warmth in four places. */
     val first: Boolean = false,
+    /** True when an hour went by mid session and it was saved where it stood. */
+    val awayTooLong: Boolean = false,
 )
 
 /**
@@ -75,6 +77,8 @@ fun SessionDoneScreen(
             color = SteadyPalette.Navy,
             modifier = Modifier.semantics { heading() },
         )
+
+        if (state.awayTooLong) NoteBlock(stringResource(R.string.session_hour_away))
 
         state.rows.forEach { row ->
             ListItem(

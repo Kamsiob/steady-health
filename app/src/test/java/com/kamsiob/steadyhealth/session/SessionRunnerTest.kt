@@ -32,6 +32,33 @@ class SessionRunnerTest {
     }
 
     @Test
+    fun theReadyScreenStartsOnItsOwnSoTheSessionCanBeDoneFaceDown() {
+        var runner = start()
+        repeat(SessionRunner.FIRST_READY_SECONDS - 1) { runner = runner.tick() }
+        assertWithMessage("started before the wait was up").that(runner.stage).isEqualTo(Stage.Ready)
+
+        runner = runner.tick()
+        assertThat(runner.stage).isInstanceOf(Stage.CountIn::class.java)
+    }
+
+    @Test
+    fun theWaitIsShorterAfterTheFirstMovement() {
+        var runner = start().ready().go().endSet().skipRest()
+        assertThat(runner.stage).isEqualTo(Stage.Ready)
+        assertThat(runner.readySeconds).isEqualTo(SessionRunner.READY_SECONDS)
+
+        repeat(SessionRunner.READY_SECONDS) { runner = runner.tick() }
+        assertThat(runner.stage).isInstanceOf(Stage.CountIn::class.java)
+    }
+
+    @Test
+    fun aPausedReadyScreenNeverStartsOnItsOwn() {
+        var runner = start().pause()
+        repeat(SessionRunner.FIRST_READY_SECONDS * 2) { runner = runner.tick() }
+        assertThat(runner.stage).isEqualTo(Stage.Ready)
+    }
+
+    @Test
     fun theCountInIsThreeSeconds() {
         val runner = start().ready()
         assertThat(runner.stage).isEqualTo(Stage.CountIn(SessionRunner.COUNT_IN))
