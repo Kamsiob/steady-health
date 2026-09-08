@@ -1,6 +1,7 @@
 package com.kamsiob.steadyhealth.ui
 
 import com.kamsiob.steadyhealth.R
+import com.kamsiob.steadyhealth.domain.AbilityDomain
 import com.kamsiob.steadyhealth.domain.Exclusion
 import com.kamsiob.steadyhealth.domain.GettingAround
 
@@ -33,6 +34,13 @@ object Labels {
         GettingAround.Walker -> R.string.around_walker
         GettingAround.Wheelchair -> R.string.around_wheelchair
         GettingAround.InBed -> R.string.around_in_bed
+    }
+
+    fun forAbility(value: AbilityDomain) = when (value) {
+        AbilityDomain.GetUp -> R.string.ability_get_up
+        AbilityDomain.Go -> R.string.ability_go
+        AbilityDomain.Carry -> R.string.ability_carry
+        AbilityDomain.Steady -> R.string.ability_steady
     }
 
     fun forLanguage(tag: String) = when (tag) {

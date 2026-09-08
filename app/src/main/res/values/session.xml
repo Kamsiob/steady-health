@@ -19,6 +19,9 @@
     <string name="session_rest">Rest</string>
     <string name="session_last_time">Last time: %1$d</string>
     <string name="session_target">Aiming for %1$d</string>
+    <string name="session_count_one">Count one</string>
+    <string name="session_tap_each">Tap the circle each time</string>
+    <string name="session_tap_or_sensed">Put the phone in a pocket and it counts, or tap the circle</string>
     <string name="session_of">of %1$d</string>
     <string name="session_speaker_on">Sound on</string>
     <string name="session_speaker_off">Sound off</string>
@@ -55,7 +58,23 @@
     <string name="felt_about_right">About right</string>
     <string name="felt_hard">Hard</string>
     <string name="done_next_time">Next time</string>
-    <string name="done_next_line">%1$d %2$s.</string>
+    <plurals name="done_next_shape">
+        <item quantity="one">About a minute, starting with %2$s.</item>
+        <item quantity="other">About %1$d minutes, starting with %2$s.</item>
+    </plurals>
+
+    <!--
+      The same six adaptations as adapt_*, said on the done screen, where the session
+      being described has not happened yet. Two sets rather than one because "today"
+      and "next time" are not the same sentence, and a screen that says the wrong one
+      reads as a bug in the app rather than a tense.
+    -->
+    <string name="next_lighter">A bit lighter than today, because that one was hard.</string>
+    <string name="next_swapped">Something else instead of %1$s, while that settles.</string>
+    <string name="next_shorter">Shorter than usual, since it has been a few days.</string>
+    <string name="next_one_more">One more than today, since the last two felt easy.</string>
+    <string name="next_easy_day">An easy one, after two strong ones.</string>
+    <string name="next_after_unwell">Gentler for a couple of weeks, while you get back into it.</string>
     <string name="done_save">Save</string>
     <string name="done_change_next">Change next time</string>
     <string name="done_against_last">%1$d, from %2$d</string>
@@ -68,6 +87,38 @@
         <item quantity="one">About a minute</item>
         <item quantity="other">About %1$d minutes</item>
     </plurals>
+    <!-- Today's session card. The one thing on Today, and the one button. -->
+    <string name="card_label">Today\'s session</string>
+    <plurals name="card_minutes">
+        <item quantity="one">About a minute</item>
+        <item quantity="other">About %1$d minutes</item>
+    </plurals>
+    <string name="card_go">Start</string>
+    <string name="card_done">Done today.</string>
+    <string name="card_again">Do another</string>
+    <string name="card_feeds">For %1$s</string>
+    <string name="card_with_both">With a warm up and a cool down.</string>
+    <string name="card_with_warm_up">With a warm up.</string>
+    <string name="card_with_cool_down">With a cool down.</string>
+    <string name="card_nothing">Nothing is set up for today yet.</string>
+
+    <!-- The one noticed line. The person\'s own history, said back to them. -->
+    <!--
+      "Heel raises: 14, from 10 when you started." Neither number is a quantity of
+      the words around it: the first is where the person is now and the second is
+      where they began, and "when you started" agrees with nothing. A plural here
+      would give identical items in every language and one more thing to get wrong.
+    -->
+    <string name="noticed_climbed" tools:ignore="PluralsCandidate">%1$s: %2$d, from %3$d when you started.</string>
+    <plurals name="noticed_more_days">
+        <item quantity="one">One day with a session this week, against %2$d last week.</item>
+        <item quantity="other">%1$d days with a session this week, against %2$d last week.</item>
+    </plurals>
+    <plurals name="noticed_how_many">
+        <item quantity="one">One session so far.</item>
+        <item quantity="other">%1$d sessions so far.</item>
+    </plurals>
+
     <string name="offer_feeds">For %1$s</string>
     <string name="offer_easy_today">Today\'s an easy one</string>
     <string name="offer_small">Not today, but something small</string>

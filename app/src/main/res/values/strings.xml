@@ -439,6 +439,7 @@
     <!-- Settings, grid screen 22. -->
     <string name="settings_title">Settings</string>
     <string name="settings_getting_around">How you get around</string>
+    <string name="settings_ask_sub">Anything about how the app works</string>
     <string name="settings_therapist">Working with a therapist</string>
     <string name="settings_therapist_sub">Lets you add what they gave you as your own list</string>
     <string name="settings_weigh_in">Weigh in</string>

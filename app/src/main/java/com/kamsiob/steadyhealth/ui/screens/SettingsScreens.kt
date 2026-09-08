@@ -62,6 +62,7 @@ data class SettingsActions(
     val onData: () -> Unit,
     val onReminders: () -> Unit,
     val onTryItAndSee: (Boolean) -> Unit,
+    val onAsk: () -> Unit,
 )
 
 /**
@@ -89,6 +90,14 @@ fun SettingsScreen(
             heading = stringResource(R.string.settings_getting_around),
             subtitle = state.gettingAroundLabel,
             onClick = actions.onGettingAround,
+        )
+
+        // Asking a question moved here when the help dot took the top right corner of
+        // every screen. Two question marks on Today was one too many.
+        ListItem(
+            heading = stringResource(R.string.ask_title),
+            subtitle = stringResource(R.string.settings_ask_sub),
+            onClick = actions.onAsk,
         )
 
         SwitchRow(

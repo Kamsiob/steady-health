@@ -13,6 +13,7 @@ import com.kamsiob.steadyhealth.data.DayEntry
 import com.kamsiob.steadyhealth.data.DayRepository
 import com.kamsiob.steadyhealth.data.MovementRepository
 import com.kamsiob.steadyhealth.data.ProfileRepository
+import com.kamsiob.steadyhealth.data.RunRepository
 import com.kamsiob.steadyhealth.data.SteadyDatabase
 import com.kamsiob.steadyhealth.data.WeekRepository
 import com.kamsiob.steadyhealth.data.WeightRepository
@@ -94,6 +95,8 @@ class SteadyViewModel(application: Application) : AndroidViewModel(application) 
     internal val movement get() = MovementRepository(db)
     internal val weeks get() = WeekRepository(db)
     internal val checks get() = CheckRepository(db)
+    internal val runs get() = RunRepository(db)
+    private val cards get() = TodayCards(getApplication(), db)
 
     private val _onboardingComplete = MutableStateFlow<Boolean?>(null)
     val onboardingComplete: StateFlow<Boolean?> = _onboardingComplete.asStateFlow()
@@ -288,6 +291,8 @@ class SteadyViewModel(application: Application) : AndroidViewModel(application) 
             nextLabel = context.getString(nextLabel()),
             welcomeBack = welcomeBack,
             notice = _notice.value,
+            session = cards.sessionCard(date.toEpochDay(), way.way, exclusions),
+            noticed = cards.noticedLine(date.toEpochDay()),
         )
     }
 
@@ -543,6 +548,7 @@ class SteadyViewModel(application: Application) : AndroidViewModel(application) 
             helper = way.way == GettingAround.Walker,
             pacingNote = context.getString(R.string.move_pacing_note).takeIf { pacing },
             restToday = rest,
+            weighsIn = way.weighsIn && profile.weighsIn(),
         )
     }
 

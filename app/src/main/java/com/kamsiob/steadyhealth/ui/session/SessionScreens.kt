@@ -2,6 +2,7 @@
 
 package com.kamsiob.steadyhealth.ui.session
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -13,6 +14,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
@@ -52,6 +55,8 @@ data class SessionUiState(
     val stepOf: String = "",
     /** Shown once, after "Make it easier" has been used. */
     val eased: Boolean = false,
+    /** True when the phone counts this one itself, so the line under the ring says so. */
+    val sensed: Boolean = false,
 )
 
 /** What every session screen can do. Grouped, because there are seven of them. */
@@ -171,17 +176,10 @@ fun LiveScreen(
         actions = actions,
         modifier = modifier,
         footer = {
-            if (state.counted == Counted.Taps || state.counted == Counted.Reps) {
-                PrimaryButton(
-                    label = stringResource(R.string.session_done_set),
-                    onClick = actions.onEndSet,
-                )
-            } else {
-                PrimaryButton(
-                    label = stringResource(R.string.session_done_set),
-                    onClick = actions.onEndSet,
-                )
-            }
+            PrimaryButton(
+                label = stringResource(R.string.session_done_set),
+                onClick = actions.onEndSet,
+            )
         },
     ) {
         SteadyText(
@@ -192,9 +190,25 @@ fun LiveScreen(
             textAlign = TextAlign.Center,
         )
 
+        // The ring is the count. For anything the phone cannot count on its own it is
+        // also the button, because a separate "add one" control beside a circle this
+        // size is a second thing to aim at while standing up out of a chair.
+        val counting = state.counted == Counted.Taps || state.counted == Counted.Reps
+        val countOne = stringResource(R.string.session_count_one)
         ProgressRing(
             progress = state.progress,
-            modifier = Modifier.fillMaxWidth().padding(horizontal = RING_INSET),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = RING_INSET)
+                .then(
+                    if (counting) {
+                        Modifier
+                            .clickable(role = Role.Button, onClick = actions.onTap)
+                            .semantics { contentDescription = countOne }
+                    } else {
+                        Modifier
+                    },
+                ),
             animate = motionOn(),
         ) {
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -209,6 +223,18 @@ fun LiveScreen(
                     color = SteadyPalette.Ink3Text,
                 )
             }
+        }
+
+        if (counting) {
+            SteadyText(
+                text = stringResource(
+                    if (state.sensed) R.string.session_tap_or_sensed else R.string.session_tap_each,
+                ),
+                style = SteadyType.Body,
+                color = SteadyPalette.Ink3Text,
+                modifier = Modifier.fillMaxWidth(),
+                textAlign = TextAlign.Center,
+            )
         }
 
         state.lastResult?.let {

@@ -2,6 +2,7 @@ package com.kamsiob.steadyhealth.ui.session
 
 import android.app.Application
 import android.os.SystemClock
+import androidx.annotation.PluralsRes
 import androidx.annotation.StringRes
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -11,6 +12,7 @@ import com.kamsiob.steadyhealth.data.RunRepository
 import com.kamsiob.steadyhealth.data.SteadyDatabase
 import com.kamsiob.steadyhealth.sensing.Motion
 import com.kamsiob.steadyhealth.sensing.RepCounter
+import com.kamsiob.steadyhealth.session.Adaptation
 import com.kamsiob.steadyhealth.session.Area
 import com.kamsiob.steadyhealth.session.Buzz
 import com.kamsiob.steadyhealth.session.Counted
@@ -279,10 +281,39 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
 
     private suspend fun nextTimeLine(felt: Felt): String {
         val next = SessionEngine.plan(
-            inputsFor(profile, runs).copy(lastFelt = felt, feltBefore = runs.lastFelt()),
+            // The answer that was just given is the last one, and the one before it is
+            // the session before this one. Reading lastFelt() here counted the answer
+            // twice and told somebody the last two felt easy after a single session.
+            inputsFor(profile, runs).copy(lastFelt = felt, feltBefore = runs.feltBefore()),
         )
-        val first = next.main.firstOrNull() ?: return ""
-        return string(R.string.done_next_line, first.target, first.movement.name.lowercase())
+        // The main movements first, because that is what somebody pictures, but an
+        // easy day has none and saying nothing about it would make the answer look
+        // like it changed nothing.
+        val opening = next.main.firstOrNull() ?: next.steps.firstOrNull() ?: return ""
+        val shape = plural(
+            R.plurals.done_next_shape,
+            next.minutes,
+            next.minutes,
+            opening.movement.name.lowercase(),
+        )
+        val why = adaptationLine(next.adaptation)
+        return listOfNotNull(shape, why).joinToString(" ")
+    }
+
+    /**
+     * The one sentence for whatever the engine changed.
+     *
+     * Exactly one, chosen by the engine, never two and never written by a model.
+     */
+    private fun adaptationLine(adaptation: Adaptation): String? = when (adaptation.kind) {
+        Adaptation.Kind.Lighter -> string(R.string.next_lighter)
+        Adaptation.Kind.Swapped ->
+            adaptation.movementName?.let { string(R.string.next_swapped, it.lowercase()) }
+        Adaptation.Kind.Shorter -> string(R.string.next_shorter)
+        Adaptation.Kind.OneMore -> string(R.string.next_one_more)
+        Adaptation.Kind.EasyDay -> string(R.string.next_easy_day)
+        Adaptation.Kind.AfterUnwell -> string(R.string.next_after_unwell)
+        Adaptation.Kind.None -> null
     }
 
     /**
@@ -443,6 +474,9 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
     private fun string(@StringRes id: Int, vararg args: Any): String =
         getApplication<Application>().getString(id, *args)
 
+    private fun plural(@PluralsRes id: Int, count: Int, vararg args: Any): String =
+        getApplication<Application>().resources.getQuantityString(id, count, *args)
+
     private companion object {
         const val A_SECOND = 1000L
         const val AN_HOUR = 60L * 60 * 1000
@@ -479,5 +513,6 @@ fun SessionRunner.toUiState(speaking: Boolean, unit: String, stepOf: String): Se
         counted = movement?.counted ?: Counted.Reps,
         stepOf = stepOf,
         eased = easedIds.isNotEmpty(),
+        sensed = movement?.sensedBy != null && movement.sensedBy != Sensed.None,
     )
 }

@@ -205,12 +205,7 @@ class SummaryViewModel(application: Application) : AndroidViewModel(application)
         .format(DateTimeFormatter.ofPattern("d MMMM yyyy", Locale.getDefault()))
 
     @StringRes
-    private fun nameFor(domain: AbilityDomain) = when (domain) {
-        AbilityDomain.GetUp -> R.string.ability_get_up
-        AbilityDomain.Go -> R.string.ability_go
-        AbilityDomain.Carry -> R.string.ability_carry
-        AbilityDomain.Steady -> R.string.ability_steady
-    }
+    private fun nameFor(domain: AbilityDomain) = Labels.forAbility(domain)
 
     @StringRes
     private fun stateFor(state: AbilityState) = when (state) {

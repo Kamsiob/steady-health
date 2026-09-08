@@ -125,9 +125,7 @@ private fun Tabs(
                     composable(Route.TABS) {
                         TabBody(
                             tab = tab,
-                            onTab = { tab = it },
                             viewModel = viewModel,
-                            askViewModel = askViewModel,
                             settingsViewModel = settingsViewModel,
                             checkViewModel = checkViewModel,
                             abilityViewModel = abilityViewModel,
@@ -150,6 +148,7 @@ private fun Tabs(
                     sessionRoutes(sessionViewModel, back)
                     settingsRoutes(
                         viewModel = settingsViewModel,
+                        askViewModel = askViewModel,
                         navController = navController,
                         back = back,
                         onSummary = {
@@ -322,9 +321,7 @@ private fun NavGraphBuilder.dailyRoutes(
 @Suppress("LongParameterList") // Three tabs, seven view models, one place.
 private fun TabBody(
     tab: Tab,
-    onTab: (Tab) -> Unit,
     viewModel: SteadyViewModel,
-    askViewModel: AskViewModel,
     settingsViewModel: SettingsViewModel,
     checkViewModel: CheckViewModel,
     abilityViewModel: AbilityViewModel,
@@ -343,18 +340,13 @@ private fun TabBody(
                     abilityViewModel.open(it)
                     navController.navigate(Route.ABILITY)
                 },
-                onWeighIn = {
-                    viewModel.openWeighIn()
-                    navController.navigate(Route.WEIGH_IN)
-                },
                 onSayHow = {
                     viewModel.openSayHow()
                     navController.navigate(Route.SAY_HOW)
                 },
-                onMove = { onTab(Tab.Move) },
-                onAsk = {
-                    askViewModel.openAsk()
-                    navController.navigate(Route.ASK)
+                onGo = {
+                    sessionViewModel.startTodays()
+                    navController.navigate(Route.SESSION)
                 },
                 onSettings = {
                     settingsViewModel.openSettings()
@@ -370,10 +362,14 @@ private fun TabBody(
             MoveScreen(
                 state = state,
                 onGo = {
-                    // Move's Go runs the new session while Today is being rebuilt,
-                    // so Phase 1a is on the device rather than only in tests.
                     sessionViewModel.startTodays()
                     navController.navigate(Route.SESSION)
+                },
+                // Weight came off Today with the reframe, so its way in lives here
+                // until Phase 2 rebuilds this tab as the library and history.
+                onWeighIn = {
+                    viewModel.openWeighIn()
+                    navController.navigate(Route.WEIGH_IN)
                 },
             )
         }
@@ -606,6 +602,7 @@ private fun NavGraphBuilder.askRoutes(
 
 private fun NavGraphBuilder.settingsRoutes(
     viewModel: SettingsViewModel,
+    askViewModel: AskViewModel,
     navController: NavHostController,
     back: () -> Unit,
     onSummary: () -> Unit,
@@ -626,6 +623,10 @@ private fun NavGraphBuilder.settingsRoutes(
                 onData = { navController.navigate(Route.DATA) },
                 onReminders = { navController.navigate(Route.REMINDERS) },
                 onTryItAndSee = viewModel::setTryItAndSee,
+                onAsk = {
+                    askViewModel.openAsk()
+                    navController.navigate(Route.ASK)
+                },
             ),
             onBack = back,
         )

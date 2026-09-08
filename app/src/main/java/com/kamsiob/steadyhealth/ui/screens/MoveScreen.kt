@@ -46,6 +46,9 @@ data class MoveUiState(
 
     /** In pacing mode, when the days for this week have been used. */
     val restToday: Boolean = false,
+
+    /** False for somebody who is not weighing in, which hides the way in entirely. */
+    val weighsIn: Boolean = true,
 )
 
 /**
@@ -60,6 +63,7 @@ data class MoveUiState(
 fun MoveScreen(
     state: MoveUiState,
     onGo: () -> Unit,
+    onWeighIn: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     SteadyScreen(
@@ -110,6 +114,14 @@ fun MoveScreen(
             NoteBlock(
                 heading = stringResource(R.string.move_helper_title),
                 text = stringResource(R.string.move_helper_body),
+            )
+        }
+
+        if (state.weighsIn) {
+            ListItem(
+                heading = stringResource(R.string.today_weigh_in),
+                subtitle = stringResource(R.string.today_weigh_sub),
+                onClick = onWeighIn,
             )
         }
     }

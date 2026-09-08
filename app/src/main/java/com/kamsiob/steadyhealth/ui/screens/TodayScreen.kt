@@ -1,6 +1,5 @@
 package com.kamsiob.steadyhealth.ui.screens
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -15,9 +14,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
@@ -28,25 +25,17 @@ import com.kamsiob.steadyhealth.domain.AbilityDomain
 import com.kamsiob.steadyhealth.ui.components.AbilityTile
 import com.kamsiob.steadyhealth.ui.components.CarryGlyph
 import com.kamsiob.steadyhealth.ui.components.DailyCard
-import com.kamsiob.steadyhealth.ui.components.Hero
-import com.kamsiob.steadyhealth.ui.components.HeroExplain
-import com.kamsiob.steadyhealth.ui.components.HeroLabel
-import com.kamsiob.steadyhealth.ui.components.HeroNumber
-import com.kamsiob.steadyhealth.ui.components.HeroSky
-import com.kamsiob.steadyhealth.ui.components.MoveGlyph
 import com.kamsiob.steadyhealth.ui.components.NoteBlock
 import com.kamsiob.steadyhealth.ui.components.RiseGlyph
-import com.kamsiob.steadyhealth.ui.components.SectionTitle
+import com.kamsiob.steadyhealth.ui.components.SessionCard
+import com.kamsiob.steadyhealth.ui.components.SessionCardState
 import com.kamsiob.steadyhealth.ui.components.SteadyGlyph
 import com.kamsiob.steadyhealth.ui.components.SteadyScreen
 import com.kamsiob.steadyhealth.ui.components.TalkGlyph
 import com.kamsiob.steadyhealth.ui.components.TravelGlyph
-import com.kamsiob.steadyhealth.ui.components.WeekRow
-import com.kamsiob.steadyhealth.ui.components.WeighGlyph
 import com.kamsiob.steadyhealth.ui.help.Place
 import com.kamsiob.steadyhealth.ui.theme.Ability
 import com.kamsiob.steadyhealth.ui.theme.SteadyPalette
-import com.kamsiob.steadyhealth.ui.theme.SteadyShapes
 import com.kamsiob.steadyhealth.ui.theme.SteadySpacing
 import com.kamsiob.steadyhealth.ui.theme.SteadyText
 import com.kamsiob.steadyhealth.ui.theme.SteadyType
@@ -96,6 +85,12 @@ data class TodayUiState(
 
     /** One sentence the app owes the person, until they say they have read it. */
     val notice: String? = null,
+
+    /** Today's session. Null only while it is still being planned. */
+    val session: SessionCardState? = null,
+
+    /** The one line the app noticed, or nothing at all. ADDENDUM-03 Part 9. */
+    val noticed: String? = null,
 ) {
     val doneCount: Int
         get() = listOfNotNull(weighedIn.takeIf { weighsIn }, saidHowItWent, moved).count { it }
@@ -107,24 +102,22 @@ data class TodayUiState(
 }
 
 /**
- * Today, from the grid, screens 5 to 7.
+ * Today. ADDENDUM-03 Part 2, folded into MASTER_SPEC 6.1.
  *
- * The abilities lead and the weight follows, which is the whole reframe in one
- * layout. The four tiles sit at the top with a sentence about life in each; the
- * weight is a block below them, not a hero, because it is a lever rather than the
- * score.
+ * The session card is the screen. It says what today is, how long it takes and what
+ * changed about it, and it carries the only button. Under it is one line the app
+ * noticed in the person's own history, and then the four abilities, which are what
+ * all of this is for.
  *
- * The three daily things keep their fixed tints and their fixed order. Somebody
- * learns where the blue one is long before they read the words on it.
+ * Weight is not here and never has been since the reframe: it appears in a sentence
+ * beside an ability that changed, and nowhere else.
  */
 @Composable
 fun TodayScreen(
     state: TodayUiState,
     onAbility: (AbilityDomain) -> Unit,
-    onWeighIn: () -> Unit,
     onSayHow: () -> Unit,
-    onMove: () -> Unit,
-    onAsk: () -> Unit,
+    onGo: () -> Unit,
     onSettings: () -> Unit,
     onNotice: () -> Unit,
     modifier: Modifier = Modifier,
@@ -144,26 +137,15 @@ fun TodayScreen(
                 )
             }
             RoundAction(
-                icon = R.drawable.ic_question,
-                spoken = stringResource(R.string.action_ask),
-                onClick = onAsk,
-            )
-            RoundAction(
                 icon = R.drawable.ic_settings,
                 spoken = stringResource(R.string.action_settings),
                 onClick = onSettings,
             )
         }
 
-        AbilityGrid(state.abilities, onAbility)
+        state.session?.let { SessionCard(state = it, onGo = onGo) }
 
-        if (state.weighsIn && state.weightValue != null) {
-            Hero(sky = if (state.morning) HeroSky.Morning else HeroSky.Evening) {
-                HeroLabel(stringResource(R.string.weight_label))
-                HeroNumber(value = state.weightValue, unit = state.weightUnit)
-                if (state.weightExplain.isNotBlank()) HeroExplain(state.weightExplain)
-            }
-        }
+        state.noticed?.let { NoteBlock(it) }
 
         state.welcomeBack?.let { NoteBlock(it) }
 
@@ -176,22 +158,18 @@ fun TodayScreen(
             )
         }
 
-        SectionTitle(text = stringResource(R.string.today_section), aside = doneAside(state))
+        AbilityGrid(state.abilities, onAbility)
 
-        DailyThree(state = state, onWeighIn = onWeighIn, onSayHow = onSayHow, onMove = onMove)
-
-        if (!state.weighsIn) NoteBlock(stringResource(R.string.today_weighing_off))
-
-        if (state.nextWalkName.isNotBlank()) NextThing(state = state, onMove = onMove)
-
-        if (state.dayLetters.isNotEmpty()) {
-            WeekRow(
-                dayLetters = state.dayLetters,
-                walked = state.walkedThisWeek,
-                todayIndex = state.todayIndex,
-                spoken = pluralStringResource(R.plurals.week_row_spoken, state.daysWalked, state.daysWalked),
-            )
-        }
+        DailyCard(
+            title = stringResource(
+                if (state.saidHowItWent) R.string.today_said else R.string.today_say,
+            ),
+            subtitle = stringResource(R.string.today_say_sub),
+            tint = SteadyPalette.SkyL,
+            done = state.saidHowItWent,
+            onClick = onSayHow,
+            glyph = { TalkGlyph() },
+        )
     }
 }
 
@@ -223,109 +201,6 @@ private fun AbilityGrid(abilities: List<AbilityTileState>, onAbility: (AbilityDo
             }
             if (pair.size == 1) Box(Modifier.weight(1f))
         }
-    }
-}
-
-/** "2 of 3 done", "All three done", or "Both done" for somebody not weighing in. */
-@Composable
-private fun doneAside(state: TodayUiState): String = when {
-    !state.allDone -> stringResource(R.string.today_progress, state.doneCount, state.dailyCount)
-    state.weighsIn -> stringResource(R.string.today_all_done)
-    else -> stringResource(R.string.today_all_done_two)
-}
-
-/**
- * The dark row at the bottom of Today: what the next one is, and a way in.
- *
- * Its own composable because the label above the name is not always "Your next
- * walk". It is "Today, for Go" in a wheelchair and "Two minutes in bed" at the
- * other end, and the state carries the words rather than the screen choosing.
- */
-@Composable
-private fun NextThing(state: TodayUiState, onMove: () -> Unit) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clip(SteadyShapes.LifeCard)
-            .background(SteadyPalette.Navy)
-            .clickable(role = Role.Button, onClick = onMove)
-            .padding(SteadySpacing.Inside),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            SteadyText(
-                text = state.nextLabel,
-                style = SteadyType.CardTitle,
-                color = SteadyPalette.White.copy(alpha = LABEL_ALPHA),
-            )
-            SteadyText(
-                text = state.nextWalkName,
-                style = SteadyType.SectionTitle,
-                color = SteadyPalette.White,
-            )
-        }
-        Box(
-            modifier = Modifier
-                .clip(SteadyShapes.Round)
-                .background(SteadyPalette.OrangeD)
-                .padding(horizontal = GO_SIDE, vertical = GO_TOP),
-        ) {
-            SteadyText(
-                text = stringResource(R.string.today_go),
-                style = SteadyType.Button,
-                color = SteadyPalette.White,
-            )
-        }
-    }
-}
-
-/**
- * The three daily things, in their fixed order with their fixed tints.
- *
- * A section of its own because it is one idea, not because a counter asked for
- * it: the order and the tints never change, and keeping them in one place is
- * what makes that easy to see.
- */
-@Composable
-private fun DailyThree(
-    state: TodayUiState,
-    onWeighIn: () -> Unit,
-    onSayHow: () -> Unit,
-    onMove: () -> Unit,
-) {
-    Row(horizontalArrangement = Arrangement.spacedBy(SteadySpacing.ListGap)) {
-        if (state.weighsIn) {
-            DailyCard(
-                title = stringResource(
-                    if (state.weighedIn) R.string.today_weighed_in else R.string.today_weigh_in,
-                ),
-                subtitle = stringResource(R.string.today_weigh_sub),
-                tint = SteadyPalette.Sand,
-                done = state.weighedIn,
-                modifier = Modifier.weight(1f),
-                onClick = onWeighIn,
-            ) { WeighGlyph() }
-        }
-
-        DailyCard(
-            title = stringResource(
-                if (state.saidHowItWent) R.string.today_said else R.string.today_say,
-            ),
-            subtitle = stringResource(R.string.today_say_sub),
-            tint = SteadyPalette.SkyL,
-            done = state.saidHowItWent,
-            modifier = Modifier.weight(1f),
-            onClick = onSayHow,
-        ) { TalkGlyph() }
-
-        DailyCard(
-            title = if (state.moved) stringResource(R.string.today_moved) else state.moveTitle,
-            subtitle = state.moveSubtitle,
-            tint = SteadyPalette.GreenL,
-            done = state.moved,
-            modifier = Modifier.weight(1f),
-            onClick = onMove,
-        ) { MoveGlyph() }
     }
 }
 
@@ -369,7 +244,4 @@ fun AbilityGlyph(domain: AbilityDomain, modifier: Modifier = Modifier) {
 }
 
 private const val ALL_THREE = 3
-private const val LABEL_ALPHA = 0.92f
 private val ACTION_ICON = 24.dp
-private val GO_SIDE = 18.dp
-private val GO_TOP = 10.dp
