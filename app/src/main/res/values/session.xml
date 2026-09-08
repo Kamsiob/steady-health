@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <!--
+      The session, from ADDENDUM-03 Part 1. Every line here is either read out loud or
+      read from two feet away by somebody standing up out of a chair, so they are all
+      short and none of them has a subordinate clause in it.
+    -->
+    <string name="session_start">Start</string>
+    <string name="session_change">Change it</string>
+    <string name="session_ready">I\'m ready</string>
+    <string name="session_go">Go</string>
+    <string name="session_pause">Pause</string>
+    <string name="session_resume">Carry on</string>
+    <string name="session_skip_rest">Skip the rest</string>
+    <string name="session_skip_count_in">Skip the count in</string>
+    <string name="session_done_set">Done with this one</string>
+    <string name="session_next_up">Next: %1$s</string>
+    <string name="session_rest">Rest</string>
+    <string name="session_last_time">Last time: %1$d</string>
+    <string name="session_target">Aiming for %1$d</string>
+    <string name="session_of">of %1$d</string>
+    <string name="session_speaker_on">Sound on</string>
+    <string name="session_speaker_off">Sound off</string>
+
+    <!-- The three exits. Equal weight, never buried, from ADDENDUM-03 Part 2. -->
+    <string name="exit_easier">Make it easier</string>
+    <string name="exit_skip">Skip this one</string>
+    <string name="exit_enough">That\'s enough for today</string>
+    <string name="exit_hurts">Something hurts</string>
+    <string name="exit_eased">Switched to the easier one. That still counts.</string>
+
+    <!-- What the pain button asks, once the session has already stopped. -->
+    <string name="hurt_where">Where does it hurt?</string>
+    <string name="hurt_why">Those movements are left out for a week. Nothing else changes.</string>
+    <string name="hurt_shoulder">Shoulder</string>
+    <string name="hurt_arm">Arm or wrist</string>
+    <string name="hurt_back">Back</string>
+    <string name="hurt_hip">Hip</string>
+    <string name="hurt_knee">Knee</string>
+    <string name="hurt_ankle">Ankle or foot</string>
+    <string name="hurt_neck">Neck</string>
+    <string name="hurt_rather_not">I\'d rather not say</string>
+    <string name="hurt_left_out">Left the %1$s movements out this week.</string>
+    <string name="hurt_worth_a_word">Worth a word with your doctor about that %1$s.</string>
+    <string name="hurt_bring_back">Ready to try the %1$s movements again?</string>
+    <string name="hurt_bring_back_yes">Yes, bring them back</string>
+    <string name="hurt_bring_back_no">Not yet</string>
+
+    <!-- The done screen. -->
+    <string name="done_title">Done. That counts.</string>
+    <string name="done_first">That\'s the first one.</string>
+    <string name="done_how">How did that feel?</string>
+    <string name="felt_easy">Easy</string>
+    <string name="felt_about_right">About right</string>
+    <string name="felt_hard">Hard</string>
+    <string name="done_next_time">Next time</string>
+    <string name="done_save">Save</string>
+    <string name="done_change_next">Change next time</string>
+    <string name="done_against_last">%1$d, from %2$d</string>
+    <string name="done_first_time">%1$d, the first time</string>
+    <string name="done_skipped">Left out</string>
+
+    <!-- The offer card on Today. -->
+    <string name="offer_today">Today\'s session</string>
+    <plurals name="offer_length">
+        <item quantity="one">About a minute</item>
+        <item quantity="other">About %1$d minutes</item>
+    </plurals>
+    <string name="offer_feeds">For %1$s</string>
+    <string name="offer_easy_today">Today\'s an easy one</string>
+    <string name="offer_small">Not today, but something small</string>
+    <string name="offer_got_a_minute">Got a minute?</string>
+    <string name="offer_got_a_minute_sub">One movement, sixty seconds. It counts.</string>
+
+    <!-- The adaptation sentences. One at a time, and never more. -->
+    <string name="adapt_lighter">A bit lighter today, since the last one felt hard.</string>
+    <string name="adapt_swapped">Swapped %1$s out, since you mentioned it was sore.</string>
+    <string name="adapt_shorter">Shorter one to get going again.</string>
+    <string name="adapt_one_more">One more than last time. You said the last two felt easy.</string>
+    <string name="adapt_easy_day">An easy one after two harder ones.</string>
+    <string name="adapt_after_unwell">We\'ll take it slowly for a couple of weeks. That\'s what bodies need after being unwell.</string>
+
+    <!-- Warm up and cool down, each explained once. -->
+    <string name="warm_up_why">A minute to get moving first. It makes the rest easier.</string>
+    <string name="cool_down_why">A minute to let everything settle. Skip it if you like.</string>
+
+    <!-- What the voice says. Never a number the engine did not produce. -->
+    <string name="say_count_in_three">Three</string>
+    <string name="say_count_in_two">Two</string>
+    <string name="say_count_in_one">One</string>
+    <string name="say_count_in_go">Go</string>
+    <string name="say_five_more">Five more</string>
+    <string name="say_more_than_last">That\'s more than last time</string>
+    <string name="say_set_done">That\'s the set</string>
+    <string name="say_rest_next">Rest. Next is %1$s</string>
+    <string name="say_five_seconds">Five seconds</string>
+    <string name="say_session_done">That\'s the session. Well done for turning up.</string>
+    <string name="say_up">Up</string>
+    <string name="say_down">And down</string>
+
+    <!--
+      "%1$d" alone, spoken as each rep is counted. A plural would give identical
+      items in every language, and there is no word after the number to agree with.
+    -->
+    <string name="say_number" tools:ignore="PluralsCandidate">%1$d</string>
+
+</resources>

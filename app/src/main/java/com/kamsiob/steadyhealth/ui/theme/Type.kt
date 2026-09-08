@@ -42,10 +42,21 @@ val Figtree = FontFamily(
  * everywhere, no uppercase labels, no italics.
  *
  * Sizes are sp so they follow the system font size, which the accessibility floor
- * requires. Line heights are set with trim turned off so a large font size grows
+ * requires. ADDENDUM-03 Part 17 raises that floor: body text never below 16sp, so
+ * Body and BodyStrong moved up from 14 and Caption from 12.
+ *
+ * Line heights are set with trim turned off so a large font size grows
  * the line box rather than clipping the letters.
  */
 object SteadyType {
+
+    /**
+     * The count on the live session screen, and the largest type in the app.
+     *
+     * Readable from two feet away by somebody standing up out of a chair with the
+     * phone on a table. Nothing else is this size, and nothing else needs to be.
+     */
+    val SessionCount = style(size = 96, weight = WEIGHT_BLACK, tracking = -0.05f)
 
     val HeroNumber = style(size = 64, weight = WEIGHT_BLACK, tracking = -0.05f)
     val HeroHeadline = style(size = 38, weight = WEIGHT_BLACK, tracking = -0.04f)
@@ -53,15 +64,15 @@ object SteadyType {
     val Greeting = style(size = 28, weight = WEIGHT_EXTRABOLD, tracking = -0.035f)
     val SectionTitle = style(size = 17, weight = WEIGHT_EXTRABOLD, tracking = -0.02f)
     val BlockValue = style(size = 24, weight = WEIGHT_BLACK, tracking = -0.04f)
-    val CardTitle = style(size = 14, weight = WEIGHT_EXTRABOLD, tracking = -0.02f)
-    val ListItemHeading = style(size = 15, weight = WEIGHT_EXTRABOLD, tracking = -0.02f)
-    val Body = style(size = 14, weight = WEIGHT_REGULAR, tracking = 0f)
-    val BodyStrong = style(size = 14, weight = WEIGHT_SEMIBOLD, tracking = 0f)
-    val Caption = style(size = 12, weight = WEIGHT_SEMIBOLD, tracking = 0f)
+    val CardTitle = style(size = 15, weight = WEIGHT_EXTRABOLD, tracking = -0.02f)
+    val ListItemHeading = style(size = 16, weight = WEIGHT_EXTRABOLD, tracking = -0.02f)
+    val Body = style(size = 16, weight = WEIGHT_REGULAR, tracking = 0f)
+    val BodyStrong = style(size = 16, weight = WEIGHT_SEMIBOLD, tracking = 0f)
+    val Caption = style(size = 14, weight = WEIGHT_SEMIBOLD, tracking = 0f)
     val Button = style(size = 16, weight = WEIGHT_EXTRABOLD, tracking = -0.01f)
 
     /** The tab bar label, DESIGN.md section 3. Small, and it scales with the system. */
-    val TabLabel = style(size = 11, weight = WEIGHT_BOLD, tracking = 0f)
+    val TabLabel = style(size = 12, weight = WEIGHT_BOLD, tracking = 0f)
 
     /** The screen title in the 44 px top row, DESIGN.md section 4. */
     val ScreenTitle = style(size = 20, weight = WEIGHT_EXTRABOLD, tracking = -0.02f)
