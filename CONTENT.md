@@ -143,3 +143,26 @@ Source: the Patient-Specific Functional Scale, used widely in physical therapy.
 
 ## Review note
 The owner reviews these once before release. Anyone who works in eating disorder support should read cards 4 and 7. A physical therapist should read cards 8, 9, 10, 11, and 12. Sources are named so the review is quick.
+
+## Expansion, from ADDENDUM-03 Part 8 (merged on commit 9837f2a)
+The card library grows from twelve to about twenty-five. The new ones, all hand
+written, all sourced, none of them advice:
+
+- Why strength matters more than cardio after fifty.
+- Balance as a skill, not a fixed quality.
+- What to expect after an operation.
+- What a physio does, and how to get one.
+- How to talk to a doctor about mobility.
+- Footwear and balance.
+- Protein and muscle.
+- What morning stiffness usually is.
+- Getting up from the floor, in stages. Offered once in month two, written rather than
+  a session, and it never mentions falling. Almost nobody is taught this.
+- What a home programme is for, and why doing it matters more than doing it perfectly.
+- What the words on a therapy report usually mean.
+- Why the app asks how a session felt.
+- What changes in the first month, and what does not.
+
+The card titled "What the talk test is" is renamed, because ADDENDUM-03 adds "test" to
+the banned list. It becomes "How hard should it feel?" and the copy is adjusted to
+match; the source and the substance are unchanged.

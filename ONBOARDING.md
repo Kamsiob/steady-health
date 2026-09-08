@@ -1,70 +1,91 @@
 # ONBOARDING.md: the first run, and how the app teaches itself
 
-Goal from the research: a first real action in under a minute, one thing learned per screen, nothing unlocked that the person hasn't earned a reason to see. The retention data says day-one completion of a meaningful action is the strongest predictor there is, and that long setup is where people leave. So setup is short, the app teaches in place afterward, and everything else is progressive.
+Replaced in full by ADDENDUM-03 Part 3, merged on commit 9837f2a. The earlier
+eleven-screen sequence, which asked for units, height, age, capability, exclusions,
+readiness, an anchor and a weigh-in before the person had done anything, is gone.
 
-## Sequence
+**The rule:** the person does something real before answering anything optional, and
+every question is asked at the moment it matters.
 
-### 1. Welcome
-Hero block, sun and hills. Headline: "Notice what changes. Never get graded." Line: "Your weight, your walks, and how your days go. All of it stays on your phone." Language pills: English, Espanol, Chinese, Arabic (RTL from day one). Button: Get started. Caption: "Free and open source, by Kamsiob." Nothing else. No tour, no carousel.
+The measure of this document is a number: **under sixty seconds from launch to the
+start of the first session.** Anything that does not survive that constraint is asked
+later or not at all.
 
-### 2. Three things, once
-One screen, three lines, each with its glyph, read in ten seconds:
-- "Weigh in when it suits you. The app smooths it so one heavy morning doesn't matter."
-- "Say how the day went. One sentence, talk or type."
-- "Move for two minutes. A short walk counts."
-Button: Okay.
+## The sequence
 
-### 2b. How you get around
-"Most days, how do you get around?" Four cards: on my feet; with a walker or cane; in a wheelchair; mostly in bed or a chair, for now. Under them: "This sets what the app measures and what it suggests. There is no wrong answer, and you can change it any time." Then one switch: "Working with a physical or occupational therapist right now?" which, if on, lets the person enter what their therapist gave them as their own list.
+### O1. The hook
+Full bleed sun and hills hero. Large: "What can you do?" Under it: "This app keeps
+track of what your body can do, and helps you do more of it. Everything stays on your
+phone." Language pills, showing only the languages this build actually speaks. One
+button: "Show me".
 
-This is the first real question because it decides which version of the app the person gets. It is never framed as a level.
+No sign up, no email, no account, no permission request, nothing to read.
 
-### 3. About you
-Height (a picker; "So the app can do one calculation on the body page. Never for a label."). Age, optional, with "Skip" as a real button and the line "Used only to show typical ranges for your age, if you ever want them. Skip is fine." Units. Nothing else.
+### O2. One question, four cards
+"Most days, how do you get around?" On my feet / With a walker or cane / In a
+wheelchair / Mostly in bed or a chair, for now. Under it: "There's a version of this
+app for each. Change it any time." Cards at least 64dp tall, one tap, no Continue
+button.
 
-### 4. Where you're starting
-Four capability questions as three-way pills, each with a one-line reason under it:
-- "Getting out of a low chair is": hard / okay / easy. "Sets how short your first walks and exercises are."
-- "Stairs are": something I avoid / fine with a stop / fine. 
-- "I can walk before I want to stop for about": under 5 minutes / 5 to 15 / more than 15.
-- "Getting down to the floor and back up": no / with help / yes.
-Then one question, alone: "After activity, do you feel much worse for a day or more afterward?" no / sometimes / yes. Under it: "Some people's bodies work that way. If yours does, the app won't push."
+### O3. Their words
+"What would you like to be able to do?" A large microphone button and a text field,
+equal size, side by side.
 
-### 5. Anything to leave out
-"Is there anything you avoid, or have been told not to do?" Multi-select pills in movement words only: pushing or pressing; anything that strains my stomach; getting down on the floor; jumping or impact; deep knee bending; lifting overhead; twisting my back; deep forward bending; arching my back; lying flat on my back; straining or holding my breath. Line under: "The app hides those for good. It never asks why." Button: Continue, with "Nothing to leave out" as a second button.
+Six starter chips, and deliberately not all of them maintenance: get off the floor /
+stairs without stopping / carry the shopping in one trip / keep up with the grandkids
+/ walk further than I do now / get stronger than I am.
 
-### 6. Before harder walks (readiness)
-Five flags in original wording, each yes/no: chest pain at rest or when active; fainting or dizziness that made you lose balance in the last year; a doctor said only exercise under supervision; pregnant; a bone or joint problem that could get worse. Any yes: one card, "Worth a word with your doctor before the harder walks. Everything up to a 15-minute walk is still here." with a link "The official readiness questionnaire (PAR-Q+)" opening eparmedx.com. Never blocks anything. If all no: skip straight on.
+Their sentence appears exactly as they said it, then "I'll keep track of this" with
+the tracked item, editable. One item is enough. Skipping picks "move more easily" and
+the app asks again on day four.
 
-### 7. What would you like to be able to do?
-The centre of onboarding and the first place the model is visible. "Say it however you would to a friend." Talk or type. The person's sentence appears as they said it, then: "I'll track these. Right?" with the items the model pulled out, each showing its ability. Confirm or edit. Starters are offered for anyone who would rather pick: carry the groceries in one trip; stairs without stopping; get down to the floor and back up; keep up with the kids; reach the top shelf; get to the mailbox on my own; feel less stiff in the morning.
+### O4. The first session, which is not a question
+"Here's something you can do right now. It takes about two minutes." The movement, its
+setup line, one button: "Start".
 
-Then, on the next screen: "Right now, how hard is each one?" with a ten-block rating per item and "Zero is can't do it at all. Ten is easy." Under it: "The app asks again once a month. The difference between then and now is the whole point." 
+### O5. After the session, three things
+One tap each, a visible Skip on all three.
+1. "How did that feel?" easy / about right / hard.
+2. "Anything you avoid, or have been told not to do?" Movement chips plus "nothing".
+3. "Do you have a sturdy chair without arms?" yes / only with arms / no.
 
-### 8. When would two minutes fit?
-"Pick something you already do every day. Right after it is when the app will suggest a walk." Pills: after morning coffee; after lunch; after dinner; after brushing my teeth; walking the dog; the school run. Line: "It usually takes a few months for something like this to feel automatic. Skipping a day doesn't undo anything." Button: Done.
+Then Today.
 
-### 9. First weigh-in (the first real action)
-Straight to the dial. When saved: a white block with a green cookie shape, "Your first point. The line starts here. It gets smarter every morning you add one, and a missed morning changes nothing." This is the day-one aha, and setup counts as the first mark on the months path because it was one.
+## Asked later, in place, each with one line saying why
+- **Day 3:** the anchor time, when the daily prompt would fit.
+- **Day 4:** a second tracked item.
+- **Week 1**, before any session over five minutes: the readiness flags.
+- **Week 2**, before the first measure: rough height, skippable.
+- **Week 3:** the photo offer.
+- **Week 4:** the confidence rating.
 
-### 10. Name your first walk
-Only if the walking ladder is visible: "What's a two-minute walk from your door?" Free text with examples faded in the field: "to the corner store," "down the hallway and back," "around the parking lot," "on the treadmill." That string becomes the name of step one. Button: Save. Then Today.
+Age is never asked in onboarding. It is asked only if the person taps "show typical
+ranges", and it is skippable there.
 
-Total: eleven screens, most of them one tap, under two minutes for someone who skips age and has nothing to leave out. The measured target is the first weigh-in and the first tracked ability both saved inside two minutes.
-
-## What the app teaches after setup, in place
-- Week one: the smoothed-weight explanation sits under the number in full. Week two: one line. Week three: gone, reachable from the info dot.
-- The first time each daily card is opened, one line of instruction appears in the card and never again.
-- The first "done" morph gets the affirmation line; after that, "Done. That counts." only.
-- History with fewer than seven days shows what will be there and why, in one sentence per section, instead of empty charts.
-- Photos are offered once, at the start of week three, on a single screen: "Want a Sunday photo? Once a week, same spot. After a few months it becomes a timelapse, and the scale can't show you what that shows. Optional, and it stays on your phone." Yes or No thanks. No thanks hides it until settings.
-- Tests are offered once, after the first two weeks of any movement, one test at a time, chosen by profile: "Want to try something you can measure? It takes a minute and only needs a chair."
-- The Sunday write-up arrives after the first full week and explains itself in its first paragraph, once.
-- The question mark on Today opens Ask a question, whose first card is "How Steady works," written by the owner, four short paragraphs.
-- The visit summary is not mentioned during setup. It is introduced once, in place, the first time the person opens the Abilities tab after there is enough data for it: a sand block above the ability rows reading "There's enough here now for a summary you can take to an appointment. It's written on your phone, from your own months." with a single action, "Have a look". Dismissing it removes it permanently, and the Summary action in the top row stays where it is.
-
-## Returning after a gap
-Any gap over 7 days shows the welcome-back screen instead of Today, once. It states the gap length, that the weight line and the walks are still there, and the single change (a shorter suggested walk for two weeks, or nothing for a short gap). No mention of missed days beyond the length, no streak language, no apology from the app. Gaps over 90 days re-run screens 4 and 5 with the previous answers pre-selected.
+## Resumable
+Quitting mid-onboarding resumes exactly where it stopped. The step reached is stored,
+not inferred, so a person who closes the app on O3 and returns a week later lands on
+O3 with what they had already typed still there.
 
 ## What onboarding never does
-Ask for a goal weight, ask about calories, ask what you eat, ask about medications, ask about diagnoses, ask for a photo, request notification permission (that happens the first time the person turns a reminder on), request location (only when they start a walk with GPS on), or show a paywall, an account screen, or an ad.
+Ask for a target weight, ask about calories, ask what you eat, ask about medications,
+ask about diagnoses, ask for a photo, request any permission, show a paywall, an
+account screen, or an ad. The notification permission is requested the first time a
+reminder is turned on, and never before.
+
+## How the app teaches itself afterwards
+Three layers, specified in ADDENDUM-03 Part 4 and folded into DESIGN.md section 4b.
+Every screen explains itself once in a sand block; every screen has a help dot in the
+same place; every number explains itself when its info dot is tapped.
+
+First run of any feature gets one sand block explaining it in a sentence, once.
+
+Today's session card is never ambiguous: it always says what to do, how long it takes,
+and has one obvious button. If a person could be lost on Today, that is a design bug
+to fix rather than a help topic to write.
+
+## Returning after a gap
+ADDENDUM-03 Part 15 replaces the old gap rule. After seven days or more the app asks
+one question with four answers and no free text, and adapts by the answer. Gaps of
+sixty days or more re-run O2 and O3 with the previous answers filled in. The word
+"missed" never appears.

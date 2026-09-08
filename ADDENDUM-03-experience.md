@@ -1,3 +1,8 @@
+**Merged into the specification on commit 9837f2a.** This file is kept as the
+record of what was asked for. The documents it names now describe the app including
+all of it, and where this file and a document disagree the document is the one that
+was edited last and wins on detail; this file wins on intent.
+
 # ADDENDUM 03: the experience overhaul
 
 The final structural overhaul. It supersedes Addendum 02's phase plan and every

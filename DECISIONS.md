@@ -834,3 +834,82 @@ RC when the versions were pinned in Phase 0 and is now the stable release, so th
 pin is genuinely stale. Recorded rather than fixed in the same breath as a
 handover build, because a compiler upgrade is its own change with its own
 verification.
+
+## ADDENDUM-03 merged, September 7 2026
+
+Saved as `ADDENDUM-03-experience.md` on commit **9837f2a** and folded into the
+documents it names in the commits that follow. The file stays in the repository as the
+record of what was asked for, with a note at the top saying it has been merged.
+
+**Where it went.**
+- ONBOARDING.md: replaced in full by Part 3.
+- MASTER_SPEC.md: section 3 (the three directions), section 5 (four tabs, Part 20),
+  section 6 (6.1 Today, 6.3 Sessions, 6.4 Progress, 6.6 deferred, 6.9 You, 6.10
+  deferred, and new 6.11, 6.15, 6.17, 6.18, 6.19, 6.20, 6.21), section 8 (platform),
+  section 9 (Part 21's phases), section 11, and a new section 12 (Part 19).
+- DESIGN.md: section 4 (four tabs), new 4b (help, Part 4), section 5 (motion, Part 12),
+  new 5b (the session screens, Part 1), section 6 (voice, the banned additions, the
+  three registers, warmth in four places), section 7 (accessibility as design, Part 17).
+- LOGIC.md: 3b (confidence, Part 18), 6 (progression rewritten around the session), 12
+  (notifications and the widget, Part 13), and new sections 15, 15b, 16, 17, 18.
+- AI.md: the models section rewritten for two optional models, job 1 made reusable, and
+  new jobs 7, 8 and 9 with job 9's validator and the fixture requirements.
+- COMPLIANCE.md: the therapist's plan, and the HAI-DEF boundary for document reading.
+- CONTENT.md: the card library expansion, Part 8 item 5.
+
+### What this supersedes
+
+**Superseded outright:**
+1. **The whole of ONBOARDING.md's eleven-screen sequence.** It asked for units, height,
+   age, capability, exclusions, readiness, an anchor and a weigh-in before the person
+   had done anything at all. The new rule is that the person does something real
+   before answering anything optional, and the measure is under sixty seconds from
+   launch to the first session.
+2. **The three-tab navigation** (Today, Move, Abilities). Four tabs now: Today,
+   Sessions, Progress, You.
+3. **"Move" as a screen of one strength set plus a walk.** Replaced by the session: a
+   led, audio-driven, four-to-eight minute thing with seven screens.
+4. **The gap decay rule in LOGIC.md 6** (8 to 28 days one step, 29 or more two steps).
+   Replaced by the interruption question in Part 15, which asks why rather than
+   assuming.
+5. **The reminder design in LOGIC.md 12.** The two-a-week ceiling stays for everything
+   except the one daily prompt, which is now on by default and stops asking on its own.
+6. **The accessibility floor in DESIGN.md 7.** Raised: 56dp in a session, 16sp body
+   text, 200 percent font scale tested, haptics on every rep.
+7. **Rive**, which was already dropped in Phase 0 and is now not named in the platform
+   section at all.
+8. **The phase plan in MASTER_SPEC.md 9**, and Addendum 02's.
+9. **The visit summary interface** and **Try it and see**, both deferred to version 2.
+   Their engines, validators and corpora are built and stay built.
+
+**Reversed:**
+10. **MedGemma is not used.** This was recorded in Phase 0 on the reasoning that the
+    app deliberately avoids medical vocabulary, so a medical model bought nothing
+    against a restrictive licence. That reasoning was correct for the app as it then
+    was. ADDENDUM-03 Part 7 adds a feature where the medical vocabulary **is** the
+    difficulty: a person holding a progress report full of MMT grades and ROM in
+    degrees, who is the subject of the document and the audience for none of it.
+
+    The reversal is recorded rather than quietly made because it departs from a
+    decision under "Visible AI", and the rule is that those are never reopened without
+    saying why. The why is that the earlier decision answered a different question.
+
+    What makes it safe is not the model but the boundary around it: the app explains
+    the words and never interprets the document, and that boundary is what keeps it
+    outside HAI-DEF's Clinical Use definition. It ships behind a flag that is off until
+    a health tech attorney has read it, which is on the BLOCKED list.
+
+**Kept unchanged**, as the addendum says: the design tokens and the look, the
+compliance position, the model output contracts, pacing mode, exclusions in movement
+terms, and the rule that the model never states a number, never decides an ability's
+state, and never writes a life sentence.
+
+### The banned list grew
+
+Added: test, workout, routine, level, unlock, achievement, complete, missed, streak,
+hazard, risk. "Plan" is permitted only for a therapist's plan.
+
+Three of these are already in shipped strings and have to change: the card "What the
+talk test is" becomes "How hard should it feel?", the talk-test question keeps its
+wording but loses the name, and the monthly check's "Skip this one" is unaffected. The
+voice test is the thing that will find the rest, and it reads the real resource files.

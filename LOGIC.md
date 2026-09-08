@@ -26,7 +26,7 @@ Everything the app decides is decided here, deterministically, on device. The on
 ## 3b. Abilities
 Four fixed domains: get_up, go, carry, steady. Every measure, exercise, and tracked item carries exactly one domain id. There is no aggregate score and none may be computed.
 
-Tracked items (the person's own list). Created at onboarding from their words (AI.md job 1), each with: verbatim text, domain, rating 0 to 10, created date, and a rating history. Re-rated monthly with the check. A change of 2 or more points is reported as a change; 1 point is within noise and is shown but not announced (from the Patient-Specific Functional Scale MCID range of about 1.3 to 3.0).
+Tracked items (the person's own list). Created at onboarding from their words (AI.md job 1), each with: verbatim text, domain, rating 0 to 10, created date, and a rating history. Re-rated monthly with the check, alongside a second optional rating from ADDENDUM-03 Part 18: "How sure do you feel about it?", zero to ten. Both lines go on the same chart in Progress, and together they produce the most useful sentence the app can say: "The chair stands got easier and you said you feel surer about the stairs too." Or, just as honestly: "The chair stands got easier but you don't feel any surer yet. That often follows later." Deterministic, never scored, never clinical. A change of 2 or more points is reported as a change; 1 point is within noise and is shown but not announced (from the Patient-Specific Functional Scale MCID range of about 1.3 to 3.0).
 
 Ability state. Each domain is Better, Same, or Quieter, computed from its measures over the last three checks. Better: any measure improved beyond its detectable change and none declined. Same: all measures within detectable change. Quieter: any measure declined beyond detectable change in three consecutive checks. Same is displayed as a result, in the same visual weight as Better. Quieter is displayed once per domain per six months, with the sentence in DESIGN.md and every measure that held listed beside it, and it offers the visit summary. It never changes a colour and never repeats.
 
@@ -57,14 +57,22 @@ Balance: feet together 10 s; semi-tandem 10 s; tandem 10 s; single leg 10 s; sin
 Visibility by exclusion: pushing hides the pushing ladder and replaces it with seated band press in range; floor hides floor work and replaces it with standing and seated core plus chair transfers; impact hides jogging and intervals and keeps brisk walking; deep knee bending caps sit-to-stand at partial range and hides mini squats; overhead caps every lift below shoulder height; stomach strain and breath-holding hide any bracing or loaded flexion and enforce exhale-on-effort cues; lying flat hides supine floor work. Guaranteed floor when nearly everything is excluded: seated ladder plus walking snacks plus breath-controlled band work.
 
 ## 6. Progression (deterministic)
-- Talk test after every session: yes easily, just about, no. Next-day check: better, same, worse (asked once, the following day, only after a session above the current step).
-- Unlock: the next step is offered after two sessions at the current step rated "yes, easily" or "just about" with no "worse" the next day. Offered, never assigned. "Not yet" suppresses the offer for 14 days.
-- Spike cap: an offered walking step may not exceed 110% of the longest walking session in the prior 30 days (tunable 110 to 120; precautionary default from Frandsen et al. 2025).
-- Step back: "worse" the next day drops the current step by one for the next session and shows the sore rule once. "No" on the talk test twice in a row at a step drops it by one.
-- Gap decay: no sessions for 8 to 28 days, one step back; 29 days or more, two steps back with a 14-day easing period during which no offers are made. Under 8 days, nothing. Shown once on the welcome-back screen; never framed as loss.
-- Re-entry after 90 days or more: re-run the capability questions (section 4) before any step is suggested.
-- Strength ladders progress by reps first, then a second set, then a harder variant; never load.
-- Balance advances only after holding the current stance 10 s on two occasions.
+- Every session ends with one question, "How did that feel?", answered easy, about
+  right, or hard. That answer is what progression turns on.
+- Rated easy twice in a row at a movement: one more rep or one more minute next time.
+- Rated hard: targets drop about ten percent next time.
+- A body tag within a day of a session: the likely movement is swapped for its
+  alternative.
+- Four or more days without a session: the next one is shorter.
+- **Ceilings.** Reps are not the progression forever. Each movement carries a rep
+  ceiling and a next variant, and at the ceiling the engine progresses by variant
+  rather than by number.
+- **Spike cap** on walking, unchanged: an offered walk may not exceed 110% of the
+  longest walk in the prior 30 days, read as in DECISIONS.md rather than as literal
+  arithmetic against the next rung.
+- Every adaptation is deterministic, and every one of them is shown as a sentence on
+  the offer card at the moment it happens. The model never chooses or writes one.
+- **Interruptions** replace the old gap decay entirely. See section 15b.
 
 ## 7. Pacing mode (ME/CFS, long COVID, any post-exertional pattern)
 Triggered by the pattern question or by the person reporting "much worse for a day or more" after two sessions in a month. In pacing mode: no offers, no unlock, no spike cap needed because nothing increases; the person sets a fixed envelope (minutes and days) and the app only ever suggests staying at or below it; "worse" the next day reduces the envelope by 20% and says so; Today's move card reads "Move within your limit" and the explanation says "This is not graded exercise. Staying inside your energy limit is the method." Pacing mode is exited only by the person, from settings, and the app re-asks the pattern question when they do. Source: NICE NG206 (2021); CDC.
@@ -108,8 +116,21 @@ Deterministic inputs collected for the model: days moved, minutes, tags with cou
 ## 11. Patterns
 Computed after six weeks of check-ins. For each tag, compare weeks where the tag appeared on three or more days against weeks where it did not, on: weight direction, average sleep, days moved. Report a pattern only when the split is at least 5 of 7 weeks in one direction. Phrase through the model (AI.md job 4). Restriction tags are excluded from this computation entirely.
 
-## 12. Reminders
-Off by default. Per-type switches: walk reminder (at the anchor moment), Sunday photo, Sunday write-up ready, a longer walk is ready. Hard ceiling of two notifications in any rolling seven days regardless of switches; the settings screen shows the count used. Copy under ten words. No reminder ever references a missed day.
+## 12. Reminders and the widget
+Replaced by ADDENDUM-03 Part 13, merged on commit 9837f2a.
+
+**One daily prompt**, on by default, at the anchor time, under ten words, never
+mentioning a day without a session, never guilt, never a count of anything. It
+rotates: "Ready when you are." / "Today's is a short one." / "Chair stands and a walk,
+about five minutes."
+
+Everything else is capped at two a week combined and is off by default.
+
+**The app stops asking.** Dismissed without opening four days running, the daily
+prompt stops for a week and returns once with "Still here whenever you want it." Four
+more, and it turns itself off and says so in the settings.
+
+**Widget:** two sizes, today's session name, its length, and a tap that starts it.
 
 ## 13. The measures table (part of the visit summary export)
 One page, function first: the four abilities and what changed in each; the person's own list with then and now ratings; every measure's first and latest result; then the levers. Date range; smoothed weight then and now; waist-to-height then and now; days and minutes moved in the last four weeks; current walking step and duration; each test's first and latest result; blood pressure entries if any; the line "Not tracked here: medication." Exported as PDF to the share sheet. Nothing is transmitted. From Phase 5 this table is the second half of the visit summary export; the written summary sits above it.
@@ -158,3 +179,161 @@ At most four candidates go to the model, ordered by rule number. If there are no
 
 ## 14. Data
 Single encrypted SQLite database (SQLCipher, key in Android Keystore). Export: a folder containing a CSV of weigh-ins, a CSV of check-ins with tags, a CSV of sessions and tests, the photos, and the visit summary PDF. Delete: everything, immediately, with one confirmation, and the copy says there is no other copy. Import restores from the export folder.
+
+## 15. The session
+From ADDENDUM-03 Part 1, merged on commit 9837f2a. The session is the centre of the
+app and this is the engine behind it.
+
+**Shape.** Four to eight minutes. A warm up of 60 to 90 seconds on any session over
+three minutes. A cool down of 60 seconds plus two thirty-second stretches on any
+session over five minutes, skippable, and skipping is never remarked on.
+
+**Screens.** S1 the offer, on Today. S2 ready. S3 count in, three seconds. S4 the set,
+live. S5 rest. S6 between movements. S7 done.
+
+**What the engine decides**, all of it deterministic:
+- Which movements, from the person's way of getting around, their exclusions, their
+  equipment, any suppressed body area, and the therapist's plan if one exists.
+- The target for each, from the last result and the last rating.
+- Whether today is an easy day: after two consecutive strength sessions, or after any
+  session rated hard. An easy day is two to three minutes of mobility, breathing or a
+  short walk, offered as "Today's an easy one" with the reason. Never a blank screen,
+  and never the words "rest day", which read as permission to skip two.
+- The adaptation sentence, shown on the offer card at the moment it applies.
+
+**Counting.** Reps come from the camera or the motion sensor where the movement
+supports it and from the person tapping where it does not. Every counted number is
+editable at the end of the set with plus and minus, and the app says nothing about
+being corrected.
+
+**Rest.** A shrinking arc rather than a ticking number, with the next movement named
+underneath and the set just finished shown with its number. "Skip the rest" is always
+available. Rest is the only timed thing in the app and it is skippable and extendable,
+which is what keeps it inside the accessibility rule about time limits.
+
+**The done screen.** What was done, each number against its last. One question, "How
+did that feel?", answered easy, about right or hard. Then the next session, already
+adjusted by that answer, on the same screen.
+
+**Audio.** Android TextToSpeech, on device, no network. It speaks the setup line, the
+count in, every rep as counted, two mid-set lines, the end of the set, the rest with
+the next movement named, the final five seconds, and the end of the session. On by
+default. Rate below the system default, three steps. It ducks other audio rather than
+stopping it, never speaks outside a session, and never speaks a number the engine did
+not produce. Without TTS the session runs silently with identical screen text.
+
+**Pacing.** The audio keeps time: "up... and down... up... and down", slower and faster
+available. On for the first three sessions of any new movement, then off unless kept.
+This is the difference between counting what happened and leading it.
+
+**Pause.** Always visible. Holds everything indefinitely, dims the screen, and resumes
+exactly where it stopped. A session paused more than an hour is saved as far as it got
+and the app says so plainly when reopened.
+
+## 15b. The bad day, and interruptions
+From ADDENDUM-03 Parts 2 and 15.
+
+**Three exits**, at every point in a session, equal buttons, never buried.
+- "Make it easier" drops to the easier variant mid set and continues: "Switched to the
+  easier one. That still counts."
+- "Skip this one" moves to the next movement.
+- "That's enough for today" ends the session and saves everything done: "Done. That
+  counts." Never "cancelled", never "incomplete", and no confirmation dialog.
+
+**Pain.** A "Something hurts" button in every session. One press stops the session
+immediately with no confirmation and asks only which area, from a short list. That
+area's movements are suppressed for seven days, the next offer says so, and after
+seven days the app asks once whether to bring them back. The same area twice in a
+month produces one line, once: "Worth a word with your doctor about that shoulder."
+No interpretation, no advice, no repetition.
+
+**Tiredness.** "Not today, but something small" on the offer gives a ninety second
+version, and it counts as a session.
+
+**Interruptions**, replacing the old gap decay. After any gap of seven days or more,
+one question with four answers and no free text:
+- "Life got busy": one step smaller for two sessions.
+- "I was unwell": two steps smaller, a two week ramp, and "We'll take it slowly for a
+  couple of weeks. That's what bodies need after being unwell." Plus, once: "If you
+  were in hospital or had a fall, it's worth a word with your doctor before the harder
+  movements."
+- "I was away": nothing beyond the standard one step.
+- "I'd rather not say": treated as busy, and not asked again for that gap.
+
+Gaps of sixty days or more re-run O2 and O3 with the previous answers filled in and
+start three steps back with the ramp. The word "missed" never appears.
+
+**Context.** Asked at O5 and editable in You: a sturdy chair without arms, a clear
+wall, equipment (bands, weights, a step, none), and somewhere to prop the phone. The
+answers filter the library, and nothing needing absent equipment is ever suggested.
+
+**Chair height.** The chair stand is meaningless if the chair changes, so the app asks
+once for a rough height, stores it, and shows it in the setup line every time. If it
+changes, the app notes once that the numbers are not directly comparable, without
+alarm.
+
+## 16. The week
+From ADDENDUM-03 Part 10. A week target set once and changeable: three, four or five
+sessions. On Today: "Two this week. One more makes three." At target: "That's three.
+Anything more is extra."
+
+Consistency is four bars in Progress, each week against its target. Every week stands
+alone. A quiet week does not erase the three beside it, and nothing is broken, lost or
+reset: "Three good weeks and one quiet one. That's what most months look like."
+
+The Sunday review is one screen reached from Today and never notified: what you did,
+what moved, one thing noticed, the week ahead with something concrete, and the card.
+It is the only place in the app that looks forward.
+
+## 17. Documents and the therapist's plan
+From ADDENDUM-03 Parts 5 and 6.
+
+**One button**, "Scan something", in Sessions and in You. The camera opens, the person
+photographs the page, and text is extracted on device with ML Kit. The app then asks
+one question about what it is looking at: exercises, a report, both, unclear, or out
+of scope. The photo is always saved, labelled by date and by who it came from, and is
+viewable forever beside anything produced from it. "Just keep it" is always available
+and is a legitimate outcome. A document can be several pages, photographed in
+sequence, handled as one.
+
+**Four ways into a plan:** photograph it, say it out loud, pick from the library, or
+type it. All four end at the same confirmation screen, where every item is shown with
+what the app matched it to, and nothing is saved unconfirmed.
+
+**How the two plans coexist.** When a therapist's plan exists, it **is** the session.
+Today's card shows it, labelled "From your physio", and that is what Start runs. The
+app's own suggestions appear below as "Also, if you want more", clearly separate,
+never merged, never counted as part of the plan, and turn-off-able in one tap. A
+movement in both is done once and counts for both, and the app says so once.
+
+**What the app does with a plan.** Runs it exactly as given. Does not add to it,
+remove from it, or progress it. Reps and frequency change only when the person changes
+them or marks that their therapist did. One line, once: "This is your therapist's, not
+ours. We'll keep track of it and leave it as they set it." A plan movement that
+conflicts with something the person avoids is flagged rather than silently dropped.
+What was done and what was not is reported only in Progress and in the export, never
+as a nag and never as a score.
+
+**The export back.** A one page PDF for the next appointment, function first: what was
+prescribed, what was done and when, the numbers, what hurt and when, and the person's
+own ratings.
+
+**Review date.** The person can set when they next see their therapist. Two days
+before, one prompt: "You see your physio on Thursday. Your page is ready."
+
+Multiple plans coexist, each labelled, each separate.
+
+## 18. Reading reports and letters
+From ADDENDUM-03 Part 7. The engine's part is the extraction and the validator; the
+model's part is in AI.md job 9; the boundary that keeps this outside Clinical Use is
+in COMPLIANCE.md.
+
+The reader produces exactly four things and nothing else: what kind of document it is,
+what it says in plain words, the words from the document explained, and things you
+might ask. Anything in the document that is a home programme is pulled into a plan
+through the confirmation flow in section 17, as a second step and never as one.
+
+Documents live in the encrypted store. The original photo is always kept and always
+viewable beside the reading. Camera frames used for extraction are never written to
+disk. Both are included in export and both are deleted by delete. Nothing is
+transmitted, and the scanning screen says so at that moment rather than in settings.

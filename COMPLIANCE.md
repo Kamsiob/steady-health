@@ -21,7 +21,7 @@ Any outcome claim in the listing or in-app needs competent and reliable scientif
 The PAR-Q+ may not be reproduced or adapted in an electronic form without the written consent of the PAR-Q+ Collaboration. Steady does not embed it. The readiness screen uses original wording and links out to eparmedx.com with attribution: PAR-Q+ Collaboration (Warburton, Jamnik, Bredin and Gledhill, Health and Fitness Journal of Canada 4(2):3-23, 2011). If the owner obtains written consent, this decision can change; record it in DECISIONS.md.
 
 ## Licences bundled
-Gemma 4 E4B: Apache-2.0. Vico: Apache-2.0. Material 3 Expressive: Apache-2.0. Phosphor: MIT. Material Symbols: Apache-2.0. Open Peeps: CC0. Figtree: SIL Open Font Licence. Rive runtime: verify at build time and record. Any Lottie file: self-authored only. Every licence text ships in the app's Made with screen and in the repository. MedGemma is not used.
+Gemma 4 E4B: Apache-2.0. Vico: Apache-2.0. Material 3 Expressive: Apache-2.0. Phosphor: MIT. Material Symbols: Apache-2.0. Open Peeps: CC0. Figtree: SIL Open Font Licence. Any Lottie file: self-authored only. ML Kit text recognition: Apache-2.0, on device, no network. MedGemma 1.5 4B: Health AI Developer Foundations terms, shown and accepted before the download, weights never bundled. Every licence text ships in the app's Made with screen and in the repository.
 
 ## Disclaimers that are load-bearing
 In app, in flow, not buried: not a medical device; talk to a clinician before harder efforts if you have a condition or symptoms; stop if you feel chest pain, faintness, or severe breathlessness (shown at the start of every test and every walk over 20 minutes); the data statement ("stays on your phone; there is no copy anywhere else").
@@ -35,4 +35,54 @@ The visit summary reports and never advises. It states what the person logged an
 Pacing mode: non-progressing, no offers, no experiments, per NICE NG206.
 
 ## What was ruled out, and why
-Any diagnosis or condition inference (device territory, and the exclusion model is better). Calorie or macro tracking (harm evidence). Streaks and loss framing (dark pattern under the studio's own rules and under the research). Medication dose tracking (medication management). Photo-based body-fat estimates (unvalidated, diagnostic-adjacent). Grip strength and supervised-only tests (hardware or fall risk). Embedding the PAR-Q+ (licence). MedGemma (licence and no benefit). Any cloud service (studio rule).
+Any diagnosis or condition inference (device territory, and the exclusion model is better). Calorie or macro tracking (harm evidence). Streaks and loss framing (dark pattern under the studio's own rules and under the research). Medication dose tracking (medication management). Photo-based body-fat estimates (unvalidated, diagnostic-adjacent). Grip strength and supervised-only tests (hardware or fall risk). Embedding the PAR-Q+ (licence). MedGemma, for the app as it then was (licence and no benefit). Reversed by ADDENDUM-03 Part 7 for the document-reading feature; see below. Any cloud service (studio rule).
+
+## The therapist's plan (ADDENDUM-03 Part 6, merged on commit 9837f2a)
+Here the app is a record keeper and not a clinician. It never interprets a plan, never
+modifies one, never advises for or against one, and never suggests the person is doing
+it wrong. It runs what it was given, exactly as given, and reports what was done.
+
+A plan movement that conflicts with something the person said they avoid is flagged
+rather than silently dropped, and the flag points at the therapist rather than at the
+app's own judgement: "Your plan has wall push ups, and you said you avoid pushing. Ask
+your therapist about it. We'll leave it in for now."
+
+The export back to the therapist states what was prescribed, what was done and when,
+the numbers, what hurt and when, and the person's own ratings. It draws no conclusion
+from any of it.
+
+## Reading reports and letters, and the HAI-DEF boundary (ADDENDUM-03 Part 7)
+**This reverses the earlier decision that MedGemma is not used.** The earlier decision
+was correct for the app as it then was and is wrong for the feature added here; the
+reversal and its reasoning are recorded in DECISIONS.md.
+
+HAI-DEF permits commercial use and redistribution with pass-through and prohibits
+Clinical Use, defined as any use in diagnosis or treatment. Explaining the words in a
+document the person already holds, without interpreting, advising, or diagnosing, sits
+outside that definition. The constraints in AI.md job 9 are what keep it there, and
+they are load-bearing rather than stylistic:
+
+- Never diagnoses, and never names a condition the document did not name.
+- Never says whether the news is good or bad, and never characterises progress.
+- Never advises on exercise, treatment, medication, or whether to follow a plan.
+- Never says whether to be worried, and never says not to be.
+- Never contradicts or second-guesses what a clinician wrote.
+- Never interprets a number against a normal range or a population.
+- Never handles anything outside movement, therapy, or care logistics.
+
+Printed at the top of every reading, and shown once on first use: "This explains the
+words in your document. It doesn't say what they mean for you. That's a question for
+whoever wrote it."
+
+The weights are a separate, user-initiated download, never bundled in the repository
+or in the APK, which keeps them clear of AGPL-3.0. HAI-DEF terms are shown before the
+download and accepted there. Made with credits Google and names the licence.
+
+**A health tech attorney reviews this boundary once before release.** Until they have,
+it is on the BLOCKED list and the feature ships behind a flag that is off. That is not
+a formality: the difference between explaining a word and interpreting a document is
+the whole of the argument, and it is not mine to settle.
+
+**Google Play:** the health apps declaration is updated to describe document reading.
+The listing describes it as explaining documents in plain words and claims no
+interpretation.

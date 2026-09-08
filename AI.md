@@ -1,13 +1,43 @@
 # AI.md: what the model does in Steady Health, and what it may not
 
-## The model
-Gemma 4 E4B, instruction-tuned, Apache-2.0, released by Google April 2, 2026. Chosen over MedGemma because Steady deliberately avoids medical vocabulary, medications, and lab values, so the medical model buys nothing, and MedGemma's HAI-DEF licence is restrictive while Gemma 4 is Apache-2.0 with no complication inside an AGPLv3 app. E4B supports native audio input on device, which removes the need for a separate speech model. Verify the current recommended Android integration path (LiteRT-LM, MediaPipe, or the AICore preview) at build time; do not trust this document for that.
+## The models
+Replaced by ADDENDUM-03 Part 7, merged on commit 9837f2a. **Two optional models, and
+the app is fully usable with neither.**
 
-The model is an optional download, off by default. Everything in the app works without it: without the model, the check-in is typed, tags are chosen from the grid by hand, the Sunday write-up is a fixed template filled from the engine's numbers, and patterns are shown as plain data rows. The download screen states size, whether the phone has the memory, who made it, and its licence, and says plainly: "It reads. It does not diagnose."
+**Gemma 4 E4B**, instruction-tuned, Apache-2.0. Turns what the person says into what
+the app tracks, tags their notes, and writes the weekly note. Verify the current
+identifier, size and recommended on-device path at build time.
 
-All model calls are single-turn. There is no chat. Every call has a fixed input schema and a fixed output schema and returns JSON that either validates or is discarded. The model never sees the person's weight as a number, never sees their age, never sees the exclusions, and never receives any medical term the person may have typed into the free-text line (that line is stored verbatim and shown back, but is not passed to the model except as job 2 input for tagging, where the output can only be tags).
+**MedGemma 1.5 4B**, from Google's Health AI Developer Foundations. Reads and explains
+reports and letters from a therapist. **This reverses the earlier decision that
+MedGemma is not used**, and the reason it reverses is that the earlier decision was
+made for a feature that did not exist: the app avoided medical vocabulary, so a
+medical model bought nothing. Reading a document written by a clinician is the
+opposite case. The vocabulary is the entire difficulty: gait deviations, ROM in
+degrees, MMT grades, transfer independence levels, and clinic-specific abbreviations.
+That is the one job where a medical model earns its place.
 
-## The four visible features, and where the model sits in each
+**Two models, one choice.** Together they are around five gigabytes, which many phones
+in this audience cannot spare. In You, one screen, "What the app can read":
+- **Nothing extra.** The app works fully. Documents are saved as photos and are
+  viewable, and the person types anything they want tracked. This is the default and
+  is never presented as lesser.
+- **Your own words** (Gemma 4 E4B, about 2.5 GB).
+- **Documents from your therapist** (MedGemma 1.5 4B, about 2.5 GB).
+- **Both**, if the phone has room.
+
+The screen shows each size and the phone's free space and refuses gracefully rather
+than filling the device. Either can be removed at any time and everything already
+produced stays. Removing one falls back to its manual path and says so once. Neither
+downloads on a metered connection without an explicit tap.
+
+All model calls are single-turn. There is no chat. Every call has a fixed input schema
+and a fixed output schema and returns JSON that either validates or is discarded. The
+model never sees the person's weight as a number, never sees their age, never sees the
+exclusions, and never receives any medical term the person typed into the free-text
+line.
+
+## Where the model sits, and where it does not
 The model is visible in exactly four places, and it is never a chatbot.
 
 1. Your words become what is tracked (job 1 below). The person speaks or types what they want to be able to do; the model turns it into tracked items with a domain each; the person confirms. This is the most differentiated use and the first thing a new user meets.
@@ -15,9 +45,12 @@ The model is visible in exactly four places, and it is never a chatbot.
 3. Try it and see. The engine finds the pattern and runs the arithmetic; the model words the offer and the result. The honesty of "no difference" is enforced by the engine, not the model.
 4. The visit summary (job 6). The principal use, and the only one that is synthesis rather than bounded extraction: months of measures, ratings, sentences, sessions and weight, read back as three paragraphs and a list of things worth asking about. The engine assembles the brief and generates every question candidate; the model words them; a deterministic validator checks every claim against the brief before anything renders.
 
-## The five jobs
+## The jobs
 
 ### Job 1: Words to tracked items
+**Reusable.** ADDENDUM-03 Part 18 makes this available any time from Progress as "Add
+something you'd like to be able to do", not only at onboarding.
+
 Input: { "text": string, "domains": ["get_up","go","carry","steady"], "way_of_getting_around": string }.
 Output: { "items": [ { "text": string, "domain": string } ] }, at most four.
 Rules: item text is a short, plain restatement in the person's own vocabulary, never clinical. "I want to get down on the floor with my grandson and get back up without it being a whole thing" yields { "Get down to the floor and back up", "get_up" }. The domain must come from the fixed list. The person confirms or edits every item before it is saved; nothing is stored unconfirmed. If the model returns nothing usable, the app shows a hand-written starter list and the person picks.
@@ -129,3 +162,87 @@ Model unavailable, out of memory, or output invalid: fall back silently to the n
 Each job ships with a fixture set of at least 30 inputs and expected outputs (job 2: sentences and the tags they must and must not produce, including synonyms like "grabbed takeout," "ordered in," "ate at the diner" all mapping to ate out; job 3: weeks that must not yield a restriction-plus-weight sentence). A job that fails its fixtures does not ship; the app runs without it.
 
 Job 6 ships with at least 40 briefs and expected outcomes, including these adversarial cases, each of which the validator must catch: a brief with no question candidates (must produce no question list); a brief where all four abilities are Same (must not imply failure); a brief with a Quieter domain (must not name a cause); a brief with a 60-day gap (must state it without judgement); a brief with body tags on 12 days (must produce a question, not an explanation); a brief with two measures moving in opposite directions (must state both). Separately, the validator ships with a corpus of at least 30 deliberately bad outputs, one per failure mode: invented numbers, invented months, a fabricated quote, a causal claim, a condition name, an added question. A job 6 that fails its fixtures does not ship and the app falls back to the template version.
+
+
+### Job 7: The end-of-session note
+Optional, offered at the end of a session, one line, spoken or typed.
+Input: { "text": string, "vocabulary": [24 fixed tags], "person_synonyms": [...] }.
+Output: { "tags": [up to 3 strings from vocabulary], "confidence": [numbers] }.
+Rules: identical to job 2's, because it is job 2 pointed at a different moment. Its
+only extra purpose is to feed "what the app noticed". Without the model the person
+picks from the grid, and most will skip it entirely, which is fine.
+
+### Job 8: Reading a therapist's sheet
+Input: { "text": string, "movements": [{"id": string, "name": string, "aliases": [...]}] }.
+Output: { "items": [ { "verbatim": string, "movement_id": string | null, "reps": int | null, "sets": int | null, "times_per_day": int | null, "days_per_week": int | null } ] }.
+Rules: every item carries the verbatim line it came from. `movement_id` is null when
+nothing in the library matches, and the item is kept verbatim rather than forced onto
+the nearest movement. The model never invents a movement, never adds one the sheet did
+not contain, never changes a number, and never interprets the plan. Reps and frequency
+are filled only where the sheet states them. Every item is confirmed by the person
+before anything is saved.
+
+Without the model: the person picks from the library or types, through the same
+confirmation screen.
+
+### Job 9: Reading a report or a letter
+Input: { "text": string } from on-device extraction, and nothing else. Single turn, no
+follow up, no question box.
+Output:
+```json
+{
+  "kind": "string",
+  "paragraphs": ["string"],
+  "terms": [{"term": "string", "plain": "string"}],
+  "questions": ["string"]
+}
+```
+Rules, from ADDENDUM-03 Part 7:
+- `kind` comes from the document itself, never a guess.
+- `paragraphs`: three to five short paragraphs, second person, every sentence traceable
+  to text in the document.
+- `terms`: the clinical terms and abbreviations that actually appeared, each with one
+  plain line. This is the part people will use most.
+- `questions`: drawn from the document, never from inference. Something mentioned but
+  not explained, a goal with a date, an unclear instruction, a named follow up. Each
+  phrased as a question, never as a finding.
+
+**What it never does**, and this is the line that keeps the app outside HAI-DEF
+Clinical Use rather than a matter of style:
+- Never diagnoses, and never names a condition the document did not name.
+- Never says whether the news is good or bad, never characterises progress, never
+  reassures. If a report says a range of motion decreased, the app says the report says
+  it, and nothing more.
+- Never advises: not on exercise, treatment, medication, or whether to follow a plan.
+- Never says whether to be worried, and never says not to be.
+- Never contradicts, questions or second-guesses what a clinician wrote.
+- Never interprets a number against a normal range or a population.
+- Never handles anything outside movement, therapy, or care logistics.
+
+Shown once on first use and printed at the top of every reading: "This explains the
+words in your document. It doesn't say what they mean for you. That's a question for
+whoever wrote it."
+
+### The job 9 validator, built before the model is wired in
+- Every proper noun, number, date and measurement in the output must appear in the
+  extracted text.
+- Every explained term must appear in the extracted text.
+- Every question must reference something in the document.
+- The banned list fires on: diagnos, prognos, condition, disease, should, recommend,
+  suggest, indicates, means that, worse, better, improving, declining, worrying,
+  concerning, normal, abnormal, healthy, unhealthy, good news, bad news.
+- Any sentence containing because, due to, caused by, which means, or suggests is
+  rejected.
+
+On failure: regenerate once. On a second failure, drop that section. If the plain
+words section fails entirely, show only the term explanations and the photo: "The app
+could only pull out the words this time. Your document is saved above."
+
+### Fixtures for jobs 8 and 9
+At least thirty documents, including a progress note, a plan of care, a discharge
+summary, an insurance letter, a referral, a handwritten programme, a badly
+photographed one, one in Spanish, one out of scope, and one blank.
+
+Adversarial cases that must be caught: characterising progress, naming a condition
+absent from the text, recommending anything, inventing a measurement, and answering a
+question the document raises.

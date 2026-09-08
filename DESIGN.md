@@ -127,51 +127,137 @@ Provenance line. 12/600 ink3, centred, at the foot of a page that was written ra
 ## 4. Screen anatomy
 Every content screen: a 44 px top row (round back button with a 2 px sand inset outline, title 20/800 navy, optional orange-d text action on the right), then blocks on the 12 px grid, then the primary button pinned in a 8/18/14 footer, then the tab bar where the screen is a tab root. Today and Welcome back replace the top row with the date (13/600 ink3), the greeting (28/800 navy), and a butter avatar disc.
 
-The visit summary page. Reached from a top-right text action reading "Summary" on the Abilities tab and on every ability detail page, in orange-d at 13.5/800, and from one row in Settings under Your data. It is never a fourth tab, never badged, and never announced. Top row with a back button, the title "Your visit summary" 20/800 navy, and a text action reading "Export". Then, in order: the window pill row; the ability strip; the summary card; the question list; the measures block under a section title "The numbers"; and the provenance line. Primary button "Export as a PDF", with a secondary ghost button "Regenerate".
+**The four tabs**, from ADDENDUM-03 Part 20: Today, Sessions, Progress, You. Every
+tab has the help dot in the same place, and every screen explains itself once.
 
-Its empty state, when there is not enough data, shows the ability strip if there is one, then a sand block saying what is still needed and that the numbers below are complete, then the measures block and the export button. The button is never disabled.
+## 4b. Help
+From ADDENDUM-03 Part 4. Three layers, and no "I'm lost" button, because a permanent
+one is an admission that the screen failed.
 
-Its loading state shows the Material 3 Expressive contained loading indicator inside the summary card with one line, "Reading back through your months." No percentage, and no skeleton text that could be mistaken for content.
+**L1, the screen explains itself once.** Every screen, on first open, one sand block
+at the top with one sentence. Never a modal, never a tour, never a dark overlay. A
+small dismiss, and it never returns. Today: "This is today. One session, and what the
+app has noticed." Sessions: "Everything you can do, and everything you've done."
+Progress: "What's changed since you started." You: "Your list, your settings, and how
+the app works." Library: "Sixty or so movements. Tap any to read it, or start it now."
 
-The exported PDF is the same content in the same order, on white, with the app name and the date range at the top and the provenance line at the bottom. Figtree, the same type scale, and the ability tints reduced to a small coloured square before each name so it prints legibly in greyscale. One page if it fits, two if it does not, never more.
+**L2, the help dot.** A "?" in the top right of every screen, the same place and the
+same size, always. It opens a sheet: what this screen is for in two sentences, what
+each thing on it means, and two or three likely questions with answers. Hand written
+per screen, never generated. Dismissed by tapping anywhere.
+
+**L3, every number explains itself.** Tap the info dot on any figure: "Chair stands:
+how many times you stood up from a chair in thirty seconds. Yours have gone from nine
+to fourteen since March." No number in this app is ever unexplained.
+
+The first run of any feature gets one sand block explaining it in a sentence. Once.
+
+Today's session card is never ambiguous: it always says what to do, how long it takes,
+and has one obvious button. If a person could be lost on Today, that is a design bug
+to fix rather than a help topic to write.
 
 ## 5. Motion
-Material 3 Expressive springs, standard scheme. The daily card morphs from its tint to white and the check disc scales in when done; no confetti, no sound by default. The Go pill scales on press. The hero sky crossfades at dawn and dusk over two seconds. Rive for the pieces that react to state (done morph, Go, the walk marker); Lottie only for play-once art the project authored. All motion stops under the system reduce-motion setting.
+Replaced by ADDENDUM-03 Part 12, merged on commit 9837f2a. Flat shapes, big radii,
+warm colour, no decoration. Motion follows the same rules. **Five movements and
+nothing else.**
+
+1. **Count up.** Any changing number animates old to new over 400ms with a spring.
+2. **Fill.** Any bar or arc fills over 600ms, ease out.
+3. **Morph.** Completion uses the Material 3 Expressive shape morph, squircle to
+   cookie, 400ms spring. The app's one moment of delight, in the same shape language
+   as everything else.
+4. **Rise.** New content enters up 12dp and fades in over 250ms, staggered 40ms.
+5. **Sun.** The hero's sun or moon drifts continuously, a 40 second cycle and 3dp of
+   travel. Almost imperceptible, and it is what makes the app feel alive rather than
+   printed.
+
+Never: confetti, sparkles, bounce, rotation, parallax, sound effects, celebration
+screens, characters, or any transition over 600ms.
+
+In a session: the count springs on each rep, the ring fills as reps accumulate, the
+rest countdown is a shrinking arc, and the next movement's name rises in as rest
+begins.
+
+**Reduce motion.** Numbers change instantly, fills are immediate, the morph becomes a
+cross fade, and the sun stops. Nothing is lost.
+
+## 5b. The session screens
+From ADDENDUM-03 Part 1. Seven screens, and the fourth is the dominant screen of the
+whole app.
+
+**S1 the offer**, on Today: the session's name, its length, the movements in it, one
+line saying what it feeds, and any adaptation sentence. Two actions, "Start" and
+"Change it".
+**S2 ready**, full screen: the movement's name, its setup line, the target, the stop
+rule. One button, "I'm ready".
+**S3 count in**: three, two, one, go, one second each, the number filling the screen.
+**S4 the set, live**: an enormous count that climbs as reps are detected, the target
+and the last result under it, a progress ring filling toward the target, and pause and
+the three exits always visible. For untimed movements the same screen shows elapsed
+time, and steps as well for a walk.
+**S5 rest**: a shrinking arc rather than a ticking number, the next movement named
+underneath, the set just finished shown with its number, and "Skip the rest".
+**S6 between movements**: the same shape as S2, with the count-in skippable.
+**S7 done**: what was done, each number against its last; "How did that feel?"; then
+the next session on the same screen, already adjusted.
+
+The count on S4 is the largest type in the app. It has to be readable from two feet
+away by somebody standing up out of a chair, which is the whole reason the screen
+exists.
 
 ## 6. Voice
-The app describes; the person concludes. Every sentence passes one test: would a friend say this out loud. The app may not use a word it has not taught; the first time an idea appears, the sentence carries its own explanation, and later it shortens.
+The app describes; the person concludes. Every sentence passes one test: would a
+friend say this out loud. The app may not use a word it has not taught; the first time
+an idea appears, the sentence carries its own explanation, and later it shortens.
 
-Words that do not exist in the app: rung, tier, trail, trend, postcard, story, check-in, streak, score, goal, target, calories, burn, earn, cheat, fail, should, must, senior, elderly, frail, frailty, fall risk, decline, sarcopenia, patient, diagnosis, prescribe.
+**Words that do not exist in the app:** rung, tier, trail, trend, postcard, story,
+check-in, streak, score, goal, target, calories, burn, earn, cheat, fail, should,
+must, senior, elderly, frail, frailty, fall risk, decline, sarcopenia, patient,
+diagnosis, prescribe, report, assessment, evaluation, findings, results,
+recommendations, and, added by ADDENDUM-03: test, workout, routine, level, unlock,
+achievement, complete, missed, streak, hazard, risk.
 
-The visit summary additionally never contains: report, assessment, evaluation, findings, results, recommendations. It is a summary, and it is the person's own page.
-Words that do: walk, where you started, months, your weight smoothed, your week written up, say how today went, done, that counts, get up, go, carry, steady, better, same, what you said you want.
+"Plan" is permitted only for a therapist's plan. "Steady" means reliable, not stuck.
 
-The ability sentence pattern, used everywhere a measure is reported: what you can do now, then what it was. "You got off the floor without your hands this month. In March you used a chair." Never the instrument's language, never the seconds first.
+**The three registers.** Every copy template that comments on a change has three
+versions and the engine picks one from the person's inferred direction. Rebuilding:
+"You're doing more than you were a month ago." Keeping: "Same as last month, which
+takes doing." Building: "Fourteen. That's four more than when you started." Banned in
+all three: anything implying the ceiling is holding steady, anything implying
+improvement is unlikely, anything congratulating somebody for not getting worse, and
+anything treating maintenance as second best.
 
-Fixed strings (final copy, do not paraphrase):
-- Welcome: "Notice what changes. Never get graded." / "Your weight, your walks, and how your days go. All of it stays on your phone."
-- Weight label: "Your weight, smoothed." First-week line: "Smoothed means one heavy morning doesn't move it." Daily line: "The scale said 228.1 today."
-- Weigh-in note: "Smoothed weight stays at 226.4. Morning weight moves a couple of pounds with water and salt. That's normal, and it's why the app shows the smoothed number first."
-- Daily cards: "Weighed in" / "Say how today went" with "Talk or type, 20 seconds" / "Move for two minutes" with "A short walk counts."
-- Tags: "Here's what I picked up. From what you said. Tap anything that's wrong, or add one."
-- Talk test: "Could you have held a conversation?" with "Yes, easily" / "Just about" / "No".
-- Done: "Done. That counts." Affirmation pattern: "You walked today, on a day you said was busy." Never "great job."
-- Next walk offer: "[Walk] is ready when you are." with "Try the longer one" / "Not yet". Never "you should."
-- Sore rule: "If you're sore tomorrow, the app will suggest an easier walk. That's normal."
-- Welcome back: "Your weight line is still here. So are your walks." Never mention a streak or a gap beyond its length.
-- Plateau: "A flat stretch. That's the body doing what bodies do."
-- Same: "Same is a result. Holding a number for a year is something most people don't do." Never "no change," never "stalled."
-- Decline, once only: "Standing up has taken a little longer each month since June. Three months in one direction is worth a mention at your next appointment." Then, in the same view: "Everything else held." No colour change, no alarm, no repetition.
-- Counting: "On this phone. Nothing recorded."
-- Data: "Gone. There is no copy anywhere else." 
-- Support link label, always: "Support this work."
-- Visit summary, tab action and settings row: "Summary". Page title: "Your visit summary". Question block heading: "Things you might ask about". No candidates: "Nothing stood out this time." Measures heading: "The numbers". Provenance: "Written on your phone from what you logged between [date] and [date]. Nothing was sent anywhere." Loading: "Reading back through your months." Validation fallback: "The written summary could not be produced this time. The numbers below are complete." Export button: "Export as a PDF".
-- Introducing the summary, shown once in place above the ability rows: "There's enough here now for a summary you can take to an appointment. It's written on your phone, from your own months." with one action, "Have a look."
+**Warmth, in exactly four places.** From ADDENDUM-03 Part 16.
+1. The first session: "That's the first one."
+2. The first month: a card in Progress with then and now for their own item.
+3. Returning after two weeks or more: "Good to see you. Everything's still here."
+4. A tracked item crossing its threshold: "You said you wanted to get off the floor
+   without your hands. You just did it."
 
-Numbers-off mode replaces every figure with a direction word ("a little lower than last month") app-wide, hides the destination line, and removes the axis from charts.
+Everywhere else, plain. No congratulation for an ordinary session, no emoji, no
+exclamation marks, no praise. Affirmations name what was done and never evaluate it.
 
-## 7. Accessibility floor
-Body text never below 14 px; all text passes 4.5:1 on ground and on white; every colour state carries a shape or a word (green check for done, a ring for next, the word "done"); tap targets at least 44 dp; every drag has a tap alternative; TalkBack labels describe meaning, not drawing ("smoothed weight 226.4, a little lower than a month ago"); the tab bar has labels; nothing is conveyed by colour alone.
+## 7. Accessibility as design
+Replaced by ADDENDUM-03 Part 17. This is not a checklist applied afterwards; it is
+what the layout is for.
+
+- **Tap targets:** 56dp minimum inside a session, 48dp everywhere else. The primary
+  action is at least 64dp tall and spans the content width.
+- **No gesture is ever the only way to do anything.**
+- **Body text floor 16sp.** Correct layout at 200 percent font scale, tested rather
+  than assumed.
+- **Contrast** 4.5:1 for text and 3:1 for meaningful non-text, verified.
+- Every state is carried by a shape or a word as well as by colour.
+- **No time limits** except the rest between sets, which is skippable and extendable.
+- No double-tap gestures. No two targets within 8dp. A 300ms debounce on anything
+  destructive.
+- **Haptics** on every rep, every set and every rest end, so a session works without
+  sight or sound.
+- Every session action is reachable by system voice control.
+- TalkBack and Switch Access tested end to end.
+- The primary action sits in the bottom third of the screen.
+- **Storage accessibility:** the app is fully usable with no model installed, and the
+  model screen never implies the person is missing out.
 
 ## 8. Building a screen that is not in the grid
 1. Start from the anatomy in section 4.
