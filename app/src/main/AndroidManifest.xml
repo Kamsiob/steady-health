@@ -24,6 +24,13 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <!--
+      A buzz on every rep, set and rest end, so a session can be followed with the
+      phone in a pocket and the sound off. Not a runtime permission, granted at
+      install, and the app works the same without a vibrator in the device.
+    -->
+    <uses-permission android:name="android.permission.VIBRATE" />
+
+    <!--
       localeConfig is read from Android 13 onward, where the system settings
       offer a per-app language. Below that it is ignored and the app's own
       language picker is what a person uses. Both are wanted, so lint is told

@@ -132,6 +132,7 @@ fun CountInScreen(
             SecondaryButton(
                 label = stringResource(R.string.session_skip_count_in),
                 onClick = actions.onSkipCountIn,
+                inSession = true,
             )
         },
     ) {
@@ -317,6 +318,7 @@ private fun SessionScaffold(
                 ),
                 onClick = actions.onSpeaker,
                 modifier = Modifier.weight(1f),
+                inSession = true,
             )
             SecondaryButton(
                 label = stringResource(
@@ -324,6 +326,7 @@ private fun SessionScaffold(
                 ),
                 onClick = actions.onPause,
                 modifier = Modifier.weight(1f),
+                inSession = true,
             )
         }
         content()
@@ -344,11 +347,13 @@ private fun ExitRow(actions: SessionActions) {
                 label = stringResource(R.string.exit_easier),
                 onClick = actions.onEasier,
                 modifier = Modifier.weight(1f),
+                inSession = true,
             )
             SecondaryButton(
                 label = stringResource(R.string.exit_skip),
                 onClick = actions.onSkip,
                 modifier = Modifier.weight(1f),
+                inSession = true,
             )
         }
         Row(horizontalArrangement = Arrangement.spacedBy(SteadySpacing.ListGap)) {
@@ -356,11 +361,13 @@ private fun ExitRow(actions: SessionActions) {
                 label = stringResource(R.string.exit_enough),
                 onClick = actions.onEnough,
                 modifier = Modifier.weight(1f),
+                inSession = true,
             )
             SecondaryButton(
                 label = stringResource(R.string.exit_hurts),
                 onClick = actions.onHurts,
                 modifier = Modifier.weight(1f),
+                inSession = true,
             )
         }
     }

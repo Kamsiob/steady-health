@@ -33,7 +33,22 @@ object SteadySpacing {
     val Tight = 10.dp
 
     /** The accessibility floor: nothing a finger has to hit is smaller. */
-    val TapTarget = 44.dp
+    /**
+     * The floor everywhere outside a session. ADDENDUM-03 Part 17 raises it from 44.
+     */
+    val TapTarget = 48.dp
+
+    /**
+     * The floor inside a session, where somebody is moving and looking at the phone
+     * from two feet away.
+     */
+    val SessionTapTarget = 56.dp
+
+    /**
+     * The primary action, which spans the content width and sits in the bottom third.
+     * ADDENDUM-03 Part 17 asks for at least 64dp.
+     */
+    val PrimaryHeight = 64.dp
 
     /** The 2 px inset outline on a secondary button, a pill, and the back button. */
     val Outline = 2.dp

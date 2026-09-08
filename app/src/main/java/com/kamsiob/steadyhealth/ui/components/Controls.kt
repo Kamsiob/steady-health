@@ -53,7 +53,9 @@ fun PrimaryButton(
             .fillMaxWidth()
             .clip(SteadyShapes.Round)
             .background(if (enabled) SteadyPalette.OrangeD else SteadyPalette.Sand)
-            .heightIn(min = SteadySpacing.TapTarget)
+            // ADDENDUM-03 Part 17: the primary action is at least 64dp and spans the
+            // content width, wherever it is.
+            .heightIn(min = SteadySpacing.PrimaryHeight)
             .clickable(enabled = enabled, role = Role.Button, onClick = onClick)
             .padding(vertical = BUTTON_PADDING),
         contentAlignment = Alignment.Center,
@@ -69,14 +71,21 @@ fun PrimaryButton(
 
 /** Secondary: white with a 2 dp sand inset outline, navy text. */
 @Composable
-fun SecondaryButton(label: String, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun SecondaryButton(
+    label: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    inSession: Boolean = false,
+) {
     Box(
         modifier = modifier
             .fillMaxWidth()
             .clip(SteadyShapes.Round)
             .background(SteadyPalette.White)
             .border(SteadySpacing.Outline, SteadyPalette.Sand, SteadyShapes.Round)
-            .heightIn(min = SteadySpacing.TapTarget)
+            .heightIn(
+                min = if (inSession) SteadySpacing.SessionTapTarget else SteadySpacing.TapTarget,
+            )
             .clickable(role = Role.Button, onClick = onClick)
             .padding(vertical = BUTTON_PADDING),
         contentAlignment = Alignment.Center,

@@ -1149,6 +1149,10 @@ class RunRepository(private val db: SteadyDatabase) {
         db.runs().upsertRun(latest.copy(felt = felt.id))
     }
 
+    /** How many times one movement has been done, for the pacing cue. */
+    suspend fun timesDone(movementId: String): Int =
+        db.runs().allMovementsOnce().count { it.movementId == movementId && !it.skipped }
+
     suspend fun lastFelt(): Felt? = db.runs().latest()?.felt?.let { id ->
         Felt.entries.firstOrNull { it.id == id }
     }

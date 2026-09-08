@@ -10,6 +10,7 @@ import com.kamsiob.steadyhealth.data.ProfileRepository
 import com.kamsiob.steadyhealth.data.RunRepository
 import com.kamsiob.steadyhealth.data.SteadyDatabase
 import com.kamsiob.steadyhealth.session.Area
+import com.kamsiob.steadyhealth.session.Buzz
 import com.kamsiob.steadyhealth.session.Counted
 import com.kamsiob.steadyhealth.session.Ending
 import com.kamsiob.steadyhealth.session.Felt
@@ -44,6 +45,7 @@ import java.time.ZoneId
 class SessionViewModel(application: Application) : AndroidViewModel(application) {
 
     private val speech = Speech(application)
+    private val buzz = Buzz(application)
     private val db get() = SteadyDatabase.get(getApplication())
     private val runs get() = RunRepository(db)
     private val profile get() = ProfileRepository(db)
@@ -65,6 +67,8 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
     /** When the session was paused, so an hour away can be noticed. */
     private var pausedAt = 0L
     private var startedAt = 0L
+    private var pacing = false
+    private var paceUp = true
     private var saved = false
 
     var speaking: Boolean = true
@@ -124,7 +128,13 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
 
     // --- what the person does -------------------------------------------------
 
-    fun ready() {
+    fun ready() = viewModelScope.launch {
+        val movement = _runner.value?.movement
+        // On for the first three sessions of any new movement, then off unless the
+        // person keeps it. Somebody who has done chair stands forty times does not
+        // need to be told when to go up.
+        pacing = movement != null && runs.timesDone(movement.id) < PACING_SESSIONS
+        paceUp = true
         _runner.value = _runner.value?.ready()
         sayCountIn()
     }
@@ -138,7 +148,10 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
         val before = _runner.value ?: return
         val after = before.rep()
         _runner.value = after
-        if (after.count != before.count) speakRep(after)
+        if (after.count != before.count) {
+            buzz.rep()
+            speakRep(after)
+        }
     }
 
     fun endSet() {
@@ -146,6 +159,7 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
         _runner.value = after
         spokenCount = 0
         saidMoreThanLast = false
+        buzz.setDone()
         if (after.finished) finish() else sayRest(after)
     }
 
@@ -281,6 +295,11 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
         if (!speaking) speech.stop()
     }
 
+    /** Turn the pacing cue on or off. It is on for the first three of a movement. */
+    fun setPacing(value: Boolean) {
+        pacing = value
+    }
+
     // --- the voice ------------------------------------------------------------
 
     private fun sayReady() {
@@ -324,6 +343,15 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
         }
         if (stage is Stage.Rest && stage.secondsLeft == FIVE_SECONDS) {
             speech.say(string(R.string.say_five_seconds))
+        }
+        if (before.stage is Stage.Rest && stage !is Stage.Rest) buzz.restOver()
+
+        // The pacing cue: "up... and down", on for the first three sessions of any
+        // new movement and then off unless kept. It is the difference between
+        // counting what happened and leading it.
+        if (pacing && stage is Stage.Live && after.elapsed % PACE_SECONDS == 0) {
+            speech.say(string(if (paceUp) R.string.say_up else R.string.say_down))
+            paceUp = !paceUp
         }
     }
 
@@ -377,6 +405,12 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
         const val AN_HOUR = 60L * 60 * 1000
         const val FIVE_MORE = 5
         const val FIVE_SECONDS = 5
+
+        /** One cue every two seconds: up on one, down on the next. */
+        const val PACE_SECONDS = 2
+
+        /** The pacing cue rides along for the first three sessions of a movement. */
+        const val PACING_SESSIONS = 3
     }
 }
 
