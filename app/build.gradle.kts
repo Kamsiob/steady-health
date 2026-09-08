@@ -149,6 +149,9 @@ dependencies {
     implementation(libs.sqlcipher.android)
 
     implementation(libs.androidx.datastore.preferences)
+
+    // The widget. ADDENDUM-03 Part 13: two sizes, today's session, tap to start.
+    implementation(libs.androidx.glance.appwidget)
     implementation(libs.androidx.work.runtime.ktx)
 
     implementation(libs.kotlinx.coroutines.android)

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Today's session, on the home screen. ADDENDUM-03 Part 13.
+
+  Two sizes: the small one is the length and the word Start, the wide one adds the
+  movements. The minimum is deliberately small, because somebody who keeps one screen
+  of icons should be able to fit this beside them.
+
+  previewLayout is ignored below API 31 rather than left out, because the phones that
+  do read it are the majority and the ones that do not fall back to initialLayout,
+  which is the same layout.
+-->
+<appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:description="@string/widget_description"
+    android:initialLayout="@layout/glance_default_loading_layout"
+    android:minWidth="140dp"
+    android:minHeight="100dp"
+    android:previewLayout="@layout/glance_default_loading_layout"
+    android:resizeMode="horizontal|vertical"
+    tools:ignore="UnusedAttribute"
+    android:targetCellWidth="2"
+    android:targetCellHeight="1"
+    android:updatePeriodMillis="3600000"
+    android:widgetCategory="home_screen" />

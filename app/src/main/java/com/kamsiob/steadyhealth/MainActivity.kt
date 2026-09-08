@@ -11,6 +11,7 @@ import com.kamsiob.steadyhealth.data.SteadyDatabase
 import com.kamsiob.steadyhealth.remind.Reminding
 import com.kamsiob.steadyhealth.ui.SteadyApp
 import com.kamsiob.steadyhealth.ui.theme.SteadyTheme
+import com.kamsiob.steadyhealth.widget.START_SESSION
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.ZoneId
@@ -29,9 +30,11 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         recordOpenedFromPrompt()
+        val fromWidget = intent?.getBooleanExtra(START_SESSION, false) == true
+        intent?.removeExtra(START_SESSION)
         setContent {
             SteadyTheme {
-                SteadyApp()
+                SteadyApp(openSession = fromWidget)
             }
         }
     }

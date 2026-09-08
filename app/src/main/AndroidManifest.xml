@@ -75,5 +75,22 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/shared_files" />
         </provider>
+
+        <!--
+          The widget. ADDENDUM-03 Part 13: today's session, its length, tap to start.
+          Exported because the launcher is what places it, which is the only thing
+          that ever talks to it.
+        -->
+        <receiver
+            android:name=".widget.SessionWidgetReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/session_widget" />
+        </receiver>
+
     </application>
 </manifest>

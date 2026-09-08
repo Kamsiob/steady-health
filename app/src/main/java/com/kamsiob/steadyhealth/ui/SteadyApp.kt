@@ -76,7 +76,7 @@ import kotlinx.coroutines.delay
  * an app they used once.
  */
 @Composable
-fun SteadyApp() {
+fun SteadyApp(openSession: Boolean = false) {
     val viewModel: SteadyViewModel = viewModel()
     val askViewModel: AskViewModel = viewModel()
     val settingsViewModel: SettingsViewModel = viewModel()
@@ -92,6 +92,7 @@ fun SteadyApp() {
         null -> Box(Modifier.fillMaxSize().background(SteadyPalette.Ground))
         false -> OnboardingFlow(onFinished = viewModel::onboardingFinished)
         true -> Tabs(
+            openSession,
             viewModel,
             askViewModel,
             settingsViewModel,
@@ -108,6 +109,7 @@ fun SteadyApp() {
 @Composable
 @Suppress("LongParameterList") // Four tabs, nine view models, one place.
 private fun Tabs(
+    openSession: Boolean,
     viewModel: SteadyViewModel,
     askViewModel: AskViewModel,
     settingsViewModel: SettingsViewModel,
@@ -121,6 +123,15 @@ private fun Tabs(
     val navController = rememberNavController()
     var tab by rememberSaveable { mutableStateOf(Tab.Today) }
     val back: () -> Unit = { navController.popBackStack() }
+
+    // The widget was tapped. Straight into the session, which is the whole point of
+    // a widget: the thing it names is one tap away and not four.
+    LaunchedEffect(openSession) {
+        if (openSession) {
+            sessionViewModel.startTodays()
+            navController.navigate(Route.SESSION)
+        }
+    }
     val offer by viewModel.offer.collectAsStateWithLifecycle()
 
     Box(Modifier.fillMaxSize()) {

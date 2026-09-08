@@ -420,6 +420,7 @@
     <string name="daily_still_here">Still here whenever you want it.</string>
     <string name="settings_daily">The daily one</string>
     <string name="settings_daily_sub">One a day, at your usual time. Under ten words.</string>
+    <string name="widget_description">Today\'s session, and a tap to start it.</string>
     <string name="settings_daily_off">It turned itself off after being dismissed eight times. Turn it back on whenever you like.</string>
 
     <string name="settings_reminders">Reminders</string>
