@@ -223,11 +223,20 @@ the page does not actually carry is itself a fault, so nothing can be laundered 
 putting marks around it.
 
 The phases after Phase 4 have no gate of their own in Part 21. Two device scripts were
-written for them anyway, because they answer questions a laptop cannot:
-`tools/gate-phase5.py` walks all four ways of getting around and checks that neither
-seated version is ever offered something that needs standing, and
-`tools/gate-numbers-off.py` walks thirteen screens with numbers off and reads every
-piece of text on each.
+written for them anyway, because they answer questions a laptop cannot.
+
+**The four ways of getting around: pass**, run on the phone. `tools/gate-phase5.py`
+sets each of the four in turn and checks that the session is real, that the library is
+a different library rather than a shorter one, and that neither seated version is ever
+offered anything that needs standing. On feet and with a walker see thirty six
+movements, a wheelchair user twenty three, somebody in bed twenty one, all four get a
+warm up and a session they can start, and it puts the setting back to on my feet at
+the end.
+
+**Numbers off**: `tools/gate-numbers-off.py` walks twelve screens with the switch off
+and reads every piece of text on each, including what is below the fold. It prints the
+screens it deliberately does not walk and why, which is the live session and the check,
+where the number is the instrument rather than a verdict.
 
 ## The Phase 1 acceptance gate
 
