@@ -123,8 +123,15 @@ def onboard(device, reps=10, pace=0.35):
     tapped through at machine speed on purpose: what is being measured here is not
     how long it takes, which gate-first-run.py measures properly.
     """
+    # Clear, then wait, then start. `pm clear` returns before the process is gone,
+    # and starting into the tail of the old one brings back the screen it was on
+    # rather than the first screen of a fresh install. That failed one run in three,
+    # which is worse than failing every time, because it looks like a bug in the app.
     device.clear()
+    device._adb("shell", "am", "force-stop", device.package)
+    time.sleep(1.5)
     device.launch()
+    device.wait("Show me", timeout=25)
     device.tap("Show me")
     device.tap("On my feet")
     device.tap("Stairs without stopping")
@@ -138,6 +145,9 @@ def onboard(device, reps=10, pace=0.35):
     device.tap("Done with this one")
     device.tap("About right")
     device.tap("Save")
+    # O5's two optional questions are on one screen. Answering the chair one is
+    # enough; the exclusions question is left alone on purpose, because a person
+    # who skips it is the ordinary case and the gates should test that person.
     device.tap("Yes")
     device.tap("Done")
     device.wait("Today's session", timeout=20)

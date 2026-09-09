@@ -2,6 +2,7 @@ package com.kamsiob.steadyhealth.engine
 
 import com.google.common.truth.Truth.assertThat
 import com.google.common.truth.Truth.assertWithMessage
+import com.kamsiob.steadyhealth.session.Counted
 import com.kamsiob.steadyhealth.session.Done
 import com.kamsiob.steadyhealth.session.Movements
 import org.junit.Test
@@ -33,6 +34,25 @@ class PassiveTest {
             assertWithMessage("$measureId watches $movementId")
                 .that(movement.domain)
                 .isEqualTo(measure.domain)
+        }
+    }
+
+    @Test
+    fun aWatchedMovementIsCountedInTheSameUnitAsItsMeasure() {
+        // A rep count offered as a number of seconds is not a near miss, it is a
+        // different quantity wearing the same digits. This caught one: the grip hold
+        // is seconds and the towel squeeze that looks like it is repetitions.
+        Passive.watching.forEach { (measureId, movementId) ->
+            val measure = Measures.byId(measureId)!!
+            val movement = Movements.byId(movementId)!!
+            val counted = when (measure.unit) {
+                MeasureUnit.Seconds -> Counted.Hold
+                MeasureUnit.Repetitions -> Counted.Reps
+                else -> null
+            }
+            assertWithMessage("$measureId is ${measure.unit}, $movementId is ${movement.counted}")
+                .that(movement.counted)
+                .isEqualTo(counted)
         }
     }
 

@@ -60,6 +60,14 @@ object Passive {
      * on it, so the two are not the same measurement. That is why nothing here is
      * ever recorded without being confirmed, and why the screen says the day and the
      * number rather than presenting it as a result already taken.
+     *
+     * The grip hold is not here, and it is the reason the unit test below exists. The
+     * measure is a hold in seconds and the movement that looks like it, the towel
+     * squeeze, is counted in repetitions. Pairing them would have offered somebody six
+     * as a number of seconds because they squeezed a towel six times, which is not a
+     * near miss but a different quantity wearing the same digits. The test now holds
+     * every pair to the same unit as well as the same ability, so the next one cannot
+     * be added by eye.
      */
     val watching: Map<String, String> = mapOf(
         Measures.chairStand.id to "sit_to_stand",
@@ -67,7 +75,6 @@ object Passive {
         Measures.bandRows.id to "band_row",
         Measures.singleLegStance.id to "one_leg",
         Measures.seatedReach.id to "seated_forward_lean",
-        Measures.gripHold.id to "towel_squeeze",
     )
 
     /**
