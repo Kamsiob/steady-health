@@ -11,6 +11,8 @@ import android.text.Layout
 import android.text.StaticLayout
 import android.text.TextPaint
 import androidx.core.content.res.ResourcesCompat
+import androidx.core.graphics.createBitmap
+import androidx.core.graphics.withTranslation
 import com.kamsiob.steadyhealth.R
 import java.io.File
 
@@ -88,7 +90,7 @@ object CardImage {
     }
 
     fun draw(context: Context, line: String): Bitmap {
-        val bitmap = Bitmap.createBitmap(WIDTH, HEIGHT, Bitmap.Config.ARGB_8888)
+        val bitmap = createBitmap(WIDTH, HEIGHT)
         val canvas = Canvas(bitmap)
         canvas.drawColor(GROUND)
 
@@ -142,10 +144,7 @@ object CardImage {
             size -= LINE_STEP
             layout = layoutOf(line, font, size, width)
         }
-        canvas.save()
-        canvas.translate(MARGIN, HILL_TOP + SENTENCE_DROP)
-        layout.draw(canvas)
-        canvas.restore()
+        canvas.withTranslation(MARGIN, HILL_TOP + SENTENCE_DROP) { layout.draw(this) }
     }
 
     private fun layoutOf(line: String, font: Typeface?, size: Float, width: Int): StaticLayout {

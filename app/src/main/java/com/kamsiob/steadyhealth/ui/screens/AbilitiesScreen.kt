@@ -42,7 +42,13 @@ data class AbilityRowState(
 )
 
 /** One thing the person said they want, with where they rated it. */
-data class TrackedItemState(val text: String, val domain: AbilityDomain, val rating: Int)
+data class TrackedItemState(
+    val text: String,
+    val domain: AbilityDomain,
+    val rating: Int,
+    /** The rating as it is shown: a number, or a word when numbers are off. */
+    val said: String = "",
+)
 
 /** What the Abilities tab draws. */
 data class AbilitiesUiState(
@@ -74,13 +80,29 @@ data class AbilitiesUiState(
      * the first month and never again.
      */
     val firstMonth: FirstMonthCard? = null,
+
+    /**
+     * What the monthly check needs, in the words of this version of the app.
+     *
+     * Worded by the view model, which knows how the person gets around. The row used
+     * to promise everybody a chair and a wall, which are two things the wheelchair
+     * check and the bed check never ask for.
+     */
+    val checkLede: String = "",
 )
 
 /** The first month card, already worded. Part 16, the second warm place. */
 data class FirstMonthCard(val heading: String, val line: String)
 
-/** One week, as a bar. Nothing here joins it to the week beside it. */
-data class WeekBar(val done: Int, val wanted: Int, val spoken: String)
+/**
+ * One week, as a bar. Nothing here joins it to the week beside it.
+ *
+ * [label] is what is printed under the bar, which is the count with numbers on and
+ * nothing at all with them off. The bar keeps its real height either way, because
+ * LOGIC.md says charts keep their shape and lose their axes, and a shape carries no
+ * digits.
+ */
+data class WeekBar(val done: Int, val wanted: Int, val spoken: String, val label: String = "")
 
 /**
  * Abilities, from the grid, screen 8. The tab that replaced History.
@@ -163,7 +185,7 @@ fun AbilitiesScreen(
 
         ListItem(
             heading = stringResource(R.string.check_title),
-            subtitle = stringResource(R.string.check_intro_lede),
+            subtitle = state.checkLede,
             onClick = onCheck,
         )
 
@@ -186,9 +208,13 @@ fun AbilitiesScreen(
             state.items.forEach { item ->
                 ListItem(
                     heading = item.text,
-                    subtitle = stringResource(R.string.rating_now, item.rating),
+                    // The rating is what the person said, reported back to them,
+                    // so it is one of the figures that becomes a word. NumbersOff
+                    // says why at length.
+                    subtitle = item.said,
                     tileTint = tintFor(item.domain),
                     glyph = { AbilityGlyph(item.domain) },
+                    value = null,
                 )
             }
         }
@@ -246,7 +272,7 @@ private fun WeekColumn(week: WeekBar, modifier: Modifier = Modifier) {
             )
         }
         SteadyText(
-            text = "${week.done}",
+            text = week.label,
             style = SteadyType.Caption,
             color = SteadyPalette.Ink3Text,
             modifier = Modifier.height(BAR_LABEL),

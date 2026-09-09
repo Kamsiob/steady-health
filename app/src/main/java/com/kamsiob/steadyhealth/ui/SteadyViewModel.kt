@@ -31,6 +31,7 @@ import com.kamsiob.steadyhealth.engine.DoneSession
 import com.kamsiob.steadyhealth.engine.Envelope
 import com.kamsiob.steadyhealth.engine.Ladders
 import com.kamsiob.steadyhealth.engine.LifeSentences
+import com.kamsiob.steadyhealth.engine.NumbersOff
 import com.kamsiob.steadyhealth.engine.PacingEngine
 import com.kamsiob.steadyhealth.engine.Progression
 import com.kamsiob.steadyhealth.engine.ProgressionEngine
@@ -42,6 +43,7 @@ import com.kamsiob.steadyhealth.engine.Warmth
 import com.kamsiob.steadyhealth.engine.WayOfGettingAround
 import com.kamsiob.steadyhealth.engine.WaysOfGettingAround
 import com.kamsiob.steadyhealth.engine.WeightEngine
+import com.kamsiob.steadyhealth.engine.Went
 import com.kamsiob.steadyhealth.plan.ReviewDate
 import com.kamsiob.steadyhealth.plan.ReviewPrompt
 import com.kamsiob.steadyhealth.remind.ReminderWorker
@@ -218,6 +220,20 @@ class SteadyViewModel(application: Application) : AndroidViewModel(application) 
         refresh()
     }
 
+    /**
+     * The app's extras, off or back on, from the card itself. ADDENDUM-03 Part 6.
+     *
+     * "In one tap" is the whole of the requirement, so this is a toggle and not a
+     * screen: the same row turns them off and turns them back on, and nothing asks
+     * whether the person is sure. It changes nothing about the therapist's plan, and
+     * it is the same setting the You tab shows, so turning it off here and looking
+     * there does not find two different answers.
+     */
+    fun toggleExtras() = viewModelScope.launch {
+        profile.setExtras(!profile.extras())
+        refresh()
+    }
+
     /** The one answer to "what has been happening?". ADDENDUM-03 Part 15. */
     fun answerWhyAway(why: WhyAway) = viewModelScope.launch {
         away.answer(why)
@@ -365,12 +381,16 @@ class SteadyViewModel(application: Application) : AndroidViewModel(application) 
      * Two days before, and only then. It is a line on Today rather than a
      * notification, because a notification about an appointment somebody already
      * knows about is the app telling them something they told it.
+     *
+     * Whose appointment it is comes from the plan carrying that date, not from
+     * whichever plan is oldest. Somebody with a physio plan and an OT plan would
+     * otherwise be sent to the wrong appointment by name.
      */
     private suspend fun appointmentSoon(): String? {
-        val plans = PlanRepository(db)
-        val soon = ReviewDate.due(plans.live().mapNotNull { it.reviewDay }, today())
+        val plans = PlanRepository(db).live()
+        val soon = ReviewDate.due(plans.mapNotNull { it.reviewDay }, today())
         if (soon !is ReviewPrompt.Send) return null
-        val label = plans.live().firstOrNull()?.label.orEmpty()
+        val label = plans.firstOrNull { it.reviewDay == soon.onDay }?.label.orEmpty()
             .ifBlank { string(R.string.plan_them) }
         val day = LocalDate.ofEpochDay(soon.onDay)
             .dayOfWeek
@@ -426,11 +446,18 @@ class SteadyViewModel(application: Application) : AndroidViewModel(application) 
         else -> R.string.today_move_sub
     }
 
+    /**
+     * The label above the next thing.
+     *
+     * A walker is walking, so it says walk. A wheelchair gets its own word rather
+     * than the domain id: "Today, for Go" was the only one of the four that named a
+     * category instead of a thing somebody is about to do.
+     */
     private fun nextLabel() = when {
         pacing -> R.string.move_pacing_label
-        way.way == GettingAround.OnFeet -> R.string.today_next_walk
+        way.way == GettingAround.Wheelchair -> R.string.today_next_wheel
         way.way == GettingAround.InBed -> R.string.today_move_bed
-        else -> R.string.today_next_go
+        else -> R.string.today_next_walk
     }
 
     private fun weightExplain(rawKg: Double?, units: Units, showNumbers: Boolean): String {
@@ -883,6 +910,7 @@ class SteadyViewModel(application: Application) : AndroidViewModel(application) 
 
         val results = checks.results()
         val measured = checks.latestValues()
+        val numbersOn = profile.showNumbers()
 
         _abilities.value = AbilitiesUiState(
             abilities = AbilityDomain.entries.map { domain ->
@@ -904,15 +932,46 @@ class SteadyViewModel(application: Application) : AndroidViewModel(application) 
                     text = item.text,
                     domain = AbilityDomain.fromId(item.domain) ?: AbilityDomain.GetUp,
                     rating = rating,
+                    said = ratingSaid(item.id, rating, numbersOn),
                 )
             },
             waiting = true,
             week = weekNote(),
-            weeks = cards.weekBars(),
+            weeks = cards.weekBars(numbersOn),
             weeksSaid = cards.weeksSaid(),
             lookBack = cards.lookBackLine(),
             firstMonth = firstMonthCard(),
+            checkLede = string(checkLede()),
         )
+    }
+
+    /**
+     * One item's rating, as a number or as a word.
+     *
+     * With numbers off it says which way it went since the month before rather than
+     * where it stands, because "seven out of ten" turned into a word about seven is
+     * still a place on a scale, and the point of the setting is that there is no
+     * scale to be placed on.
+     */
+    private suspend fun ratingSaid(itemId: Long, rating: Int, numbersOn: Boolean): String {
+        if (numbersOn) return string(R.string.rating_now, rating)
+        val months = abilities.months(itemId).sortedBy { it.epochDay }
+        val before = months.getOrNull(months.size - 2)?.rating?.toDouble()
+        return string(
+            when (NumbersOff.went(before, rating.toDouble())) {
+                Went.Up -> R.string.rating_word_up
+                Went.Down -> R.string.rating_word_down
+                Went.Same -> R.string.rating_word_same
+                Went.Unknown -> R.string.rating_word_first
+            },
+        )
+    }
+
+    /** What the monthly check needs, which is not the same in the four versions. */
+    private fun checkLede() = when (way.way) {
+        GettingAround.Wheelchair -> R.string.check_intro_lede_wheel
+        GettingAround.InBed -> R.string.check_intro_lede_bed
+        else -> R.string.check_intro_lede
     }
 
     /**
@@ -981,31 +1040,10 @@ class SteadyViewModel(application: Application) : AndroidViewModel(application) 
      * What this person's four abilities are called.
      *
      * The domain is the same in all four versions of the app and so is the tint
-     * and the glyph; only the word changes. Nothing here says one set is a
-     * smaller version of another, because it is not.
+     * and the glyph; only the word changes. The table is in [AbilityWords] because
+     * the ability page asks the same question and used to answer it differently.
      */
-    private fun nameFor(domain: AbilityDomain) = when (way.way) {
-        GettingAround.Wheelchair -> when (domain) {
-            AbilityDomain.GetUp -> R.string.ability_transfer
-            else -> defaultNameFor(domain)
-        }
-
-        GettingAround.InBed -> when (domain) {
-            AbilityDomain.GetUp -> R.string.ability_sit_up
-            AbilityDomain.Go -> R.string.ability_breathe
-            AbilityDomain.Carry -> R.string.ability_grip
-            AbilityDomain.Steady -> R.string.ability_ankles
-        }
-
-        else -> defaultNameFor(domain)
-    }
-
-    private fun defaultNameFor(domain: AbilityDomain) = when (domain) {
-        AbilityDomain.GetUp -> R.string.ability_get_up
-        AbilityDomain.Go -> R.string.ability_go
-        AbilityDomain.Carry -> R.string.ability_carry
-        AbilityDomain.Steady -> R.string.ability_steady
-    }
+    private fun nameFor(domain: AbilityDomain) = AbilityWords.name(way.way, domain)
 
     private fun greetingFor(now: LocalTime) = when {
         now.hour < NOON -> R.string.today_morning

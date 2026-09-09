@@ -77,6 +77,7 @@ class TodayCards(private val application: Application, private val db: SteadyDat
                 today = today,
                 lastSessionDay = runs.lastSessionDay(),
                 strengthRunLength = runs.strengthRunLength(),
+                pacingMinutes = if (profile.pacing()) profile.envelope().minutes else null,
             ),
         )
         if (plan.steps.isEmpty()) {
@@ -338,13 +339,22 @@ class TodayCards(private val application: Application, private val db: SteadyDat
      * Four separate answers. Nothing joins them and nothing totals them, which is
      * what makes this a picture of a month rather than a run of days.
      */
-    suspend fun weekBars(): List<WeekBar> = fourWeeks().mapIndexed { at, week ->
-        WeekBar(
-            done = week.done,
-            wanted = week.wanted,
-            spoken = string(R.string.weeks_bar, at + 1, week.done, week.wanted),
-        )
-    }
+    suspend fun weekBars(numbersOn: Boolean = true): List<WeekBar> =
+        fourWeeks().mapIndexed { at, week ->
+            WeekBar(
+                done = week.done,
+                wanted = week.wanted,
+                // The bar keeps its height with numbers off and loses its label and
+                // its spoken count, which is LOGIC.md's "charts keep shape and lose
+                // axes" applied to the smallest chart in the app.
+                spoken = if (numbersOn) {
+                    string(R.string.weeks_bar, at + 1, week.done, week.wanted)
+                } else {
+                    string(R.string.weeks_bar_word, at + 1)
+                },
+                label = if (numbersOn) week.done.toString() else "",
+            )
+        }
 
     /**
      * One sentence about those four weeks, and never about a run of them.
