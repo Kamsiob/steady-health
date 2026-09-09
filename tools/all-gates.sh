@@ -18,6 +18,11 @@
 # gate nobody reads.
 set -uo pipefail
 
+# Unbuffered, so a log being written is a log you can read. Redirected to a file,
+# Python holds its output until it exits, and a gate that drives a phone for four
+# minutes then crashes looks identical to one that hung.
+export PYTHONUNBUFFERED=1
+
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 OUT="${STEADY_GATE_OUT:-$ROOT/app/build/gates}"
 mkdir -p "$OUT"
