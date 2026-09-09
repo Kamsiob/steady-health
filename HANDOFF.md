@@ -7,7 +7,7 @@ it cannot see the reasoning for, or breaking something it does not understand.
 Read this in full. Then DECISIONS.md. Then MASTER_SPEC.md and DESIGN.md. Then
 `git log`.
 
-**Last updated:** 2026-09-09, during Phase 3 of the ADDENDUM-03 plan.
+**Last updated:** 2026-09-09, with every phase of ADDENDUM-03 Part 21 built.
 **Read TEST-ME.md first if you are the owner.** It says what to try and what I need.
 
 ---
@@ -37,12 +37,35 @@ audio with pacing, haptics, the warm up and the cool down, pause, the three exit
 the pain button, and the accelerometer counting stands and steps. All of it runs on
 the phone.
 
-**Phase 3 is most of the way.** The camera works on the phone end to end: "Scan
-something" is in Sessions and in You, the page is photographed, ML Kit reads the words
-off it on the device, and the classifier asks one of Part 5's five questions. A
-therapist's plan is the session when one exists, with the app's own suggestions in a
-separate block below and a one-tap switch to turn them off. The Phase 3 gate passes.
-Still to land: the export PDF, the review date prompt, and the model choice screen.
+**Phase 3 is done and its gate passes.** The camera works on the phone end to end:
+"Scan something" opens a chooser with Part 6's four ways in, the page is photographed,
+ML Kit reads the words off it on the device, and the classifier asks one of Part 5's
+five questions. A therapist's plan is the session when one exists, with the app's own
+suggestions in a separate block below and a one-tap switch to turn them off. The
+export PDF, the appointment prompt and the model choice screen all landed.
+
+**Phase 4 is done and its gate passes, and the feature ships off.** The job 9 reading
+validator, fifty five adversarial fixtures and forty two documents. Turning it on
+waits on the attorney review, which is on the BLOCKED list and is not a code task.
+
+**Phase 5 is done.** All four ways of getting around have a real library: seventy
+seven movements, every one explicitly tagged, and `Movement.ways` has no default so
+the compiler asks about the next one. A fortnight of planned sessions per way found
+three engine faults a single plan could not, including that Steady was never offered
+to anybody in any version of the app.
+
+**Phase 6 is done.** Passive measure capture and the monthly confirm, the second
+optional rating and the sentence it produces, and the first month card.
+
+**Phase 7 is done.** Beyond exercise: twenty five cards, the floor guide, the places
+walkthrough, the day between sessions. The card in all four kinds. Job 7 without the
+model.
+
+**Phase 8 is done apart from what only the owner can do.** Numbers off with the line
+written down, export, import, delete, backup and restore, hardening, the clinician
+handout, the store listing, a signing config that reads a key from outside the
+repository, and LAUNCH.md. The three translations and the signing key itself are
+BLOCKED, not unbuilt.
 
 **Phase 2 is done.** Today in full: what they said they want, the next thing, the
 session card, the week line, what the app noticed, "Got a minute?" and "Do it without
@@ -98,9 +121,25 @@ Check `git status` before assuming. Everything through Phase 2 is committed.
   returns to Today, because Part 7's reader is Phase 4 and behind a flag that stays off
   until an attorney has reviewed the boundary. The validator is being built first, as
   Part 7 requires.
-- **The therapist plan has one way in of four.** Photographing the sheet works. Saying
-  it out loud, picking from the library, and typing it are not built; all four are
-  meant to end at the same confirmation screen, which exists.
+- **Saying a plan out loud needs Android 13 and an on-device recogniser.** All four of
+  Part 6's ways in are built and all four end on the one confirmation screen. The
+  spoken one uses `SpeechRecognizer.createOnDeviceSpeechRecognizer` only, and where a
+  phone cannot do that the screen says so in a sentence and offers typing. There is no
+  fallback on purpose: the recogniser that would work sends the audio to a server.
+  Nobody has yet run it on a phone that has the on-device recogniser installed.
+- **Start does not run the therapist's plan.** This is the biggest thing Part 6 asks
+  for that is not built. Part 6: "when a therapist's plan exists, IT IS the session
+  ... and it is what Start runs". Today's card and the Sessions card do show the plan,
+  labelled, with the app's own suggestions kept separate below, and a second
+  therapist's plan sits beside the first with its own name. But `startTodays` plans
+  through `SessionEngine` from the person's own history and never opens the plan
+  table, so the button under the plan runs the app's session. What was done against
+  the plan, and the export's "what was prescribed, what was done and when", both wait
+  on this.
+- **The appointment page is the first plan only.** `TherapistPageViewModel.share`
+  takes `live().firstOrNull()`, so a second therapist's plan is not on the page taken
+  to the appointment. The brief, the pages and the PDF are all written around one
+  plan.
 - **Nothing downloads.** No INTERNET permission, no model, no download screen wired.
 - **Progress is still the old Abilities grid** with the four weeks and the look back
   added on top. MASTER_SPEC 5 wants the months, the numbers, the card and the
@@ -109,8 +148,11 @@ Check `git status` before assuming. Everything through Phase 2 is committed.
   them and nothing routes to `MoveScreen` any more. It is left in place rather than
   deleted because the walk ladder logic behind it is still what the walking movements
   read, and untangling that belongs with Phase 5.
-- **The library has fifty movements, not "sixty or so".** Adding one is a table
-  entry in `Movements.kt`.
+- **The library has seventy seven movements**, and the help sentence still says
+  "sixty or so". On feet and with a walker see fifty of them, a wheelchair user
+  thirty five, somebody in bed thirty one. Adding one is a table entry in
+  `Movements.kt`, and `Movement.ways` has no default, so the compiler asks which of
+  the four versions it belongs to.
 - **Only five screens have a help topic.** A screen with no topic has no dot, which
   is honest but incomplete. Each gets one as its screen is rebuilt.
 - **The model is not integrated.** No dependency, no INTERNET permission.
