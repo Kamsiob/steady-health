@@ -36,6 +36,10 @@ WAYS = [
 # screen carries all three, so it is the one screen worth asserting on.
 MUST_HAVE = ["I'm ready"]
 
+# A week of sessions without repeating needs more than a handful. Every way has at
+# least thirty movements, so this is a floor and not a target.
+ENOUGH_MOVEMENTS = 12
+
 # Nothing on a seated or bed session may ask somebody to stand or walk. These
 # are the movement names that would mean the library was filtered wrongly.
 ON_FEET_ONLY = [
@@ -59,13 +63,14 @@ def one_way(device, label, name, seated):
     choose(device, label)
     back_to_today(device)
 
-    today = sorted(t for t in device.screen() if len(t) > 3)
-    print("   Today:", today[:12])
+    today = device.scan()
+    print("   Today:", sorted(t for t in today if len(t) > 3)[:10])
 
-    device.tap("Today's session")
-    ready = device.screen()
-    words = sorted(t for t in ready if len(t) > 3)
-    print("   ready:", words[:10])
+    # The card's action is "Start", or "Do another" once a session has been done
+    # today, and the gates run one after another so it is usually the second.
+    device.one_of("Start", "Do another")
+    ready = device.scan()
+    print("   ready:", sorted(t for t in ready if len(t) > 3)[:10])
 
     ok = True
     missing = [want for want in MUST_HAVE if not any(want in t for t in ready)]
@@ -79,14 +84,17 @@ def one_way(device, label, name, seated):
             print(f"   FAIL ({name}): offered {wrong}, which needs standing")
             ok = False
 
-    # And the library, which is the other place a way of getting around has to
-    # be honoured. An empty one is as much a failure as a wrong one.
+    # And the library, which is the other place a way of getting around has to be
+    # honoured. An empty one is as much a failure as a wrong one. It is below the
+    # fold, so this scans rather than reads: counting what fits on the screen would
+    # be measuring the phone.
     back_to_today(device)
     device.tap("Sessions")
-    library = device.screen()
-    movements = sorted(t for t in library if t.startswith(("For ",)))
+    device.tap("Everything you can do")
+    library = device.scan()
+    movements = sorted(t for t in library if t.startswith("For "))
     print(f"   library rows: {len(movements)}")
-    if len(movements) < 6:
+    if len(movements) < ENOUGH_MOVEMENTS:
         print(f"   FAIL ({name}): only {len(movements)} movements in the library")
         ok = False
     if seated:

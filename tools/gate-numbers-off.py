@@ -63,8 +63,17 @@ SCREENS = [
     (["You", "Sessions a week"], "how many a week"),
     (["You", "Reminders"], "reminders"),
     (["You", "Your data"], "your data"),
-    (["Today", "Today's session"], "the ready screen"),
 ]
+
+# The screens this gate deliberately does not walk, and why. Each shows a number
+# with the setting off on purpose, and a gate that flagged them is a gate somebody
+# turns off. NumbersOff.kt is where the line is drawn and argued.
+NOT_WALKED = {
+    "the ready screen": "it names the target, which is what you are about to do",
+    "the live session": "the count is the instrument, not a verdict",
+    "the monthly check": "the same, and you cannot take a measure you cannot see",
+    "a therapist's plan": "their numbers, recorded as given and never rewritten",
+}
 
 
 def allowed(text):
@@ -76,15 +85,21 @@ def offences(screen):
 
 
 def set_numbers(device, on):
+    """Find the switch wherever it is on the You tab, and tap it.
+
+    It is looked for rather than navigated to, because the You tab is a list that
+    has grown and a gate that hard-coded the path to one row would fail every time
+    a row above it moved. `tap` scrolls until it finds the text.
+    """
     back_to_today(device)
     device.tap("You")
+    try:
+        device.tap("Show numbers")
+        return
+    except NotOnScreen:
+        pass
+    # Older builds kept it behind a Settings row.
     device.tap("Settings")
-    row = device.screen()
-    if "Show numbers" not in row:
-        raise NotOnScreen("Show numbers is not on the settings screen")
-    # The switch is a row, so tapping it toggles. Read the state first rather
-    # than assuming, because a gate that leaves the setting inverted is worse
-    # than one that fails.
     device.tap("Show numbers")
 
 
@@ -92,7 +107,8 @@ def walk(device, label, taps):
     back_to_today(device)
     for text in taps:
         device.tap(text)
-    screen = device.screen()
+    # Scanned rather than read, because a digit below the fold is still a digit.
+    screen = device.scan()
     bad = offences(screen)
     if bad:
         print(f"   FAIL ({label}): {bad}")
@@ -122,6 +138,9 @@ def main():
         except NotOnScreen:
             print("\ncould not put the setting back; check Show numbers in You")
 
+    print()
+    for screen, why in NOT_WALKED.items():
+        print(f"not walked, on purpose: {screen} ({why})")
     print()
     if not found:
         print("pass: no digit reached any screen with numbers off")

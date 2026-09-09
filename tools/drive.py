@@ -57,6 +57,33 @@ class Device:
                 found.setdefault(text, ((int(x1) + int(x2)) // 2, (int(y1) + int(y2)) // 2))
         return found
 
+    def scan(self, sweeps=6):
+        """Every piece of text on a screen, including what is below the fold.
+
+        `screen` reads what is drawn, which on a long list is the top of it. A gate
+        that counted rows from `screen` counted how many fit on a Pixel, which is a
+        measurement of the phone. This scrolls to the bottom, gathering as it goes,
+        and scrolls back so the screen is where it was found.
+        """
+        found = {}
+        for _ in range(sweeps):
+            before = len(found)
+            found.update(self.screen())
+            if len(found) == before:
+                break
+            self._adb("shell", "input", "swipe", "540", "1700", "540", "800", "300")
+            time.sleep(0.4)
+        for _ in range(sweeps):
+            self._adb("shell", "input", "swipe", "540", "800", "540", "1700", "300")
+        time.sleep(0.4)
+        return found
+
+    def one_of(self, *texts, timeout=None):
+        """Tap whichever of these is on screen. For a button that has two names."""
+        label, point = self.wait(*texts, timeout=timeout)
+        self.tap_point(*point)
+        return label
+
     def wait(self, *texts, timeout=None):
         """Wait until one of these is on screen, and say which and where.
 
