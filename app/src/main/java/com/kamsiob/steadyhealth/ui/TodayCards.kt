@@ -234,6 +234,19 @@ class TodayCards(private val application: Application, private val db: SteadyDat
      */
     suspend fun weekLine(today: Long): String {
         val week = Week.of(runs.history(), today, profile.weekTarget())
+        // A count of what somebody did this week is the app reporting back, and
+        // NumbersOff says every one of those becomes a word. Same four shapes,
+        // without the tally.
+        if (!profile.showNumbers()) {
+            return string(
+                when {
+                    week.met -> R.string.week_met_word
+                    week.done == 0 -> R.string.week_none_word
+                    week.toGo == 1 -> R.string.week_one_more_word
+                    else -> R.string.week_so_far_word
+                },
+            )
+        }
         return when {
             week.met -> string(R.string.week_met, week.wanted)
             week.done == 0 -> string(R.string.week_none, week.wanted)

@@ -164,6 +164,18 @@
       and a plural would give identical items in every language.
     -->
     <string name="week_none" tools:ignore="PluralsCandidate">Nothing this week yet. %1$d makes a week.</string>
+    <!--
+      The same week line with numbers off. Four sentences and not one figure,
+      because a count of what somebody did this week is the app reporting back and
+      NumbersOff says every one of those becomes a word.
+
+      The shapes are the same four: met, none, nearly, under way. What goes is how
+      many and how many more, which is the part that reads as a tally.
+    -->
+    <string name="week_met_word">That is the week. Anything more is extra.</string>
+    <string name="week_none_word">Nothing this week yet. There is time.</string>
+    <string name="week_one_more_word">One more makes the week.</string>
+    <string name="week_so_far_word">Under way this week.</string>
     <string name="settings_week">Sessions a week</string>
     <string name="settings_week_sub">What you are aiming for. Change it whenever.</string>
     <string name="week_choice">%1$d a week</string>
@@ -330,5 +342,26 @@
     <string name="chair_high">High, hips above knees</string>
     <string name="chair_in_setup">Use the %1$s you told the app about.</string>
     <string name="chair_changed">These are from a different chair, so the numbers are not directly comparable.</string>
+
+    <!--
+      What is in the room, changed after setup. ADDENDUM-03 Part 20 puts equipment
+      and the chair on You, because both are asked once in passing and there was
+      nowhere afterwards to say the step has gone or the chair has changed.
+    -->
+    <string name="kit_row">Equipment and chair</string>
+    <string name="kit_row_sub">What is in the room, and which chair</string>
+    <string name="kit_title">Equipment and chair</string>
+    <string name="kit_what">What you have</string>
+    <string name="kit_why">Only movements that fit what you have are offered. Nothing here asks you to buy anything, and the library has plenty in it with none of this ticked.</string>
+    <string name="kit_chair">A sturdy chair</string>
+    <string name="kit_wall">A clear bit of wall</string>
+    <string name="kit_step">A step</string>
+    <string name="kit_band">A band</string>
+    <string name="kit_weights">Something to hold</string>
+    <string name="kit_floor">Room to get down to the floor</string>
+    <string name="kit_arms">The chair has arms</string>
+    <string name="kit_arms_sub">Changes which chair movements are offered, not whether any are</string>
+    <string name="kit_chair_height">How high the chair is</string>
+    <string name="kit_chair_height_why">Roughly, by where your knees end up when you sit in it. Standing up from a low seat is not the same work as standing up from a high one, so the app keeps the same chair in mind each time and says when it has changed.</string>
 
 </resources>

@@ -38,7 +38,8 @@ DIGIT = re.compile(r"\d")
 # measurement of a person. Each of these is allowed to carry a digit with numbers
 # off, and each is here with the reason it is allowed.
 ALLOWED = [
-    # Today's date, in every shape the app writes one.
+    # Today's date and the time, in every shape the app writes one. Hiding the
+    # calendar is not what this setting is for.
     re.compile(r"^\w+day, \w+ \d{1,2}$"),
     re.compile(r"^\w+ \d{1,2}$"),
     re.compile(r"^\d{1,2} \w+$"),
@@ -46,6 +47,19 @@ ALLOWED = [
     re.compile(r"^\d{4}-\d{2}-\d{2}$"),
     # The system status bar, which is not this app's text at all.
     re.compile(r"^\d{1,3}%$"),
+    # How long the thing in front of you takes. The size of a job, not a measure of
+    # a person, and somebody deciding whether they have time for a session needs it
+    # more than most. The same for the twenty seconds the daily question admits to.
+    re.compile(r"^About \d+ minutes?$"),
+    re.compile(r"^About a minute$"),
+    re.compile(r".*\b\d+ seconds\b.*$"),
+    # The person's own settings. Three sessions a week is a choice they made and not
+    # the app's opinion of them, and hiding it makes the setting unusable. The
+    # reminder allowance is the app's own ceiling, said so it can be trusted.
+    re.compile(r"^\d+ a week$"),
+    re.compile(r"^.*\b\d+ left this week$"),
+    # A therapist's own numbers, recorded as given and never rewritten.
+    re.compile(r"^Asked for \d+$"),
 ]
 
 # Every screen the walk visits, as a list of taps from Today. A screen missing
