@@ -29,6 +29,12 @@ data class Card(
  * Without the model the person searches the list, which is the whole point of
  * these being hand-written: a card that only a model can find is a card most
  * people will never read.
+ *
+ * Twenty five of them, which is what ADDENDUM-03 Part 8 asks for. The last twelve
+ * are the topics it names, plus the floor guide from item 4 of the same part. That
+ * one is a card rather than a session on purpose: it is a sequence to know before
+ * it is needed, it cannot be practised safely by following a phone in the moment,
+ * and Part 8 says it never mentions falling. It does not.
  */
 object Cards {
 
@@ -136,6 +142,108 @@ object Cards {
             body = R.string.card_what_you_want_body,
             source = R.string.card_what_you_want_source,
             keywords = listOf("want", "my list", "rating", "out of ten", "list for"),
+        ),
+        Card(
+            id = "strength_first",
+            title = R.string.card_strength_first_title,
+            summary = R.string.card_strength_first_summary,
+            body = R.string.card_strength_first_body,
+            source = R.string.card_strength_first_source,
+            keywords = listOf("strength", "cardio", "walking enough", "weights", "after fifty"),
+        ),
+        Card(
+            id = "balance_skill",
+            title = R.string.card_balance_skill_title,
+            summary = R.string.card_balance_skill_summary,
+            body = R.string.card_balance_skill_body,
+            source = R.string.card_balance_skill_source,
+            keywords = listOf("balance", "wobbly", "one leg", "unsteady", "practice"),
+        ),
+        Card(
+            id = "after_operation",
+            title = R.string.card_after_operation_title,
+            summary = R.string.card_after_operation_summary,
+            body = R.string.card_after_operation_body,
+            source = R.string.card_after_operation_source,
+            keywords = listOf(
+                "operation",
+                "surgery",
+                "hip replacement",
+                "knee replacement",
+                "recovery",
+            ),
+        ),
+        Card(
+            id = "what_a_physio_does",
+            title = R.string.card_what_a_physio_does_title,
+            summary = R.string.card_what_a_physio_does_summary,
+            body = R.string.card_what_a_physio_does_body,
+            source = R.string.card_what_a_physio_does_source,
+            keywords = listOf("physio", "physiotherapist", "occupational therapist", "referral"),
+        ),
+        Card(
+            id = "talk_to_a_doctor",
+            title = R.string.card_talk_to_a_doctor_title,
+            summary = R.string.card_talk_to_a_doctor_summary,
+            body = R.string.card_talk_to_a_doctor_body,
+            source = R.string.card_talk_to_a_doctor_source,
+            keywords = listOf("doctor", "appointment", "tell them", "raise it", "how do i say"),
+        ),
+        Card(
+            id = "footwear",
+            title = R.string.card_footwear_title,
+            summary = R.string.card_footwear_summary,
+            body = R.string.card_footwear_body,
+            source = R.string.card_footwear_source,
+            keywords = listOf("shoes", "slippers", "footwear", "soles", "indoors"),
+        ),
+        Card(
+            id = "protein",
+            title = R.string.card_protein_title,
+            summary = R.string.card_protein_summary,
+            body = R.string.card_protein_body,
+            source = R.string.card_protein_source,
+            keywords = listOf("protein", "eat", "meals", "diet", "breakfast"),
+        ),
+        Card(
+            id = "morning_stiffness",
+            title = R.string.card_morning_stiffness_title,
+            summary = R.string.card_morning_stiffness_summary,
+            body = R.string.card_morning_stiffness_body,
+            source = R.string.card_morning_stiffness_source,
+            keywords = listOf("stiff", "stiffness", "morning", "seized up", "out of bed"),
+        ),
+        Card(
+            id = "off_the_floor",
+            title = R.string.card_off_the_floor_title,
+            summary = R.string.card_off_the_floor_summary,
+            body = R.string.card_off_the_floor_body,
+            source = R.string.card_off_the_floor_source,
+            keywords = listOf("floor", "get up off the floor", "down on the floor", "stages"),
+        ),
+        Card(
+            id = "grip",
+            title = R.string.card_grip_title,
+            summary = R.string.card_grip_summary,
+            body = R.string.card_grip_body,
+            source = R.string.card_grip_source,
+            keywords = listOf("grip", "hands", "jars", "hand strength", "bags"),
+        ),
+        Card(
+            id = "sore_day",
+            title = R.string.card_sore_day_title,
+            summary = R.string.card_sore_day_summary,
+            body = R.string.card_sore_day_body,
+            source = R.string.card_sore_day_source,
+            keywords = listOf("sore", "aching", "day after", "hurts", "next day"),
+        ),
+        Card(
+            id = "sleep_energy",
+            title = R.string.card_sleep_energy_title,
+            summary = R.string.card_sleep_energy_summary,
+            body = R.string.card_sleep_energy_body,
+            source = R.string.card_sleep_energy_source,
+            keywords = listOf("sleep", "tired", "energy", "bad night", "no energy"),
         ),
     )
 

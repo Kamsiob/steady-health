@@ -14,7 +14,7 @@ import org.junit.Test
 class CardSearchTest {
 
     @Test
-    fun thereAreThirteenCardsAndEveryIdIsDistinct() {
+    fun thereAreTwentyFiveCardsAndEveryIdIsDistinct() {
         assertThat(Cards.all.map { it.id }).containsNoDuplicates()
         assertThat(Cards.all).hasSize(titles.size)
     }
@@ -76,6 +76,18 @@ class CardSearchTest {
         "after_a_break" to "What to do after a break",
         "same_counts" to "Why staying the same counts",
         "what_you_want" to "Why the app asks what you want to be able to do",
+        "strength_first" to "Why strength comes before cardio after fifty",
+        "balance_skill" to "Balance is a skill, not a gift",
+        "after_operation" to "What usually happens after an operation",
+        "what_a_physio_does" to "What a physiotherapist actually does",
+        "talk_to_a_doctor" to "How to raise mobility with a doctor",
+        "footwear" to "Shoes and staying steady",
+        "protein" to "Protein and muscle, plainly",
+        "morning_stiffness" to "What morning stiffness usually is",
+        "off_the_floor" to "Getting up off the floor, in stages",
+        "grip" to "Why the app measures grip",
+        "sore_day" to "Sore the day after, and what it means",
+        "sleep_energy" to "Sleep, energy, and why the app asks",
     )
 
     private val questions = mapOf(
@@ -88,7 +100,7 @@ class CardSearchTest {
         "should I try fasting" to "fasting",
         "what about an eating window" to "fasting",
         "will I lose muscle on semaglutide" to "muscle_meds",
-        "how much protein" to "muscle_meds",
+        "will the medication cost me muscle" to "muscle_meds",
         "why are there two numbers" to "smoothed",
         "what is the smoothed number" to "smoothed",
         "can I log my meals" to "no_calories",
@@ -105,5 +117,29 @@ class CardSearchTest {
         "what is my list for" to "what_you_want",
         "how does this app work" to "how_it_works",
         "what is this app" to "how_it_works",
+        "is cardio or strength more use after fifty" to "strength_first",
+        "why so much strength and not cardio" to "strength_first",
+        "how do i get my balance back" to "balance_skill",
+        "is balance a skill" to "balance_skill",
+        "what happens after a hip replacement" to "after_operation",
+        "what happens after an operation" to "after_operation",
+        "what does a physiotherapist do" to "what_a_physio_does",
+        "what does a physiotherapist actually do" to "what_a_physio_does",
+        "how do i raise this with my doctor" to "talk_to_a_doctor",
+        "raise mobility with a doctor" to "talk_to_a_doctor",
+        "what shoes are best" to "footwear",
+        "what shoes keep you steady" to "footwear",
+        "how much protein do i need" to "protein",
+        "is protein worth bothering with" to "protein",
+        "why am i so stiff in the morning" to "morning_stiffness",
+        "is morning stiffness usual" to "morning_stiffness",
+        "how do i get up off the floor" to "off_the_floor",
+        "what if i end up down on the floor" to "off_the_floor",
+        "why does grip matter" to "grip",
+        "what does grip tell you" to "grip",
+        "i am sore the day after" to "sore_day",
+        "sore after a session" to "sore_day",
+        "why does it ask about sleep" to "sleep_energy",
+        "no energy today" to "sleep_energy",
     )
 }
