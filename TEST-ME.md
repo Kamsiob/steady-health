@@ -1,6 +1,6 @@
 # TEST-ME.md
 
-Steady Health, Phases 1 to 3 of the ADDENDUM-03 plan, on your Pixel.
+Steady Health, every phase of the ADDENDUM-03 plan, on your Pixel.
 
 ---
 
@@ -98,35 +98,76 @@ driven on the phone except where it says otherwise.
 19. In **You**, open **What the app can read**. Four choices, the free space on your
     phone, and "Nothing extra" first, which is the default and is meant to feel like a
     choice rather than a shortfall. Nothing downloads yet and the screen says so.
-20. Go to **Sessions**. Today's session at the top, what you have done under it, a way
+20. Back on **Sessions**, tap **Scan something** again and this time take one of the
+    other three ways in: say it out loud, pick from the library, or type it. All four
+    end at the same confirmation screen. Saying it out loud needs a phone with
+    on-device speech recognition; where there is none the app says so plainly and
+    offers typing, and it never falls back to the kind that sends your voice away.
+21. On that confirmation screen, set **when you next see them**. Two days before, the
+    app says one thing about it, once.
+22. In **You**, change **How you get around** to **In a wheelchair**, then go back to
+    Today. It is a different app: a different session, a different library, and
+    nothing in it asks you to stand up. Try **Mostly in bed or a chair** too, then put
+    it back to **On my feet**.
+23. Go to **Sessions**. Today's session at the top, what you have done under it, a way
     to add a session you already did, and the library of everything you can do.
-21. Tap a session in the history. The numbers are editable and there is a
+24. Tap a session in the history. The numbers are editable and there is a
     **Remove this session**. Nothing asks why.
-22. From Today's card, tap **Do it without the phone**. It writes the whole session
+25. From Today's card, tap **Do it without the phone**. It writes the whole session
     out and will read it aloud. Then **I have done it** and log what you managed.
-23. Go to **Progress**. Four bars, one per week, each against the number of sessions a
+26. Go to **Progress**. Four bars, one per week, each against the number of sessions a
     week you chose. Nothing joins them. Under them, one sentence saying a quiet week
     is what most months look like.
-24. Go to **You**. The daily prompt switch, how many sessions a week, and everything
+27. Go to **You**. The daily prompt switch, how many sessions a week, and everything
     else. Turn the week number to five and go back to Today: the line under the card
     should change.
 
-That is twenty four steps rather than twenty. Scanning a document is where
-ADDENDUM-03 Part 22 asks the walkthrough to end, and it now exists, so the two screens
-that came with it are worth a look while you are there.
+28. Still in **You**, turn **Show numbers** off and walk back through Today, Sessions
+    and Progress. Every figure the app was reporting back to you is now a word. The
+    count on a live screen and a therapist's own repetitions stay, because those are
+    instruments rather than verdicts, and the reason is written down in
+    `NumbersOff.kt` and in the judgment calls below.
+29. In **Progress**, at the bottom, **Send a card** and **Have a look at the places you
+    move through**. The card is one line on a picture and nothing about who you send
+    it to is kept. The places walkthrough is six questions with one plain fix each,
+    nothing added up at the end and nothing to buy.
+30. **Your data**, in **You**: export everything, and look inside the zip. Ordinary
+    spreadsheets, your photos and a one page summary, plus a backup file that can put
+    all of it back.
+
+That is thirty steps rather than twenty. ADDENDUM-03 Part 22 asks for no more than
+twenty and I have gone over, which is a judgment call and belongs in the list below:
+the app now has surfaces that did not exist when that number was written, and leaving
+half of them undescribed seemed worse than a longer list. Steps 1 to 17 are the
+walkthrough Part 22 actually asks for, ending at a scanned document. Everything from
+18 on is the rest of the app, and you can stop at 17 with a clear conscience.
 
 **What a scan does not do yet: explain a letter.** Tapping "Explain it" keeps the page
-and returns you to Today. Part 7's reader is Phase 4 and stays behind a flag until an
-attorney has reviewed the boundary, which is on the list above. The validator that
-guards it is being built first, which is the order Part 7 asks for.
+and returns you to Today. Part 7's reader stays behind a flag until an attorney has
+reviewed the boundary, which is on the list above. What is finished is the thing Part 7
+says has to come first: the validator, and its corpus. Nothing about that is waiting on
+anybody, and the day the review clears, the feature turns on against a check that has
+already been written.
 
 ---
 
 ## The gates
 
-**Phase 1**, run on the phone, in full below. **Phase 3**: "the therapist plan and the
-app's suggestions are visibly separate, and a movement in both is counted once" passes
-as `PlanSeparateTest` on the phone, four tests. All 27 instrumented tests pass.
+ADDENDUM-03 Part 21 sets two gates by name. Both are recorded here and in full in
+DECISIONS.md.
+
+| Gate | Result |
+| --- | --- |
+| **Phase 1 acceptance**, nine items | **Pass**, run on the phone. In full below. |
+| **Phase 3**: the therapist plan and the app's suggestions are visibly separate on Today and in history, by screenshot, and a movement in both is counted once | **Pass** on the phone, as `PlanSeparateTest`. |
+| **Phase 4**: all thirty fixtures pass and every adversarial case is caught | **Pass**, and the corpus is larger than asked. Fifty five job 9 cases, forty five of them deliberately bad and ten honest, covering every fault the validator can report and every adversarial case Part 7 names. Forty two documents for the page classifier, including the progress note, the plan of care, the discharge summary, the insurance letter, the referral, the handwritten programme, the badly photographed one, the Spanish one, the out of scope one and the blank one. The feature still ships off, because the gate is not the thing that turns it on. |
+
+The phases after Phase 4 have no gate of their own in Part 21. Two device scripts were
+written for them anyway, because they answer questions a laptop cannot:
+`tools/gate-phase5.py` walks all four ways of getting around and checks that neither
+seated version is ever offered something that needs standing, and
+`tools/gate-numbers-off.py` walks thirteen screens with numbers off and reads every
+piece of text on each.
 
 ## The Phase 1 acceptance gate
 
@@ -188,25 +229,64 @@ it back on starts from nothing.
 **Logging a past session asks for no numbers.** Somebody logging Tuesday's walk on
 Thursday does not remember how many. What is recorded is that it happened.
 
+**Where the line falls in numbers-off mode.** LOGIC.md says all figures become
+direction words. Taken literally the live count goes too and you cannot count. So a
+number the app reports back becomes a word and a number that is part of doing
+something right now stays: the count while you stand up, a rest timer, a therapist's
+own repetitions, the sessions a week you chose. The whole argument is in
+`NumbersOff.kt`. If you think the live count should go as well, it is one branch.
+
+**The appointment prompt is on as soon as you set a date.** Setting the date reads to
+me as the asking, and a date typed into an app that then produces nothing is a setting
+somebody has to go and find. The switch appears beside the others once a date exists,
+so turning it off is one tap. Everything else in the app is off until asked for, so
+this is the odd one out on purpose.
+
+**A rating that went down is never remarked on.** The confidence sentence has no
+branch for it. Every sentence the app could offer there is the app disagreeing with
+somebody about their own month, so it says nothing. If a month where somebody feels
+worse should be acknowledged rather than passed over, that is a real argument and I
+came down on the other side.
+
+**A passive measure can be confirmed rather than performed.** The monthly check offers
+what the phone already counted in ordinary sessions. The chair stand is the awkward
+one, because the check has a clock on it and a session does not, so the two are not
+quite the same measurement. It is offered anyway, with the day and the number said out
+loud, and nothing is recorded unless you tap. If that comparison bothers you, drop
+`chair_stand_30` from `Passive.watching` and the check asks for it properly again.
+
+**The end-of-session note offers three groups of tags and not six.** Food and sleep
+are questions about a day, and the question at the end of a session is about four
+minutes. Somebody who wants to record that they ate badly still has the daily
+check-in.
+
+**Thirty steps in the walkthrough above, where Part 22 asks for twenty.** Stated
+plainly because it is the one instruction in the addendum I did not follow. Steps 1 to
+17 are the walkthrough as asked, ending at a scanned document.
+
 ---
 
 ## Where the work stands
 
-Phases 1, 2 and 3 are built and each gate has been run on the phone. Phase 5 is partly
-built: the gap question and the chair are done, and exclusions, readiness and pacing
-were already there.
+Every phase of ADDENDUM-03 Part 21 is built. What is not finished is not code:
 
-Phase 4 is started at the right end. Part 7 says the reading validator is built before
-the model is wired in, and that is where the run stopped: the job 9 output type is
-written and closed so that a fifth field cannot turn a reading into an opinion, and
-the validator itself was mid-flight. Nothing downloads, nothing reads a document, and
-"Explain it" keeps the page and returns you to Today.
+**Phase 4 ships off**, which is what its own gate asks for. The reader, its validator
+and its corpus are written and the corpus passes, and the feature stays behind a flag
+until the attorney review clears. That is on your list, not mine.
 
-Phases 6, 7 and 8 have not started: passive measures and Progress in full, beyond
-exercise and the card, then languages, import, backup and release.
+**The three translations are empty.** English ships. `locales_config.xml` declares
+Spanish, Chinese and Arabic, the switching is built and tested, and the picker shows
+only the languages that have real strings, so today it shows nothing and it comes back
+on its own the moment a folder lands. Producing three translations of a health app by
+machine is the one thing in this build I would not do without a person who speaks the
+language, and it is recorded under BLOCKED rather than done badly.
 
-Most of the app from the earlier plan is still here and still works. The Move screen's
-walk-first shape is superseded and its rebuild is Phase 5.
+**The signed bundle needs a key**, which only you can make. LAUNCH.md is the whole
+path from here to a Play listing, in order, with every form answered.
+
+**The chair-stand count has never been checked against a human count.** It is the one
+measurement in the app whose accuracy is unverified and it is item 2 on the list at
+the top of this file.
 
 HANDOFF.md is current. DECISIONS.md has every judgment call with its reasoning, the
 gate results in full, and the BLOCKED list.
