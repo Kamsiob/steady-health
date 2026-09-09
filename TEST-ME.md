@@ -84,7 +84,9 @@ driven on the phone except where it says otherwise.
 15. **Lock the screen** mid session with the power button, wait, and unlock. Same
     thing. This is the one I could not test, because I cannot come back through your
     keyguard.
-16. Go to **Sessions** and tap **Scan something**. Allow the camera. Photograph a real
+16. Go to **Sessions** and tap **Scan something**. It asks **What have you got?** with
+    four ways in: paper, saying it out loud, picking from the library, and typing.
+    Take the first. Allow the camera. Photograph a real
     sheet of exercises from a physio if you have one, then **That's all of it**. The
     app should say it looks like exercises and offer to add them. Tap through to the
     confirmation screen: every line is shown as it was written, with what the app made
@@ -99,10 +101,14 @@ driven on the phone except where it says otherwise.
     phone, and "Nothing extra" first, which is the default and is meant to feel like a
     choice rather than a shortfall. Nothing downloads yet and the screen says so.
 20. Back on **Sessions**, tap **Scan something** again and this time take one of the
-    other three ways in: say it out loud, pick from the library, or type it. All four
-    end at the same confirmation screen. Saying it out loud needs a phone with
-    on-device speech recognition; where there is none the app says so plainly and
-    offers typing, and it never falls back to the kind that sends your voice away.
+    other three ways in. All four end at the same confirmation screen. Saying it out
+    loud needs a phone with on-device speech recognition; where there is none the app
+    says so in one sentence and offers typing, and it never falls back to the kind
+    that sends your voice away. Try saying something like "my physio wants me doing
+    ten sit to stands twice a day and heel raises": it shows you what it heard before
+    it reads anything into it, so a misheard number does not arrive looking like
+    something your therapist wrote. **Nobody has run the spoken path on a phone with a
+    real recogniser**, so this one is worth your time.
 21. On that confirmation screen, set **when you next see them**. Two days before, the
     app says one thing about it, once.
 22. In **You**, change **How you get around** to **In a wheelchair**, then go back to
