@@ -100,6 +100,10 @@ DATES = [
     re.compile(r"\b\w+ \d{1,2},? \d{4}\b"),
     re.compile(r"\b\d{4}-\d{2}-\d{2}\b"),
     re.compile(r"\b\d{1,2}:\d{2}\s?[ap]?m?\b", re.I),
+    # A day named by how long ago it was, which is what the screen for logging a
+    # session you already did offers instead of a calendar. Picking a day needs the
+    # days named, and "three days ago" is a date said the way people say it.
+    re.compile(r"\b\d+ (day|week|month)s? ago\b"),
 ]
 
 
