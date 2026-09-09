@@ -320,6 +320,14 @@ are questions about a day, and the question at the end of a session is about fou
 minutes. Somebody who wants to record that they ate badly still has the daily
 check-in.
 
+**Somebody who changes how they get around keeps the words they already used.**
+If you set up the app on your feet, say you want the stairs without stopping, and
+later switch to the wheelchair version, Today still shows "Stairs without stopping",
+because it is what you said and the app never rewrites it. The library, the session
+and the onboarding chips all change; your own sentence does not. I think that is
+right, and it is the one place where being right looks odd on the screen. You will
+see it at step 22.
+
 **The band press is hidden from somebody who avoids pushing.** LOGIC.md section 5
 offers the band press as the replacement for the whole pushing ladder, so on that
 reading it should stay visible. A press is a press whatever you are sitting in, and I
