@@ -62,6 +62,13 @@ class Device:
     def screen(self):
         """Every piece of text on screen, with the middle of the thing it sits in."""
         raw = self._adb("exec-out", "uiautomator", "dump", "/dev/tty")
+        # An empty dump is uiautomator failing, not a screen with nothing on it. It
+        # happens when the window is mid-transition and it happens for no reason at
+        # all, and believing it makes a gate report that the app has gone blank. One
+        # retry, then take what comes: a real empty screen is a finding either way.
+        if "<node" not in raw:
+            time.sleep(1.0)
+            raw = self._adb("exec-out", "uiautomator", "dump", "/dev/tty")
         found = {}
         for text, described, x1, y1, x2, y2 in NODE.findall(raw):
             middle = ((int(x1) + int(x2)) // 2, (int(y1) + int(y2)) // 2)
