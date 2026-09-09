@@ -204,6 +204,12 @@ class AccessibilityTest {
                         onExtras = {},
                         onDocuments = {},
                         onModels = {},
+                        onList = {},
+                        onKit = {},
+                        onPlans = {},
+                        onPlaces = {},
+                        onAudio = {},
+                        onAbout = {},
                     ),
                     onBack = {},
                 )
