@@ -7,18 +7,21 @@ import org.junit.Test
 /**
  * ADDENDUM-03 Part 7, "TWO MODELS, ONE CHOICE", as tests.
  *
- * Four rules are the ones worth holding, and the rest of this file is arithmetic
- * around them. The margin is never spent, whatever the sum comes to. A metered
- * connection never produces an answer a screen could act on without a tap. Removing
- * gives the work back to a manual path and reaches nothing else. And with neither
- * model on the phone there is no answer anywhere that says the app is short of
- * something, which is the one that would be quietly broken by a later refactor.
+ * Five rules are the ones worth holding, and the rest of this file is arithmetic
+ * around them. The margin is never spent, and the number the app asks somebody to
+ * free up is the number that actually works, counted from where their phone is now.
+ * A metered connection never produces an answer a screen could act on without a tap.
+ * A model the build has not been cleared to offer is not offered, whatever the phone
+ * could hold. Removing gives the work back to a manual path and reaches nothing else.
+ * And with neither model on the phone there is no answer anywhere that says the app
+ * is short of something, which is the one that would be quietly broken by a later
+ * refactor.
  */
 class ModelRoomTest {
 
     @Test
     fun withNeitherModelTheAppIsWholeAndNothingSaysOtherwise() {
-        val room = ModelRoom.of(freeBytes = 0, installed = emptySet(), connection = Connection.None)
+        val room = ModelRoom(freeBytes = 0, installed = emptySet(), connection = Connection.None)
 
         assertThat(room.nothingExtra).isTrue()
         assertWithMessage("every job is done some way with neither model on the phone")
@@ -27,10 +30,10 @@ class ModelRoomTest {
     }
 
     @Test
-    fun bothModelsAreOfferedEvenOnAPhoneWithNoRoomForEither() {
+    fun bothModelsGetARowEvenOnAPhoneWithNoRoomForEither() {
         // A row saying how much more room it needs is more use than a row that is
         // not there, and Part 7 asks the screen to show each size.
-        val room = ModelRoom.of(freeBytes = 0)
+        val room = ModelRoom(freeBytes = 0)
 
         assertThat(room.choices.map { it.model }).containsExactlyElementsIn(OptionalModel.entries).inOrder()
     }
@@ -63,9 +66,28 @@ class ModelRoomTest {
         val model = OptionalModel.DocumentsFromYourTherapist
         val short = ModelRoom.HEADROOM_BYTES + model.bytes - A_HUNDRED_MEGABYTES
 
-        val answer = ModelRoom.canAdd(model, short, emptySet(), Connection.Unmetered)
+        val answer = ModelRoom.canAdd(model, short, emptySet(), Connection.Unmetered, BOTH_OFFERED)
 
         assertThat(answer).isEqualTo(CanAdd.NotEnoughRoom(shortBy = A_HUNDRED_MEGABYTES))
+    }
+
+    @Test
+    fun theShortfallCountsTheMarginEvenWhenThePhoneIsAlreadyInsideIt() {
+        // The failure this stops: a phone with less free space than the margin being
+        // told it is short by the size of the model, freeing exactly that, and being
+        // refused a second time with a smaller number.
+        val model = OptionalModel.YourOwnWords
+        val nearlyFull = HALF_A_GIGABYTE
+
+        val answer = ModelRoom.canAdd(model, nearlyFull, emptySet(), Connection.Unmetered)
+
+        val shortBy = (answer as CanAdd.NotEnoughRoom).shortBy
+        assertWithMessage("the margin is part of what has to be freed")
+            .that(shortBy)
+            .isEqualTo(ModelRoom.HEADROOM_BYTES + model.bytes - nearlyFull)
+        assertWithMessage("freeing exactly what was asked for is enough the second time")
+            .that(ModelRoom.canAdd(model, nearlyFull + shortBy, emptySet(), Connection.Unmetered))
+            .isEqualTo(CanAdd.Ready(roomLeftAfter = 0))
     }
 
     @Test
@@ -84,8 +106,8 @@ class ModelRoomTest {
     }
 
     @Test
-    fun onWifiTheAnswerIsReadyForEitherModel() {
-        val room = ModelRoom.of(PLENTY, emptySet(), Connection.Unmetered)
+    fun onWifiTheAnswerIsReadyForEitherModelOnceBothAreOnOffer() {
+        val room = ModelRoom(PLENTY, emptySet(), Connection.Unmetered, BOTH_OFFERED)
 
         OptionalModel.entries.forEach {
             assertWithMessage(it.id).that(room.canAdd(it)).isInstanceOf(CanAdd.Ready::class.java)
@@ -109,6 +131,61 @@ class ModelRoomTest {
     }
 
     @Test
+    fun theReadingModelIsNotOnOfferUntilTheBuildSaysItIs() {
+        // Part 7: the feature ships behind a flag that is off until a health tech
+        // attorney has reviewed the HAI-DEF boundary. The default has to be the off one.
+        assertThat(ModelRoom.OFFERED_NOW).doesNotContain(OptionalModel.DocumentsFromYourTherapist)
+
+        val answer = ModelRoom.canAdd(
+            OptionalModel.DocumentsFromYourTherapist,
+            PLENTY,
+            emptySet(),
+            Connection.Unmetered,
+        )
+
+        assertThat(answer).isEqualTo(CanAdd.NotOfferedYet)
+    }
+
+    @Test
+    fun whatIsNotOnOfferIsSaidBeforeAnythingAboutRoom() {
+        // Asking somebody to free up three gigabytes for a download that cannot start
+        // is worse than saying nothing about the space at all.
+        val answer = ModelRoom.canAdd(
+            OptionalModel.DocumentsFromYourTherapist,
+            0,
+            emptySet(),
+            Connection.Unmetered,
+        )
+
+        assertThat(answer).isEqualTo(CanAdd.NotOfferedYet)
+    }
+
+    @Test
+    fun aModelOnThePhoneStaysOnThePhoneEvenIfTheBuildStopsOfferingIt() {
+        val installed = setOf(OptionalModel.DocumentsFromYourTherapist)
+
+        val answer = ModelRoom.canAdd(
+            OptionalModel.DocumentsFromYourTherapist,
+            PLENTY,
+            installed,
+            Connection.Unmetered,
+        )
+
+        assertThat(answer).isEqualTo(CanAdd.AlreadyHere)
+    }
+
+    @Test
+    fun eachRowAnswersForItsOwnModelAndNotForTheOther() {
+        val room = ModelRoom(PLENTY, setOf(OptionalModel.YourOwnWords), Connection.Unmetered)
+
+        assertThat(room.canAdd(OptionalModel.YourOwnWords)).isEqualTo(CanAdd.AlreadyHere)
+        assertThat(room.canAdd(OptionalModel.DocumentsFromYourTherapist)).isEqualTo(CanAdd.NotOfferedYet)
+        room.choices.forEach {
+            assertWithMessage(it.model.id).that(it.canAdd).isEqualTo(room.canAdd(it.model))
+        }
+    }
+
+    @Test
     fun aModelAlreadyOnThePhoneIsNeverOfferedAgain() {
         val installed = setOf(OptionalModel.YourOwnWords)
 
@@ -120,19 +197,58 @@ class ModelRoomTest {
     }
 
     @Test
+    fun theRoomLeftIsWhatIsStillSpendableAndNotWhatThePhoneWillShow() {
+        val model = OptionalModel.YourOwnWords
+        val free = ModelRoom.HEADROOM_BYTES + model.bytes + A_HUNDRED_MEGABYTES
+
+        val answer = ModelRoom.canAdd(model, free, emptySet(), Connection.Unmetered) as CanAdd.Ready
+
+        assertThat(answer.roomLeftAfter).isEqualTo(A_HUNDRED_MEGABYTES)
+        assertWithMessage("the phone itself keeps the margin on top of that")
+            .that(free - model.bytes)
+            .isEqualTo(answer.roomLeftAfter + ModelRoom.HEADROOM_BYTES)
+    }
+
+    @Test
     fun theRoomLeftAfterOneIsWhatTheOtherHasToFitIn() {
-        val forOneAndABit = ModelRoom.HEADROOM_BYTES + OptionalModel.YourOwnWords.bytes + A_HUNDRED_MEGABYTES
+        val both = OptionalModel.entries.sumOf { it.bytes }
+        val first = OptionalModel.YourOwnWords
+        val forBothAndABit = ModelRoom.HEADROOM_BYTES + both + A_HUNDRED_MEGABYTES
+
+        assertThat(ModelRoom.bothFit(forBothAndABit)).isTrue()
+        // Installing the first one is the phone losing that many bytes, which is the
+        // number the second download now has to fit inside.
+        val afterTheFirst = forBothAndABit - first.bytes
+        val answer = ModelRoom.canAdd(
+            OptionalModel.DocumentsFromYourTherapist,
+            afterTheFirst,
+            setOf(first),
+            Connection.Unmetered,
+            BOTH_OFFERED,
+        )
+
+        assertThat(answer).isEqualTo(CanAdd.Ready(roomLeftAfter = A_HUNDRED_MEGABYTES))
+    }
+
+    @Test
+    fun theSecondModelIsRefusedWhenTheFirstOneUsedUpTheRoom() {
+        val first = OptionalModel.YourOwnWords
+        val forOneAndABit = ModelRoom.HEADROOM_BYTES + first.bytes + A_HUNDRED_MEGABYTES
 
         assertThat(ModelRoom.bothFit(forOneAndABit)).isFalse()
         val answer = ModelRoom.canAdd(
             OptionalModel.DocumentsFromYourTherapist,
-            forOneAndABit,
-            setOf(OptionalModel.YourOwnWords),
+            forOneAndABit - first.bytes,
+            setOf(first),
             Connection.Unmetered,
+            BOTH_OFFERED,
         )
-        // Free space has not moved in this call, because the phone reports it and the
-        // engine does not guess at it. What has moved is that one is now installed.
-        assertThat(answer).isInstanceOf(CanAdd.Ready::class.java)
+
+        assertThat(answer).isEqualTo(
+            CanAdd.NotEnoughRoom(
+                shortBy = OptionalModel.DocumentsFromYourTherapist.bytes - A_HUNDRED_MEGABYTES,
+            ),
+        )
     }
 
     @Test
@@ -164,7 +280,7 @@ class ModelRoomTest {
     fun aFullPhoneHasNoSpareBytesRatherThanFewerThanNone() {
         assertThat(ModelRoom.spare(0)).isEqualTo(0)
         assertThat(ModelRoom.spare(ModelRoom.HEADROOM_BYTES / 2)).isEqualTo(0)
-        assertThat(ModelRoom.of(freeBytes = 0).spareBytes).isEqualTo(0)
+        assertThat(ModelRoom(freeBytes = 0).spareBytes).isEqualTo(0)
     }
 
     @Test
@@ -207,15 +323,15 @@ class ModelRoomTest {
         var installed = OptionalModel.entries.toSet()
         OptionalModel.entries.forEach { installed = ModelRoom.remove(it, installed).installed }
 
-        assertThat(ModelRoom.of(PLENTY, installed, Connection.Unmetered).nothingExtra).isTrue()
+        assertThat(ModelRoom(PLENTY, installed, Connection.Unmetered).nothingExtra).isTrue()
     }
 
     @Test
     fun whatIsDoneByHandIsWhateverTheMissingModelWouldHaveDone() {
-        val onlyWords = ModelRoom.of(PLENTY, setOf(OptionalModel.YourOwnWords), Connection.Unmetered)
+        val onlyWords = ModelRoom(PLENTY, setOf(OptionalModel.YourOwnWords), Connection.Unmetered)
 
         assertThat(onlyWords.byHand).containsExactly(ManualPath.LookAtThePhoto)
-        assertThat(ModelRoom.of(PLENTY, OptionalModel.entries.toSet()).byHand).isEmpty()
+        assertThat(ModelRoom(PLENTY, OptionalModel.entries.toSet()).byHand).isEmpty()
     }
 
     @Test
@@ -237,6 +353,19 @@ class ModelRoomTest {
     }
 
     @Test
+    fun aReadyAnswerNeverStandsInForTermsNobodyHasAccepted() {
+        // The engine answers about room and the connection and nothing else, so a
+        // screen holding Ready for these weights still has HAI-DEF terms to show.
+        val model = OptionalModel.DocumentsFromYourTherapist
+        val room = ModelRoom(PLENTY, emptySet(), Connection.Unmetered, BOTH_OFFERED)
+
+        assertThat(room.canAdd(model)).isInstanceOf(CanAdd.Ready::class.java)
+        assertWithMessage("the licence, not the answer, is what says a tap is still owed")
+            .that(model.licence.termsAcceptedBeforeDownload)
+            .isTrue()
+    }
+
+    @Test
     fun everyJobBelongsToExactlyOneModel() {
         val claimed = OptionalModel.entries.flatMap { it.does }
 
@@ -250,6 +379,12 @@ class ModelRoomTest {
 
         const val A_HUNDRED_MEGABYTES = 100_000_000L
 
+        /** Less free space than the margin, which is where the arithmetic used to slip. */
+        const val HALF_A_GIGABYTE = 500_000_000L
+
         const val ABOUT_FIVE_GB = 5_000_000_000L
+
+        /** The set a build passes once the HAI-DEF boundary has been reviewed. */
+        val BOTH_OFFERED: Set<OptionalModel> = OptionalModel.entries.toSet()
     }
 }

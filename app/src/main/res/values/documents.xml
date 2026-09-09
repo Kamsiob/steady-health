@@ -63,7 +63,10 @@
 
     <!-- How the two plans sit beside each other on Today. -->
     <string name="plan_from">From your %1$s</string>
+    <string name="plan_them">therapist</string>
     <string name="plan_also">Also, if you want more</string>
+    <string name="settings_extras">The app\'s own suggestions</string>
+    <string name="settings_extras_sub">Shown under your therapist\'s plan. Off leaves only theirs.</string>
     <string name="plan_also_off">Turn the app\'s extras off</string>
     <string name="plan_also_on">Turn the app\'s extras back on</string>
     <string name="plan_on_theirs_too">This one\'s on your %1$s\'s list too.</string>

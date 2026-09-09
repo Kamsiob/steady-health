@@ -48,6 +48,9 @@ data class SettingsUiState(
     val weekTarget: Int = Week.DEFAULT,
     /** True when the daily prompt stopped itself, so the screen can say why. */
     val dailyGaveUp: Boolean = false,
+    /** True when a therapist's plan exists, which is the only time extras mean anything. */
+    val hasPlan: Boolean = false,
+    val extras: Boolean = true,
     val dailyOn: Boolean = true,
 )
 
@@ -73,6 +76,7 @@ data class SettingsActions(
     val onWeekTarget: (Int) -> Unit,
     val onDaily: (Boolean) -> Unit,
     val onScan: () -> Unit,
+    val onExtras: (Boolean) -> Unit,
 )
 
 /**
@@ -121,6 +125,15 @@ fun SettingsScreen(
 
         // Set once and changeable, which is what makes it a choice rather than a
         // number the app decided for somebody.
+        if (state.hasPlan) {
+            SwitchRow(
+                label = stringResource(R.string.settings_extras),
+                subtitle = stringResource(R.string.settings_extras_sub),
+                checked = state.extras,
+                onChange = actions.onExtras,
+            )
+        }
+
         SwitchRow(
             label = stringResource(R.string.settings_daily),
             subtitle = stringResource(R.string.settings_daily_sub),

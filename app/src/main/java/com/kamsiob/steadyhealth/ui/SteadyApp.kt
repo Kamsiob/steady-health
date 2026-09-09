@@ -852,6 +852,7 @@ private fun settingsActions(
         scanViewModel.open()
         navController.navigate(Route.SCAN)
     },
+    onExtras = viewModel::setExtras,
 )
 
 private fun NavGraphBuilder.settingsRoutes(

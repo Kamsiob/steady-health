@@ -23,7 +23,15 @@ enum class Sureness {
     /** The line named more than one movement, so the app proposes none of them. */
     MoreThanOne,
 
-    /** Nothing on the line names anything in the library. */
+    /**
+     * The app is not naming a movement for this line.
+     *
+     * Either nothing on it is in the library, or the line said not to do the thing it
+     * names. A sheet carries both, and the second is the one place where reading a
+     * line correctly would be worse than not reading it: "avoid stairs" matched to
+     * stairs puts somebody in front of the thing the line was written to keep them
+     * away from.
+     */
     Unmatched,
 }
 

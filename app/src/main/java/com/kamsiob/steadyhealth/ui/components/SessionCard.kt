@@ -37,6 +37,23 @@ data class SessionCardState(
     val doneToday: Boolean = false,
     /** "Left the knee movements out this week", when an area is suppressed. */
     val leftOut: String? = null,
+
+    /**
+     * "From your physio", when a therapist's plan exists. ADDENDUM-03 Part 6.
+     *
+     * When this is set, what the card shows IS the plan and Start runs it. The app's
+     * own suggestions are a separate list below, never merged into these.
+     */
+    val theirs: String? = null,
+
+    /** The app's own suggestions, when a plan is what the card is showing. */
+    val alsoMovements: List<String> = emptyList(),
+
+    /** Movements on both lists, said once. Part 6: done once, counts for both. */
+    val onBothLists: String? = null,
+
+    /** A plan movement that clashes with something the person avoids. Flagged, not dropped. */
+    val toAskAbout: List<String> = emptyList(),
 )
 
 @Composable
@@ -56,7 +73,7 @@ fun SessionCard(
         verticalArrangement = Arrangement.spacedBy(SteadySpacing.Tight),
     ) {
         SteadyText(
-            text = stringResource(R.string.card_label),
+            text = state.theirs ?: stringResource(R.string.card_label),
             style = SteadyType.CardTitle,
             color = SteadyPalette.Sand,
         )
@@ -87,6 +104,12 @@ fun SessionCard(
         state.leftOut?.let {
             SteadyText(text = it, style = SteadyType.Body, color = SteadyPalette.Sand)
         }
+        state.onBothLists?.let {
+            SteadyText(text = it, style = SteadyType.Body, color = SteadyPalette.Sand)
+        }
+        state.toAskAbout.forEach {
+            SteadyText(text = it, style = SteadyType.Body, color = SteadyPalette.Sand)
+        }
 
         if (state.doneToday) {
             SteadyText(
@@ -102,6 +125,22 @@ fun SessionCard(
             onClick = onGo,
             modifier = Modifier.padding(top = SteadySpacing.Tight),
         )
+
+        // ADDENDUM-03 Part 6: the app's own suggestions sit below the plan, clearly
+        // separate, never merged and never counted as part of it. They are drawn in a
+        // block of their own so that "theirs" and "ours" is visible at a glance and
+        // not something somebody has to read carefully to work out.
+        if (state.alsoMovements.isNotEmpty()) {
+            SteadyText(
+                text = stringResource(R.string.plan_also),
+                style = SteadyType.CardTitle,
+                color = SteadyPalette.Sand,
+                modifier = Modifier.padding(top = SteadySpacing.Inside),
+            )
+            state.alsoMovements.forEach {
+                SteadyText(text = it, style = SteadyType.Body, color = SteadyPalette.Sand)
+            }
+        }
 
         // ADDENDUM-03 Part 2, tiredness. Ninety seconds, and it counts as a session.
         // A quiet second line rather than a second button, because it is an out and

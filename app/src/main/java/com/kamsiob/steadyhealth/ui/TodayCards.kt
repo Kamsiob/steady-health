@@ -5,13 +5,20 @@ import androidx.annotation.PluralsRes
 import androidx.annotation.StringRes
 import com.kamsiob.steadyhealth.R
 import com.kamsiob.steadyhealth.data.AbilityRepository
+import com.kamsiob.steadyhealth.data.PlanRepository
 import com.kamsiob.steadyhealth.data.ProfileRepository
 import com.kamsiob.steadyhealth.data.RunRepository
 import com.kamsiob.steadyhealth.data.SteadyDatabase
 import com.kamsiob.steadyhealth.domain.AbilityDomain
 import com.kamsiob.steadyhealth.domain.Exclusion
 import com.kamsiob.steadyhealth.domain.GettingAround
+import com.kamsiob.steadyhealth.plan.HowMany
+import com.kamsiob.steadyhealth.plan.HowOften
+import com.kamsiob.steadyhealth.plan.PlanItem
+import com.kamsiob.steadyhealth.plan.PlanMatching
+import com.kamsiob.steadyhealth.plan.Sureness
 import com.kamsiob.steadyhealth.session.Adaptation
+import com.kamsiob.steadyhealth.session.Done
 import com.kamsiob.steadyhealth.session.Kit
 import com.kamsiob.steadyhealth.session.LookBacks
 import com.kamsiob.steadyhealth.session.Movements
@@ -19,6 +26,7 @@ import com.kamsiob.steadyhealth.session.Noticed
 import com.kamsiob.steadyhealth.session.Piece
 import com.kamsiob.steadyhealth.session.SessionEngine
 import com.kamsiob.steadyhealth.session.SessionInputs
+import com.kamsiob.steadyhealth.session.SessionPlan
 import com.kamsiob.steadyhealth.session.Week
 import com.kamsiob.steadyhealth.ui.components.SessionCardState
 import com.kamsiob.steadyhealth.ui.screens.LibraryRow
@@ -38,6 +46,7 @@ import java.time.ZoneId
 class TodayCards(private val application: Application, private val db: SteadyDatabase) {
 
     private val runs get() = RunRepository(db)
+    private val plans get() = PlanRepository(db)
     private val profile get() = ProfileRepository(db)
 
     /**
@@ -70,6 +79,15 @@ class TodayCards(private val application: Application, private val db: SteadyDat
         if (plan.steps.isEmpty()) {
             return SessionCardState(length = string(R.string.card_nothing))
         }
+
+        // ADDENDUM-03 Part 6. When a therapist's plan exists it IS the session: the
+        // card shows theirs, Start runs theirs, and the app's own suggestions become a
+        // separate list underneath. The two are never merged, so this replaces the
+        // movements rather than adding to them.
+        val theirs = planItems()
+        if (theirs.isNotEmpty()) {
+            return fromTheirPlan(theirs, plan, history, today, exclusions, way)
+        }
         return SessionCardState(
             length = plural(R.plurals.card_minutes, plan.minutes, plan.minutes),
             // The main movements only. A warm up and a cool down are named in one
@@ -87,6 +105,73 @@ class TodayCards(private val application: Application, private val db: SteadyDat
             // nobody has to wonder why a movement they know went missing.
             leftOut = sore.firstOrNull()
                 ?.let { string(R.string.hurt_left_out, string(Labels.forArea(it)).lowercase()) },
+        )
+    }
+
+    /**
+     * Today's card when a therapist gave them a plan.
+     *
+     * Everything shown is theirs. The app's own suggestions are listed separately and
+     * are only what is left after the plan's own movements are taken out, so nothing
+     * appears twice and nothing of the app's is ever counted as part of the plan.
+     */
+    @Suppress("LongParameterList") // Everything one card needs, and nothing more.
+    private suspend fun fromTheirPlan(
+        theirs: List<PlanItem>,
+        ours: SessionPlan,
+        history: List<Done>,
+        today: Long,
+        exclusions: Set<Exclusion>,
+        way: GettingAround,
+    ): SessionCardState {
+        val label = plans.live().firstOrNull()?.label.orEmpty()
+            .ifBlank { string(R.string.plan_them) }
+        val both = PlanMatching.onBoth(theirs, ours)
+        return SessionCardState(
+            length = string(R.string.plan_from, label),
+            movements = theirs.map { it.movement?.name ?: it.line },
+            doneToday = history.any { it.epochDay == today },
+            theirs = string(R.string.plan_from, label),
+            alsoMovements = if (profile.extras()) {
+                PlanMatching.alsoIfYouWantMore(theirs, ours).map { it.movement.name }
+            } else {
+                emptyList()
+            },
+            onBothLists = both.firstOrNull()?.let { string(R.string.plan_on_theirs_too, label) },
+            toAskAbout = conflicts(theirs, exclusions, way),
+        )
+    }
+
+    /**
+     * Plan movements that clash with something the person avoids.
+     *
+     * Part 6: flagged rather than silently dropped, and left in. The app is a record
+     * keeper here, so the answer is to ask the person to raise it with whoever wrote
+     * the plan, never to overrule them.
+     */
+    private fun conflicts(
+        theirs: List<PlanItem>,
+        exclusions: Set<Exclusion>,
+        way: GettingAround,
+    ): List<String> = PlanMatching.toAskAbout(theirs, exclusions, way).mapNotNull { item ->
+        val movement = item.movement ?: return@mapNotNull null
+        val avoided = movement.excludedBy.firstOrNull { it in exclusions } ?: return@mapNotNull null
+        string(
+            R.string.plan_conflict,
+            movement.name.lowercase(),
+            string(Labels.forExclusion(avoided)).lowercase(),
+        )
+    }
+
+    /** Every confirmed line of every live plan, as the matcher's own type. */
+    private suspend fun planItems(): List<PlanItem> = plans.liveItems().map { row ->
+        PlanItem(
+            line = row.line,
+            movement = row.movementId?.let(Movements::byId),
+            howMany = HowMany.Unsaid,
+            howOften = HowOften.Unsaid,
+            sureness = Sureness.Named,
+            eachSide = row.eachSide,
         )
     }
 

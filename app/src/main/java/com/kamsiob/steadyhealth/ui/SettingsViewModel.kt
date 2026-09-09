@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.kamsiob.steadyhealth.R
 import com.kamsiob.steadyhealth.data.DailyPromptRepository
 import com.kamsiob.steadyhealth.data.DataRepository
+import com.kamsiob.steadyhealth.data.PlanRepository
 import com.kamsiob.steadyhealth.data.ProfileRepository
 import com.kamsiob.steadyhealth.data.ReminderRepository
 import com.kamsiob.steadyhealth.data.SteadyDatabase
@@ -103,6 +104,8 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
             envelopeDays = envelope.daysPerWeek,
             weekTarget = profile.weekTarget(),
             dailyGaveUp = profile.dailyGaveUp(),
+            hasPlan = PlanRepository(db).live().isNotEmpty(),
+            extras = profile.extras(),
             dailyOn = profile.reminderOn(ReminderKind.Daily),
         )
     }
@@ -288,6 +291,11 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
     }
 
     private fun labelFor(value: GettingAround) = Labels.forGettingAround(value)
+
+    fun setExtras(on: Boolean) = viewModelScope.launch {
+        profile.setExtras(on)
+        refresh()
+    }
 
     fun setWeekTarget(value: Int) = viewModelScope.launch {
         profile.setWeekTarget(value)

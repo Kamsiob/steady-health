@@ -68,11 +68,19 @@ object PlanMatching {
      * The frequency is read and then cut out of the line before the number is looked
      * for, because "3 times a week" begins with a number that is not a count of
      * anything the person does in one go.
+     *
+     * A rate the app has no case for is cut out too, and this is the part worth
+     * arguing with. "Five times an hour" and "2 x daily" both sit a number next to a
+     * stretch of time, and left in the line that number gets read as repetitions, so
+     * the app would say five repetitions where the sheet said five times. Cutting the
+     * whole shape out leaves both boxes empty under the person's own words, which is
+     * a question they answer in one tap rather than an answer they have to catch.
      */
     fun readOne(line: String): PlanItem {
-        val text = digits(line)
+        val text = X_RATE.replace(digits(line), " ")
         val often = readOften(text)
-        val rest = often?.let { text.replace(it.words, " ") } ?: text
+        val said = often?.let { text.replace(it.words, " ") } ?: text
+        val rest = UNKNOWN_RATE.replace(said, " ")
         val found = match(line)
         return PlanItem(
             line = line.trim(),
@@ -133,6 +141,9 @@ object PlanMatching {
     // --- Splitting -----------------------------------------------------------
 
     private fun splitOnAnd(line: String): List<String> {
+        // "Avoid deep squats and stairs" has to stay one line. Cut in half, the second
+        // half loses the word that made it a warning and comes back as an item to do.
+        if (SAID_NOT_TO.containsMatchIn(normalise(line))) return listOf(line)
         val parts = line.split(AND).map(String::trim).filter { it.isNotBlank() }
         val eachStandsAlone = parts.size > 1 && parts.all { match(it).movement != null }
         return if (eachStandsAlone) parts else listOf(line)
@@ -141,7 +152,11 @@ object PlanMatching {
     // --- Matching ------------------------------------------------------------
 
     /** One phrase in the table, already normalised, and what it is worth. */
-    private data class Phrase(val words: String, val movement: Movement, val sureness: Sureness)
+    private data class Phrase(val words: String, val movement: Movement, val sureness: Sureness) {
+
+        /** The same words as a set, held once here rather than cut up on every line. */
+        val wordSet: Set<String> = words.split(" ").filter(String::isNotBlank).toSet()
+    }
 
     /** What one line came to: a movement, or the reason there is not one. */
     private data class Match(
@@ -159,14 +174,20 @@ object PlanMatching {
      * separate things the line names, and a line naming two of them gets neither: on
      * "sit to stands and heel raises" the first is not the more likely one, only the
      * earlier one.
+     *
+     * A line that says not to do something gets nothing at all. "Avoid stairs" reads
+     * as the word stairs to anything looking for a movement, and a sheet that says to
+     * leave something out is the one line where matching it correctly puts the person
+     * in front of the thing they were told to skip.
      */
     private fun match(line: String): Match {
         val hay = normalise(line)
+        if (SAID_NOT_TO.containsMatchIn(hay)) return Match(null, Sureness.Unmatched, emptyList())
         val hits = PHRASES.filter { hay.contains(it.words) }
         val kept = hits.filter { hit ->
             hits.none { it.words.length > hit.words.length && it.words.contains(hit.words) }
         }
-        val movements = kept.map { it.movement }.distinctBy { it.id }
+        val movements = (kept.map { it.movement } + alsoNamed(hay, kept)).distinctBy { it.id }
         val named = kept.any { it.sureness == Sureness.Named }
         return when {
             movements.isEmpty() -> Match(null, Sureness.Unmatched, emptyList())
@@ -174,6 +195,30 @@ object PlanMatching {
             named -> Match(movements.first(), Sureness.Named, emptyList())
             else -> Match(movements.first(), Sureness.Likely, emptyList())
         }
+    }
+
+    /**
+     * Movements the line names in words the table only knows in one order.
+     *
+     * "Step ups on a higher step" is the phrase for the higher step with two words in
+     * the middle of it, so read as a phrase it is the low step up and nothing else,
+     * which is a confident wrong answer on a line that said the opposite. A phrase
+     * whose every word is on the line, and which says more about the movement than
+     * the phrase that did match, is offered beside that one and the line comes back
+     * naming neither. Words in the wrong order are enough to raise a question here and
+     * deliberately not enough to answer one, which is why this widens what the app is
+     * unsure about and never what it is sure of.
+     */
+    private fun alsoNamed(hay: String, kept: List<Phrase>): List<Movement> {
+        val said = hay.split(" ").filter(String::isNotBlank).toSet()
+        return PHRASES.filter { phrase ->
+            said.containsAll(phrase.wordSet) &&
+                kept.any { held ->
+                    held.movement.id != phrase.movement.id &&
+                        phrase.wordSet.size > held.wordSet.size &&
+                        phrase.wordSet.containsAll(held.wordSet)
+                }
+        }.map { it.movement }
     }
 
     /**
@@ -218,7 +263,7 @@ object PlanMatching {
         EVERY_OTHER_DAY.find(text)?.let { ReadOften(HowOften.EveryOtherDay, it.value) }
 
     private fun aDay(text: String): ReadOften? {
-        val counted = TIMES_A_DAY.find(text) ?: TIMES_DAILY.find(text)
+        val counted = TIMES_A_DAY.find(text) ?: TIMES_DAILY.find(text) ?: X_A_DAY.find(text)
         if (counted != null) {
             return times(counted)?.let { ReadOften(HowOften.ADay(it), counted.value) }
         }
@@ -230,7 +275,7 @@ object PlanMatching {
     }
 
     private fun aWeek(text: String): ReadOften? {
-        val counted = TIMES_A_WEEK.find(text)
+        val counted = TIMES_A_WEEK.find(text) ?: X_A_WEEK.find(text)
         if (counted != null) {
             return times(counted)?.let { ReadOften(HowOften.AWeek(it), counted.value) }
         }
@@ -245,15 +290,35 @@ object PlanMatching {
     /**
      * The number the line asks for.
      *
-     * Sets are pulled out first and the line is rewritten with only the second number
-     * in it, so "3 sets of 8" and "8" go down the same path afterwards and the unit
-     * words that follow are still there to be read.
+     * Rounds are pulled out first and the line is rewritten without them, so "3 sets of
+     * 8" and "8" go down the same path afterwards and the unit words that follow are
+     * still there to be read.
      */
     private fun howMany(text: String, movement: Movement?): HowMany {
-        val sets = SETS_OF.find(text)
-        val rounds = sets?.let { number(it.groupValues[1], MOST_SETS) } ?: ONCE
-        val rest = sets?.let { text.replaceRange(it.range, " ${it.groupValues[2]} ") } ?: text
+        val (rounds, rest) = sets(text)
         return minutes(rest) ?: seconds(rest, rounds) ?: reps(rest, rounds) ?: bare(rest, movement, rounds)
+    }
+
+    /** Rounds, and the line with the words that said so taken out of it. */
+    private data class ReadSets(val rounds: Int, val rest: String)
+
+    /**
+     * How many rounds, written either way round.
+     *
+     * Sheets put the rounds first ("3 sets of 8") and sheets put them last ("8 reps, 3
+     * sets"), and reading only the first shape leaves the second saying one set of
+     * eight. That is a quiet way to hand somebody a third of what their therapist
+     * asked for, and quiet is the problem: nothing on the confirmation screen would
+     * look wrong.
+     */
+    private fun sets(text: String): ReadSets {
+        val of = SETS_OF.find(text)
+        if (of != null) {
+            val rest = text.replaceRange(of.range, " ${of.groupValues[2]} ")
+            return ReadSets(number(of.groupValues[1], MOST_SETS) ?: ONCE, rest)
+        }
+        val after = SETS_AFTER.find(text) ?: return ReadSets(ONCE, text)
+        return ReadSets(number(after.groupValues[1], MOST_SETS) ?: ONCE, text.replaceRange(after.range, " "))
     }
 
     private fun minutes(text: String): HowMany? =
@@ -465,12 +530,40 @@ object PlanMatching {
     private val TIMES_A_WEEK = Regex("""(\d+)\s*times?\s*(?:a|per|each)\s*week""")
     private val WEEKLY = Regex("""\bweekly\b""")
     private val SETS_OF = Regex("""(\d+)\s*(?:sets?|x)\s*(?:of\s+)?(\d+)""")
+    private val SETS_AFTER = Regex("""(\d+)\s*sets?\b""")
     private val MINUTES = Regex("""(\d+)\s*(?:minutes?|mins?)\b""")
     private val SECONDS = Regex("""(\d+)\s*(?:seconds?|secs?)\b""")
     private val HOLD_FOR = Regex("""hold\s+(?:for\s+)?(\d+)""")
     private val TIMES_BY = Regex("""\bx\s*(\d+)""")
     private val REPS = Regex("""(\d+)\s*(?:reps?|repetitions?)\b""")
     private val ANY_NUMBER = Regex("""\d+""")
+
+    /**
+     * The words that turn a line into something not to do.
+     *
+     * Kept short and kept whole words. Every one of them costs the app a match it
+     * might have got right, and that is the trade the whole file is built on: a line
+     * the person confirms by hand costs a tap, and "no stairs" read as stairs costs
+     * them the one thing their therapist wrote the line to prevent.
+     */
+    private val SAID_NOT_TO = Regex("""\b(?:avoid|avoiding|no|not|never|dont|instead|rather)\b""")
+
+    /**
+     * A number sat straight against a stretch of time by an x, which the app leaves.
+     *
+     * "2 x daily" is twice a day to one person and two repetitions a day to the next,
+     * and an x means repetitions elsewhere on the same sheets ("heel raises x15"), so
+     * there is nothing here to be sure about. The whole shape comes out and both boxes
+     * stay empty. [X_A_DAY] is the same notation with an article in it, which settles
+     * it: "2 x a day" is a rate and cannot be read any other way.
+     */
+    private val X_RATE = Regex("""\d+\s*x\s*(?:day|daily|week|weekly)\b""")
+
+    private val X_A_DAY = Regex("""(\d+)\s*x\s*(?:a|per|each)\s+day\b""")
+    private val X_A_WEEK = Regex("""(\d+)\s*x\s*(?:a|per|each)\s+week\b""")
+
+    /** A rate with a period [HowOften] has no case for, such as five times an hour. */
+    private val UNKNOWN_RATE = Regex("""\d+\s*times?\s+(?:a|an|per|each)\s+\w+""")
 
     private const val ONCE = 1
     private const val TWICE = 2

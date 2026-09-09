@@ -491,6 +491,16 @@ class ProfileRepository(private val db: SteadyDatabase) {
     suspend fun setReminderOn(kind: ReminderKind, value: Boolean) =
         put("remind_${kind.id}", value.toString())
 
+    /**
+     * Whether the app's own suggestions appear beneath a therapist's plan.
+     *
+     * ADDENDUM-03 Part 6: the person can turn the extras off entirely, in one tap,
+     * and many will. On by default, and it changes nothing about the plan itself.
+     */
+    suspend fun extras(): Boolean = get(EXTRAS)?.toBoolean() ?: true
+
+    suspend fun setExtras(value: Boolean) = put(EXTRAS, value.toString())
+
     /** True when the daily prompt turned itself off, so Settings can say why. */
     suspend fun dailyGaveUp(): Boolean = get(DAILY_GAVE_UP).toBoolean()
 
@@ -564,6 +574,7 @@ class ProfileRepository(private val db: SteadyDatabase) {
         const val ANCHOR_DAY = "anchor_day"
         const val WEEK_TARGET = "week_target"
         const val DAILY_GAVE_UP = "daily_gave_up"
+        const val EXTRAS = "plan_extras"
         const val WITH_THERAPIST = "with_therapist"
         const val UNITS = "units"
         const val HEIGHT = "height_cm"
