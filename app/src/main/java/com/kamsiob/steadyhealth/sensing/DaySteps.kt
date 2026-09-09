@@ -37,7 +37,7 @@ class DaySteps(private val context: Context) {
 
     /** Whether this phone has the counter at all. Plenty do not. */
     val available: Boolean
-        get() = context.packageManager.hasSystemFeature(PackageManager.FEATURE_SENSOR_STEP_COUNTER) &&
+        get() = context.packageManager.hasSystemFeature(COUNTER) &&
             manager?.getDefaultSensor(Sensor.TYPE_STEP_COUNTER) != null
 
     val allowed: Boolean
@@ -72,5 +72,7 @@ class DaySteps(private val context: Context) {
          * into a build whose minimum is 29. The manifest declares the same string.
          */
         const val ACTIVITY_RECOGNITION = "android.permission.ACTIVITY_RECOGNITION"
+
+        private const val COUNTER = PackageManager.FEATURE_SENSOR_STEP_COUNTER
     }
 }
