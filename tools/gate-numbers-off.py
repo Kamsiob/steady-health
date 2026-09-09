@@ -15,9 +15,13 @@ It reads text and taps. It writes nothing to the phone, installs nothing, and
 changes one setting inside this application, which is the setting under test, and
 puts it back at the end.
 
-The date is the one exception and it is a real one: a date is not a figure about
-the person, and an app that hid today's date would be hiding the calendar rather
-than the numbers. Dates are allowed and are matched out below by shape.
+Where the line is, in one sentence, and at length in NumbersOff.kt: a number the
+app reports back becomes a word, and a number that is part of doing something
+right now stays. So the count climbing while somebody stands up out of a chair is
+still a number with the setting off, and so are a rest timer, a therapist's own
+repetitions, and a setting somebody chose themselves. Dates stay too, because an
+app that hid today's date would be hiding the calendar rather than the numbers,
+and they are matched out below by shape.
 """
 
 import os
