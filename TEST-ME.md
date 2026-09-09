@@ -260,6 +260,13 @@ are questions about a day, and the question at the end of a session is about fou
 minutes. Somebody who wants to record that they ate badly still has the daily
 check-in.
 
+**The band press is hidden from somebody who avoids pushing.** LOGIC.md section 5
+offers the band press as the replacement for the whole pushing ladder, so on that
+reading it should stay visible. A press is a press whatever you are sitting in, and I
+made the session engine hide it while leaving the ladder doing exactly what LOGIC.md
+says. Two documents disagree and I picked one. If somebody who avoids pushing should
+still be offered a band press, it is one line in `Movements.kt`.
+
 **Thirty steps in the walkthrough above, where Part 22 asks for twenty.** Stated
 plainly because it is the one instruction in the addendum I did not follow. Steps 1 to
 17 are the walkthrough as asked, ending at a scanned document.
