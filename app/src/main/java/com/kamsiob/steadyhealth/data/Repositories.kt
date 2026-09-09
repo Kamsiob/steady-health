@@ -483,12 +483,19 @@ class ProfileRepository(private val db: SteadyDatabase) {
     /**
      * Whether one kind of reminder is on.
      *
-     * The daily prompt is the only one on by default, which is ADDENDUM-03 Part 13.
-     * Everything else is off until somebody turns it on, and all of them together are
-     * capped at two a week.
+     * The daily prompt is on by default, which is ADDENDUM-03 Part 13. Everything
+     * else is off until somebody turns it on, and all of them together are capped at
+     * two a week.
+     *
+     * The appointment is the one other default, and it is on for a different reason:
+     * setting the date is the asking. Part 6 says "the person can set when they next
+     * see their therapist. Two days before, one prompt", which reads as one thing and
+     * not as two, and a date typed into the app that then produces nothing is a
+     * setting somebody has to find. The switch appears next to the others once there
+     * is a date, so turning it off is one tap and finding it needs no explanation.
      */
     suspend fun reminderOn(kind: ReminderKind): Boolean =
-        get("remind_${kind.id}")?.toBoolean() ?: (kind == ReminderKind.Daily)
+        get("remind_${kind.id}")?.toBoolean() ?: (kind in ON_TO_BEGIN_WITH)
 
     suspend fun setReminderOn(kind: ReminderKind, value: Boolean) =
         put("remind_${kind.id}", value.toString())
@@ -593,6 +600,9 @@ class ProfileRepository(private val db: SteadyDatabase) {
     suspend fun shownOn(noticeId: String): Long? = db.notices().get(noticeId)?.shownAt
 
     companion object {
+        /** The two nobody has to find. Everything else waits to be asked for. */
+        private val ON_TO_BEGIN_WITH = setOf(ReminderKind.Daily, ReminderKind.Review)
+
         const val ONBOARDED = "onboarding_complete"
         const val GETTING_AROUND = "getting_around"
         const val ONBOARDING_STEP = "onboarding_step"
@@ -1285,6 +1295,26 @@ class PlanRepository(private val db: SteadyDatabase) {
 
     /** The soonest appointment across every live plan, for the one prompt about it. */
     suspend fun nextReviewDay(): Long? = db.plans().live().mapNotNull { it.reviewDay }.minOrNull()
+
+    /** Every appointment there is, which is what ReviewDate asks its question about. */
+    suspend fun reviewDays(): List<Long> = db.plans().live().mapNotNull { it.reviewDay }
+
+    /** The appointments that have already had their one prompt. */
+    suspend fun reviewPrompted(): Set<Long> =
+        db.plans().live().mapNotNull { it.reviewPromptedFor }.toSet()
+
+    /**
+     * Write down that the prompt for [day] has gone out.
+     *
+     * Marked on every plan that shares the date rather than on one of them, because
+     * two plans reviewed at the same appointment are one appointment and the person
+     * hears about it once.
+     */
+    suspend fun reviewPromptSent(day: Long) {
+        db.plans().live()
+            .filter { it.reviewDay == day }
+            .forEach { db.plans().put(it.copy(reviewPromptedFor = day)) }
+    }
 
     /** Put a plan away without deleting what was done from it. */
     suspend fun archive(planId: Long, at: Long) {

@@ -77,6 +77,10 @@
     <string name="plan_conflict">Your plan has %1$s, and you said you avoid %2$s. Ask your therapist about it. We\'ll leave it in for now.</string>
     <string name="plan_review">When do you next see them?</string>
     <string name="plan_review_none">Not set</string>
+    <string name="plan_review_sub">Optional. We\'ll say once, two days before.</string>
+    <string name="plan_review_set">Set a date</string>
+    <string name="plan_review_change">Change</string>
+    <string name="plan_review_clear">No date after all</string>
     <string name="plan_review_soon">You see your %1$s on %2$s. Your page is ready.</string>
     <string name="plan_export">Make the page for your appointment</string>
 

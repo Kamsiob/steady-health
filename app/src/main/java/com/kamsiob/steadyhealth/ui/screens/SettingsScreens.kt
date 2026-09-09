@@ -42,6 +42,7 @@ data class SettingsUiState(
     val remindersOn: Set<ReminderKind> = emptySet(),
     val remindersLeft: Int = 0,
     val remindersBlocked: Boolean = false,
+    val hasAppointment: Boolean = false,
     val envelopeMinutes: Int = 0,
     val envelopeDays: Int = 0,
     /** Three, four or five sessions a week. ADDENDUM-03 Part 10. */
@@ -330,6 +331,7 @@ fun RemindersScreen(
     on: Set<ReminderKind>,
     left: Int,
     blocked: Boolean,
+    hasAppointment: Boolean,
     onToggle: (ReminderKind, Boolean) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
@@ -343,12 +345,19 @@ fun RemindersScreen(
 
         if (blocked) NoteBlock(stringResource(R.string.reminders_denied), tint = SteadyPalette.SkyL)
 
-        listOf(
-            ReminderKind.Walk to (R.string.reminders_walk to R.string.reminders_walk_sub),
-            ReminderKind.StepReady to (R.string.reminders_step to R.string.reminders_step_sub),
-            ReminderKind.WeekNote to (R.string.reminders_week to R.string.reminders_week_sub),
-            ReminderKind.Photo to (R.string.reminders_photo to R.string.reminders_photo_sub),
-        ).forEach { (kind, labels) ->
+        // The appointment switch appears only once there is an appointment. A row
+        // offering to remind somebody about a date they have not set is a setting
+        // for nothing, and the plan screen is where a date gets set.
+        buildList {
+            if (hasAppointment) {
+                val review = R.string.reminders_review to R.string.reminders_review_sub
+                add(ReminderKind.Review to review)
+            }
+            add(ReminderKind.Walk to (R.string.reminders_walk to R.string.reminders_walk_sub))
+            add(ReminderKind.StepReady to (R.string.reminders_step to R.string.reminders_step_sub))
+            add(ReminderKind.WeekNote to (R.string.reminders_week to R.string.reminders_week_sub))
+            add(ReminderKind.Photo to (R.string.reminders_photo to R.string.reminders_photo_sub))
+        }.forEach { (kind, labels) ->
             SwitchRow(
                 label = stringResource(labels.first),
                 subtitle = stringResource(labels.second),

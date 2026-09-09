@@ -405,6 +405,12 @@
     <string name="remind_photo">Sunday photo, if you fancy it.</string>
     <string name="remind_week">Your week is written up.</string>
     <string name="remind_step">A longer walk is ready.</string>
+    <!--
+      The appointment. Nine words, no verb about what to do with it, and nothing
+      about whether the plan was followed. ADDENDUM-03 Part 6 asks for one prompt
+      two days before, and this is the whole of it.
+    -->
+    <string name="remind_review">Your page is ready for your appointment.</string>
 
     <!--
       The one daily prompt, from ADDENDUM-03 Part 13. Under ten words, rotating, and
@@ -439,6 +445,8 @@
     <string name="reminders_week_sub">Sunday</string>
     <string name="reminders_step">A longer walk is ready</string>
     <string name="reminders_step_sub">When the app offers one</string>
+    <string name="reminders_review">Before your appointment</string>
+    <string name="reminders_review_sub">Two days before, once</string>
     <string name="reminders_denied">Android is not letting notifications through. You can change that in the system settings for this app.</string>
 
     <string name="data_title">Your data</string>

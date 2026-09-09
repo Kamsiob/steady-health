@@ -107,6 +107,7 @@ object Reminding {
         ReminderKind.Photo -> R.string.remind_photo
         ReminderKind.WeekNote -> R.string.remind_week
         ReminderKind.StepReady -> R.string.remind_step
+        ReminderKind.Review -> R.string.remind_review
         ReminderKind.Daily -> R.string.daily_ready
     }
 }

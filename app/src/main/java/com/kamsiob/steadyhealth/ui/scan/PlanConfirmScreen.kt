@@ -2,8 +2,10 @@
 
 package com.kamsiob.steadyhealth.ui.scan
 
+import android.app.DatePickerDialog
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import com.kamsiob.steadyhealth.R
@@ -18,6 +20,9 @@ import com.kamsiob.steadyhealth.ui.components.PrimaryButton
 import com.kamsiob.steadyhealth.ui.components.SectionTitle
 import com.kamsiob.steadyhealth.ui.components.SteadyScreen
 import com.kamsiob.steadyhealth.ui.components.TextEntry
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 
 /**
  * Confirming a plan. ADDENDUM-03 Part 6.
@@ -37,6 +42,7 @@ fun PlanConfirmScreen(
     state: PlanDraftUiState,
     onLabel: (String) -> Unit,
     onDrop: (Int) -> Unit,
+    onReviewDay: (Long?) -> Unit,
     onSave: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
@@ -73,6 +79,59 @@ fun PlanConfirmScreen(
                 onClick = { onDrop(at) },
             )
         }
+
+        SectionTitle(stringResource(R.string.plan_review))
+        Appointment(day = state.reviewDay, onDay = onReviewDay)
+    }
+}
+
+/**
+ * The appointment, and the one row that sets it.
+ *
+ * It is optional and it stays optional. Nothing on this screen waits for it, the
+ * plan saves without it, and a plan with no appointment behaves exactly as a plan
+ * with one does apart from the single prompt two days before. Somebody who does not
+ * know when they are next going in should be able to walk past this row.
+ *
+ * The platform date picker rather than one drawn here. It is the calendar every
+ * other app on the phone shows, it is already translated into every language this
+ * app will ship in, it already reads correctly under TalkBack, and it already
+ * handles the font scale. A prettier one written here would be four of those things
+ * done again and one of them done worse.
+ */
+@Composable
+private fun Appointment(day: Long?, onDay: (Long?) -> Unit) {
+    val context = LocalContext.current
+    val date = day?.let(LocalDate::ofEpochDay)
+    val shown = date?.format(DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG))
+
+    val action = if (day == null) R.string.plan_review_set else R.string.plan_review_change
+
+    ListItem(
+        heading = shown ?: stringResource(R.string.plan_review_none),
+        subtitle = stringResource(R.string.plan_review_sub),
+        value = stringResource(action),
+        onClick = {
+            val start = date ?: LocalDate.now()
+            DatePickerDialog(
+                context,
+                { _, year, month, dayOfMonth ->
+                    onDay(LocalDate.of(year, month + 1, dayOfMonth).toEpochDay())
+                },
+                start.year,
+                start.monthValue - 1,
+                start.dayOfMonth,
+            ).show()
+        },
+    )
+
+    // Only once there is one to clear. A row offering to unset nothing is a row
+    // somebody has to read past.
+    if (day != null) {
+        ListItem(
+            heading = stringResource(R.string.plan_review_clear),
+            onClick = { onDay(null) },
+        )
     }
 }
 

@@ -396,6 +396,16 @@ data class PlanEntity(
     val createdAt: Long,
     val reviewDay: Long? = null,
     val archivedAt: Long? = null,
+    /**
+     * The appointment day whose one prompt has already gone out.
+     *
+     * Kept here rather than alongside the reminders because the reminders table
+     * answers "how much has the app said this week" and this answers "has this
+     * appointment been mentioned", which survives the week rolling over. Storing
+     * the day rather than a flag is what makes moving the appointment earn the new
+     * date its own prompt and leave the old one with the one it already had.
+     */
+    val reviewPromptedFor: Long? = null,
 )
 
 /**

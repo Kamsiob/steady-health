@@ -9,6 +9,7 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.kamsiob.steadyhealth.R
 import com.kamsiob.steadyhealth.data.DailyPromptRepository
+import com.kamsiob.steadyhealth.data.PlanRepository
 import com.kamsiob.steadyhealth.data.ProfileRepository
 import com.kamsiob.steadyhealth.data.ReminderRepository
 import com.kamsiob.steadyhealth.data.RunRepository
@@ -17,6 +18,8 @@ import com.kamsiob.steadyhealth.engine.DailyPrompt
 import com.kamsiob.steadyhealth.engine.Prompt
 import com.kamsiob.steadyhealth.engine.ReminderKind
 import com.kamsiob.steadyhealth.engine.Reminders
+import com.kamsiob.steadyhealth.plan.ReviewDate
+import com.kamsiob.steadyhealth.plan.ReviewPrompt
 import com.kamsiob.steadyhealth.session.SessionEngine
 import com.kamsiob.steadyhealth.session.SessionInputs
 import java.time.DayOfWeek
@@ -57,20 +60,55 @@ class ReminderWorker(
 
         if (!Reminders.maySend(reminders.sentSince(now - A_WEEK), now)) return Result.success()
 
-        val today = LocalDate.now(ZoneId.systemDefault())
-        val sunday = today.dayOfWeek == DayOfWeek.SUNDAY
-        val due = buildSet {
-            if (profile.reminderOn(ReminderKind.Walk)) add(ReminderKind.Walk)
-            if (sunday && profile.reminderOn(ReminderKind.WeekNote)) add(ReminderKind.WeekNote)
-            if (sunday && profile.reminderOn(ReminderKind.Photo)) add(ReminderKind.Photo)
-        }
-
-        val kind = Reminders.pick(due) ?: return Result.success()
+        val plans = PlanRepository(db)
+        val appointment = appointment(profile, plans, LocalDate.now(ZoneId.systemDefault()))
+        val kind = Reminders.pick(due(profile, appointment)) ?: return Result.success()
         val sent = Reminding.send(context, context.getString(Reminding.words(kind)))
         // Only a reminder that actually went out counts against the ceiling. One
         // the system swallowed should not cost somebody their week's allowance.
         if (sent) reminders.record(kind, now)
+        // And the appointment is only written down as said once it has been said,
+        // for the same reason. Its window is two days wide so that a day lost to
+        // the ceiling is not the prompt lost with it.
+        if (sent && kind == ReminderKind.Review && appointment != null) {
+            plans.reviewPromptSent(appointment)
+        }
         return Result.success()
+    }
+
+    /**
+     * Everything the switches and the calendar say could go out today.
+     *
+     * Which one of them actually does is the ceiling's decision and not this one's.
+     * Nothing here reads a day somebody missed, which is why the only dates it looks
+     * at are today's day of the week and an appointment somebody typed in.
+     */
+    private suspend fun due(profile: ProfileRepository, appointment: Long?): Set<ReminderKind> {
+        val sunday = LocalDate.now(ZoneId.systemDefault()).dayOfWeek == DayOfWeek.SUNDAY
+        return buildSet {
+            if (appointment != null) add(ReminderKind.Review)
+            if (profile.reminderOn(ReminderKind.Walk)) add(ReminderKind.Walk)
+            if (sunday && profile.reminderOn(ReminderKind.WeekNote)) add(ReminderKind.WeekNote)
+            if (sunday && profile.reminderOn(ReminderKind.Photo)) add(ReminderKind.Photo)
+        }
+    }
+
+    /**
+     * The appointment today's one prompt would be about, or null.
+     *
+     * Every rule about which day and how many times lives in ReviewDate, which is a
+     * pure function, and this only supplies it with what is on the phone. The switch
+     * is checked first so that a phone with the setting off never even reads the
+     * plans.
+     */
+    private suspend fun appointment(
+        profile: ProfileRepository,
+        plans: PlanRepository,
+        today: LocalDate,
+    ): Long? {
+        if (!profile.reminderOn(ReminderKind.Review)) return null
+        val prompt = ReviewDate.due(plans.reviewDays(), today.toEpochDay(), plans.reviewPrompted())
+        return (prompt as? ReviewPrompt.Send)?.onDay
     }
 
     /**

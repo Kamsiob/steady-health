@@ -21,6 +21,15 @@ enum class ReminderKind(val id: String) {
 
     /** A longer walk is ready. The only one that is ever good news by itself. */
     StepReady("step_ready"),
+
+    /**
+     * Two days before the appointment somebody set. ADDENDUM-03 Part 6.
+     *
+     * The only capped kind that expires. A Sunday write-up is still there on
+     * Monday and an appointment is not, which is why it sits at the head of the
+     * order below rather than in the order it was added.
+     */
+    Review("review"),
 }
 
 /**
@@ -60,10 +69,15 @@ object Reminders {
     /**
      * Which one to send when more than one is due at the same moment.
      *
-     * A longer walk being ready is the only one of the four that is good news on
-     * its own, so it goes first. The walk reminder is next because it is the one
-     * somebody asked for by naming a habit. The two Sunday ones are last, and
-     * losing one of them costs nothing: the write-up is still there tomorrow.
+     * The appointment goes first because it is the only one that stops being true.
+     * ReviewDate says why at length: every other capped kind can simply go out
+     * tomorrow, and a page that was ready for an appointment that has been and gone
+     * is worse than one that was never mentioned.
+     *
+     * A longer walk being ready is next, the only one of the rest that is good news
+     * on its own. The walk reminder follows because it is the one somebody asked
+     * for by naming a habit. The two Sunday ones are last, and losing one of them
+     * costs nothing: the write-up is still there tomorrow.
      */
     fun pick(due: Set<ReminderKind>): ReminderKind? = ORDER.firstOrNull { it in due }
 
@@ -77,6 +91,7 @@ object Reminders {
      * else.
      */
     val CAPPED = listOf(
+        ReminderKind.Review,
         ReminderKind.StepReady,
         ReminderKind.Walk,
         ReminderKind.WeekNote,

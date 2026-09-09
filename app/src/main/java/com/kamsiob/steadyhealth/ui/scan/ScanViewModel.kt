@@ -31,6 +31,8 @@ import java.time.ZoneId
 data class PlanDraftUiState(
     val items: List<PlanItem> = emptyList(),
     val label: String = "",
+    /** The next appointment, as an epoch day. Optional, and stays optional. */
+    val reviewDay: Long? = null,
 )
 
 /**
@@ -183,6 +185,8 @@ class ScanViewModel(private val application: Application) : AndroidViewModel(app
 
     fun setPlanLabel(label: String) = _draft.update { it.copy(label = label) }
 
+    fun setPlanReviewDay(day: Long?) = _draft.update { it.copy(reviewDay = day) }
+
     /** Drop one proposed line. The person confirming is the point of the screen. */
     fun dropItem(at: Int) = _draft.update { state ->
         state.copy(items = state.items.filterIndexed { index, _ -> index != at })
@@ -199,7 +203,11 @@ class ScanViewModel(private val application: Application) : AndroidViewModel(app
         val draft = _draft.value
         if (draft.items.isEmpty()) return@launch
         val at = System.currentTimeMillis()
-        val planId = plans.save(label = draft.label.ifBlank { "" }, at = at)
+        val planId = plans.save(
+            label = draft.label.ifBlank { "" },
+            at = at,
+            reviewDay = draft.reviewDay,
+        )
         draft.items.forEach { plans.addItem(planId, row(planId, it, at)) }
         _draft.value = PlanDraftUiState()
         onDone()

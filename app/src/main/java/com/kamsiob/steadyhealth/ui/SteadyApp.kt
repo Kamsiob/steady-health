@@ -807,6 +807,7 @@ private fun NavGraphBuilder.scanRoutes(
             state = draft,
             onLabel = viewModel::setPlanLabel,
             onDrop = viewModel::dropItem,
+            onReviewDay = viewModel::setPlanReviewDay,
             onSave = { viewModel.savePlan { navController.popBackStack(Route.TABS, false) } },
             onBack = back,
         )
@@ -976,6 +977,7 @@ private fun NavGraphBuilder.settingsRoutes(
             on = state.remindersOn,
             left = state.remindersLeft,
             blocked = state.remindersBlocked,
+            hasAppointment = state.hasAppointment,
             onToggle = { kind, on ->
                 // The one moment this app asks for the notification permission,
                 // and only because somebody just asked for something that needs it.

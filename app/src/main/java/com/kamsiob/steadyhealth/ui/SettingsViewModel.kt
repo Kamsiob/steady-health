@@ -79,6 +79,7 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
         envelope = profile.envelope()
         _pattern.value = profile.pem()
         val on = ReminderKind.entries.filter { profile.reminderOn(it) }.toSet()
+        val plans = PlanRepository(db).live()
 
         _settings.value = SettingsUiState(
             gettingAround = profile.gettingAround(),
@@ -104,7 +105,8 @@ class SettingsViewModel(application: Application) : AndroidViewModel(application
             envelopeDays = envelope.daysPerWeek,
             weekTarget = profile.weekTarget(),
             dailyGaveUp = profile.dailyGaveUp(),
-            hasPlan = PlanRepository(db).live().isNotEmpty(),
+            hasPlan = plans.isNotEmpty(),
+            hasAppointment = plans.any { it.reviewDay != null },
             extras = profile.extras(),
             dailyOn = profile.reminderOn(ReminderKind.Daily),
         )
