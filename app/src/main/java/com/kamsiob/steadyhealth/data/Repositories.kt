@@ -11,6 +11,8 @@ import com.kamsiob.steadyhealth.data.entity.CheckEntity
 import com.kamsiob.steadyhealth.data.entity.CheckInEntity
 import com.kamsiob.steadyhealth.data.entity.CheckInTagEntity
 import com.kamsiob.steadyhealth.data.entity.DailyPromptEntity
+import com.kamsiob.steadyhealth.data.entity.DocumentEntity
+import com.kamsiob.steadyhealth.data.entity.DocumentPageEntity
 import com.kamsiob.steadyhealth.data.entity.ExclusionEntity
 import com.kamsiob.steadyhealth.data.entity.ExperimentEntity
 import com.kamsiob.steadyhealth.data.entity.ItemRatingEntity
@@ -18,6 +20,8 @@ import com.kamsiob.steadyhealth.data.entity.LadderStateEntity
 import com.kamsiob.steadyhealth.data.entity.MeasureResultEntity
 import com.kamsiob.steadyhealth.data.entity.NoticeEntity
 import com.kamsiob.steadyhealth.data.entity.PersonSynonymEntity
+import com.kamsiob.steadyhealth.data.entity.PlanEntity
+import com.kamsiob.steadyhealth.data.entity.PlanItemEntity
 import com.kamsiob.steadyhealth.data.entity.ReadinessEntity
 import com.kamsiob.steadyhealth.data.entity.ReminderSentEntity
 import com.kamsiob.steadyhealth.data.entity.RunEntity
@@ -1160,6 +1164,99 @@ class ExperimentRepository(private val db: SteadyDatabase) {
  * already speaks: [Done] rows for its history, and the areas somebody said hurt with
  * their seven days still running.
  */
+/**
+ * Documents somebody photographed, and the plans pulled out of them.
+ *
+ * ADDENDUM-03 Parts 5, 6 and 7. Kept together because a plan usually comes from a
+ * document and the two are read back beside each other, and because both are the
+ * same promise: the photograph is always kept, always viewable, and goes wherever
+ * export and delete go.
+ */
+class DocumentRepository(private val db: SteadyDatabase) {
+
+    /** Save one photographed document with its pages, in the order they were taken. */
+    suspend fun save(
+        epochDay: Long,
+        kind: String,
+        fromWho: String,
+        pages: List<Pair<ByteArray, String>>,
+        at: Long,
+    ): Long {
+        val id = db.documents().put(
+            DocumentEntity(epochDay = epochDay, kind = kind, fromWho = fromWho, savedAt = at),
+        )
+        pages.forEachIndexed { index, (image, text) ->
+            db.documents().putPage(
+                DocumentPageEntity(documentId = id, at = index, image = image, text = text),
+            )
+        }
+        return id
+    }
+
+    suspend fun all(): List<DocumentEntity> = db.documents().all()
+
+    suspend fun pagesOf(id: Long): List<DocumentPageEntity> = db.documents().pagesOf(id)
+
+    /** Everything read off one document, in page order, as one piece of text. */
+    suspend fun textOf(id: Long): String =
+        db.documents().pagesOf(id).joinToString("\n") { it.text }
+
+    /**
+     * Take one document away entirely, pages and all.
+     *
+     * The pages go first, so a crash between the two leaves orphaned pages rather
+     * than a document whose pages have vanished. Orphans are invisible and harmless;
+     * a document that cannot show what it is is not.
+     */
+    suspend fun remove(id: Long) {
+        db.documents().deletePages(id)
+        db.documents().delete(id)
+    }
+}
+
+/**
+ * A programme somebody was given, exactly as they were given it.
+ *
+ * ADDENDUM-03 Part 6. There is deliberately no method here that changes a number: the
+ * app runs a plan as given, and reps and frequency change only when the person changes
+ * them. Adding a `progress` to this class would be adding one to the app.
+ */
+class PlanRepository(private val db: SteadyDatabase) {
+
+    suspend fun save(label: String, at: Long, reviewDay: Long? = null): Long =
+        db.plans().put(PlanEntity(label = label, createdAt = at, reviewDay = reviewDay))
+
+    suspend fun addItem(planId: Long, item: PlanItemEntity) =
+        db.plans().putItem(item.copy(planId = planId))
+
+    suspend fun live(): List<PlanEntity> = db.plans().live()
+
+    suspend fun itemsOf(planId: Long): List<PlanItemEntity> = db.plans().itemsOf(planId)
+
+    /** Every item of every live plan, which is what a session is built from. */
+    suspend fun liveItems(): List<PlanItemEntity> =
+        db.plans().live().flatMap { db.plans().itemsOf(it.id) }
+
+    suspend fun setReviewDay(planId: Long, day: Long?) {
+        val plan = db.plans().all().firstOrNull { it.id == planId } ?: return
+        db.plans().put(plan.copy(reviewDay = day))
+    }
+
+    /** The soonest appointment across every live plan, for the one prompt about it. */
+    suspend fun nextReviewDay(): Long? = db.plans().live().mapNotNull { it.reviewDay }.minOrNull()
+
+    /** Put a plan away without deleting what was done from it. */
+    suspend fun archive(planId: Long, at: Long) {
+        val plan = db.plans().all().firstOrNull { it.id == planId } ?: return
+        db.plans().put(plan.copy(archivedAt = at))
+    }
+
+    suspend fun remove(planId: Long) {
+        db.plans().itemsOf(planId).forEach { db.plans().deleteItem(it) }
+        db.plans().delete(planId)
+    }
+}
+
 /**
  * The daily prompt's own history: one row a day, and whether it was opened.
  *

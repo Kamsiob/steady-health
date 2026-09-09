@@ -58,11 +58,21 @@ class Device:
         return found
 
     def wait(self, *texts, timeout=None):
-        """Wait until one of these is on screen, and say which and where."""
+        """Wait until one of these is on screen, and say which and where.
+
+        An exact match wins over a substring one, always. Matching on substrings alone
+        had "You" find "What's changed since you started" and tap the middle of a
+        sentence instead of the tab, and the screen that came back looked like a bug in
+        the app rather than a bug in this.
+        """
         deadline = time.time() + (timeout or self.timeout)
         seen = {}
         while time.time() < deadline:
             seen = self.screen()
+            for text in texts:
+                for label, point in seen.items():
+                    if text.lower() == label.lower():
+                        return label, point
             for text in texts:
                 for label, point in seen.items():
                     if text.lower() in label.lower():
@@ -70,8 +80,28 @@ class Device:
             time.sleep(0.15)
         raise NotOnScreen(f"{texts} never appeared. On screen: {sorted(seen)}")
 
-    def tap(self, text, timeout=None):
-        label, (x, y) = self.wait(text, timeout=timeout)
+    def tap(self, text, timeout=None, scroll=6):
+        """Tap something, scrolling down to find it if it is below the fold.
+
+        uiautomator only reports what is drawn, so a button further down a long screen
+        is simply not there as far as this is concerned. Scrolling to it is what a
+        person does, so it is what this does.
+        """
+        try:
+            label, (x, y) = self.wait(text, timeout=3.0)
+        except NotOnScreen:
+            label = None
+        for _ in range(scroll):
+            if label is not None:
+                break
+            self._adb("shell", "input", "swipe", "540", "1700", "540", "800", "400")
+            time.sleep(0.7)
+            try:
+                label, (x, y) = self.wait(text, timeout=1.5)
+            except NotOnScreen:
+                label = None
+        if label is None:
+            label, (x, y) = self.wait(text, timeout=timeout)
         self._adb("shell", "input", "tap", str(x), str(y))
         return label
 

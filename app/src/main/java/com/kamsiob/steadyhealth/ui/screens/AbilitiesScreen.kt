@@ -92,7 +92,7 @@ fun AbilitiesScreen(
 ) {
     SteadyScreen(title = null, onBack = null, modifier = modifier, help = Place.Progress) {
         SteadyText(
-            text = stringResource(R.string.abilities_title),
+            text = stringResource(R.string.tab_progress),
             style = SteadyType.Greeting,
             color = SteadyPalette.Navy,
         )

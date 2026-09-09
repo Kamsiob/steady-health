@@ -152,6 +152,15 @@ dependencies {
 
     // The widget. ADDENDUM-03 Part 13: two sizes, today's session, tap to start.
     implementation(libs.androidx.glance.appwidget)
+
+    // ADDENDUM-03 Part 5: one button for every piece of paper. The camera takes the
+    // photograph and ML Kit reads the text off it, both on device. Nothing about a
+    // document ever leaves the phone, which is why the text recognition is the
+    // bundled model rather than the Play Services one that downloads.
+    implementation(libs.androidx.camera.camera2)
+    implementation(libs.androidx.camera.lifecycle)
+    implementation(libs.androidx.camera.view)
+    implementation(libs.mlkit.text.recognition)
     implementation(libs.androidx.work.runtime.ktx)
 
     implementation(libs.kotlinx.coroutines.android)

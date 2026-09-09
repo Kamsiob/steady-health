@@ -1,0 +1,1638 @@
+{
+  "formatVersion": 1,
+  "database": {
+    "version": 4,
+    "identityHash": "047d875cb72d0e88e9e9e34fc920ab58",
+    "entities": [
+      {
+        "tableName": "weigh_ins",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`epochDay` INTEGER NOT NULL, `recordedAt` INTEGER NOT NULL, `rawKg` REAL NOT NULL, `smoothedKg` REAL NOT NULL, `source` TEXT NOT NULL, PRIMARY KEY(`epochDay`))",
+        "fields": [
+          {
+            "fieldPath": "epochDay",
+            "columnName": "epochDay",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "recordedAt",
+            "columnName": "recordedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "rawKg",
+            "columnName": "rawKg",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "smoothedKg",
+            "columnName": "smoothedKg",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "source",
+            "columnName": "source",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "epochDay"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_weigh_ins_epochDay",
+            "unique": true,
+            "columnNames": [
+              "epochDay"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_weigh_ins_epochDay` ON `${TABLE_NAME}` (`epochDay`)"
+          }
+        ]
+      },
+      {
+        "tableName": "check_ins",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `epochDay` INTEGER NOT NULL, `recordedAt` INTEGER NOT NULL, `sentence` TEXT NOT NULL, `sleepHalfHours` INTEGER, `dayRating` TEXT, `spoken` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "epochDay",
+            "columnName": "epochDay",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "recordedAt",
+            "columnName": "recordedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sentence",
+            "columnName": "sentence",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sleepHalfHours",
+            "columnName": "sleepHalfHours",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "dayRating",
+            "columnName": "dayRating",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "spoken",
+            "columnName": "spoken",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_check_ins_epochDay",
+            "unique": true,
+            "columnNames": [
+              "epochDay"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_check_ins_epochDay` ON `${TABLE_NAME}` (`epochDay`)"
+          }
+        ]
+      },
+      {
+        "tableName": "check_in_tags",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`checkInId` INTEGER NOT NULL, `tag` TEXT NOT NULL, `fromReader` INTEGER NOT NULL, PRIMARY KEY(`checkInId`, `tag`))",
+        "fields": [
+          {
+            "fieldPath": "checkInId",
+            "columnName": "checkInId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tag",
+            "columnName": "tag",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fromReader",
+            "columnName": "fromReader",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "checkInId",
+            "tag"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_check_in_tags_checkInId",
+            "unique": false,
+            "columnNames": [
+              "checkInId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_check_in_tags_checkInId` ON `${TABLE_NAME}` (`checkInId`)"
+          },
+          {
+            "name": "index_check_in_tags_tag",
+            "unique": false,
+            "columnNames": [
+              "tag"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_check_in_tags_tag` ON `${TABLE_NAME}` (`tag`)"
+          }
+        ]
+      },
+      {
+        "tableName": "person_synonyms",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`phrase` TEXT NOT NULL, `tag` TEXT NOT NULL, `learnedAt` INTEGER NOT NULL, PRIMARY KEY(`phrase`))",
+        "fields": [
+          {
+            "fieldPath": "phrase",
+            "columnName": "phrase",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tag",
+            "columnName": "tag",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "learnedAt",
+            "columnName": "learnedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "phrase"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_person_synonyms_phrase",
+            "unique": true,
+            "columnNames": [
+              "phrase"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_person_synonyms_phrase` ON `${TABLE_NAME}` (`phrase`)"
+          }
+        ]
+      },
+      {
+        "tableName": "sessions",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `epochDay` INTEGER NOT NULL, `startedAt` INTEGER NOT NULL, `endedAt` INTEGER NOT NULL, `durationSeconds` INTEGER NOT NULL, `ladder` TEXT NOT NULL, `stepIndex` INTEGER NOT NULL, `talkTest` TEXT, `steps` INTEGER, `distanceMetres` REAL, `nextDayFeel` TEXT, `nextDayAskedOnDay` INTEGER)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "epochDay",
+            "columnName": "epochDay",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "startedAt",
+            "columnName": "startedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "endedAt",
+            "columnName": "endedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "durationSeconds",
+            "columnName": "durationSeconds",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ladder",
+            "columnName": "ladder",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "stepIndex",
+            "columnName": "stepIndex",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "talkTest",
+            "columnName": "talkTest",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "steps",
+            "columnName": "steps",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "distanceMetres",
+            "columnName": "distanceMetres",
+            "affinity": "REAL"
+          },
+          {
+            "fieldPath": "nextDayFeel",
+            "columnName": "nextDayFeel",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "nextDayAskedOnDay",
+            "columnName": "nextDayAskedOnDay",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_sessions_epochDay",
+            "unique": false,
+            "columnNames": [
+              "epochDay"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sessions_epochDay` ON `${TABLE_NAME}` (`epochDay`)"
+          },
+          {
+            "name": "index_sessions_ladder",
+            "unique": false,
+            "columnNames": [
+              "ladder"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sessions_ladder` ON `${TABLE_NAME}` (`ladder`)"
+          }
+        ]
+      },
+      {
+        "tableName": "step_names",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`ladder` TEXT NOT NULL, `stepIndex` INTEGER NOT NULL, `name` TEXT NOT NULL, `namedAt` INTEGER NOT NULL, PRIMARY KEY(`ladder`, `stepIndex`))",
+        "fields": [
+          {
+            "fieldPath": "ladder",
+            "columnName": "ladder",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "stepIndex",
+            "columnName": "stepIndex",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "name",
+            "columnName": "name",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "namedAt",
+            "columnName": "namedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "ladder",
+            "stepIndex"
+          ]
+        }
+      },
+      {
+        "tableName": "ladder_state",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`ladder` TEXT NOT NULL, `currentStepIndex` INTEGER NOT NULL, `lastOfferedDay` INTEGER, `offerDeclinedUntilDay` INTEGER, `easingUntilDay` INTEGER, `lastSessionDay` INTEGER, PRIMARY KEY(`ladder`))",
+        "fields": [
+          {
+            "fieldPath": "ladder",
+            "columnName": "ladder",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "currentStepIndex",
+            "columnName": "currentStepIndex",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "lastOfferedDay",
+            "columnName": "lastOfferedDay",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "offerDeclinedUntilDay",
+            "columnName": "offerDeclinedUntilDay",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "easingUntilDay",
+            "columnName": "easingUntilDay",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "lastSessionDay",
+            "columnName": "lastSessionDay",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "ladder"
+          ]
+        }
+      },
+      {
+        "tableName": "tracked_items",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `text` TEXT NOT NULL, `domain` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `archivedAt` INTEGER)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "text",
+            "columnName": "text",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "domain",
+            "columnName": "domain",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "archivedAt",
+            "columnName": "archivedAt",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_tracked_items_domain",
+            "unique": false,
+            "columnNames": [
+              "domain"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_tracked_items_domain` ON `${TABLE_NAME}` (`domain`)"
+          }
+        ]
+      },
+      {
+        "tableName": "item_ratings",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`itemId` INTEGER NOT NULL, `epochDay` INTEGER NOT NULL, `rating` INTEGER NOT NULL, `recordedAt` INTEGER NOT NULL, PRIMARY KEY(`itemId`, `epochDay`))",
+        "fields": [
+          {
+            "fieldPath": "itemId",
+            "columnName": "itemId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "epochDay",
+            "columnName": "epochDay",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "rating",
+            "columnName": "rating",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "recordedAt",
+            "columnName": "recordedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "itemId",
+            "epochDay"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_item_ratings_itemId",
+            "unique": false,
+            "columnNames": [
+              "itemId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_item_ratings_itemId` ON `${TABLE_NAME}` (`itemId`)"
+          }
+        ]
+      },
+      {
+        "tableName": "checks",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `epochDay` INTEGER NOT NULL, `completedAt` INTEGER NOT NULL, `gettingAround` TEXT NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "epochDay",
+            "columnName": "epochDay",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "completedAt",
+            "columnName": "completedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "gettingAround",
+            "columnName": "gettingAround",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_checks_epochDay",
+            "unique": true,
+            "columnNames": [
+              "epochDay"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_checks_epochDay` ON `${TABLE_NAME}` (`epochDay`)"
+          }
+        ]
+      },
+      {
+        "tableName": "measure_results",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `checkId` INTEGER, `measureId` TEXT NOT NULL, `domain` TEXT NOT NULL, `epochDay` INTEGER NOT NULL, `recordedAt` INTEGER NOT NULL, `value` REAL NOT NULL, `countedBy` TEXT NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "checkId",
+            "columnName": "checkId",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "measureId",
+            "columnName": "measureId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "domain",
+            "columnName": "domain",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "epochDay",
+            "columnName": "epochDay",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "recordedAt",
+            "columnName": "recordedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "value",
+            "columnName": "value",
+            "affinity": "REAL",
+            "notNull": true
+          },
+          {
+            "fieldPath": "countedBy",
+            "columnName": "countedBy",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_measure_results_checkId",
+            "unique": false,
+            "columnNames": [
+              "checkId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_measure_results_checkId` ON `${TABLE_NAME}` (`checkId`)"
+          },
+          {
+            "name": "index_measure_results_measureId",
+            "unique": false,
+            "columnNames": [
+              "measureId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_measure_results_measureId` ON `${TABLE_NAME}` (`measureId`)"
+          },
+          {
+            "name": "index_measure_results_epochDay",
+            "unique": false,
+            "columnNames": [
+              "epochDay"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_measure_results_epochDay` ON `${TABLE_NAME}` (`epochDay`)"
+          }
+        ]
+      },
+      {
+        "tableName": "waist",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`epochDay` INTEGER NOT NULL, `recordedAt` INTEGER NOT NULL, `centimetres` REAL NOT NULL, PRIMARY KEY(`epochDay`))",
+        "fields": [
+          {
+            "fieldPath": "epochDay",
+            "columnName": "epochDay",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "recordedAt",
+            "columnName": "recordedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "centimetres",
+            "columnName": "centimetres",
+            "affinity": "REAL",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "epochDay"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_waist_epochDay",
+            "unique": true,
+            "columnNames": [
+              "epochDay"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_waist_epochDay` ON `${TABLE_NAME}` (`epochDay`)"
+          }
+        ]
+      },
+      {
+        "tableName": "blood_pressure",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `epochDay` INTEGER NOT NULL, `recordedAt` INTEGER NOT NULL, `systolic` INTEGER NOT NULL, `diastolic` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "epochDay",
+            "columnName": "epochDay",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "recordedAt",
+            "columnName": "recordedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "systolic",
+            "columnName": "systolic",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "diastolic",
+            "columnName": "diastolic",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_blood_pressure_epochDay",
+            "unique": false,
+            "columnNames": [
+              "epochDay"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_blood_pressure_epochDay` ON `${TABLE_NAME}` (`epochDay`)"
+          }
+        ]
+      },
+      {
+        "tableName": "photos",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`epochDay` INTEGER NOT NULL, `takenAt` INTEGER NOT NULL, `fileName` TEXT NOT NULL, PRIMARY KEY(`epochDay`))",
+        "fields": [
+          {
+            "fieldPath": "epochDay",
+            "columnName": "epochDay",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "takenAt",
+            "columnName": "takenAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fileName",
+            "columnName": "fileName",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "epochDay"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_photos_epochDay",
+            "unique": true,
+            "columnNames": [
+              "epochDay"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_photos_epochDay` ON `${TABLE_NAME}` (`epochDay`)"
+          }
+        ]
+      },
+      {
+        "tableName": "weekly_notes",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`weekStartDay` INTEGER NOT NULL, `writtenAt` INTEGER NOT NULL, `paragraphs` TEXT NOT NULL, `byModel` INTEGER NOT NULL, PRIMARY KEY(`weekStartDay`))",
+        "fields": [
+          {
+            "fieldPath": "weekStartDay",
+            "columnName": "weekStartDay",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "writtenAt",
+            "columnName": "writtenAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "paragraphs",
+            "columnName": "paragraphs",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "byModel",
+            "columnName": "byModel",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "weekStartDay"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_weekly_notes_weekStartDay",
+            "unique": true,
+            "columnNames": [
+              "weekStartDay"
+            ],
+            "orders": [],
+            "createSql": "CREATE UNIQUE INDEX IF NOT EXISTS `index_weekly_notes_weekStartDay` ON `${TABLE_NAME}` (`weekStartDay`)"
+          }
+        ]
+      },
+      {
+        "tableName": "runs",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `epochDay` INTEGER NOT NULL, `startedAt` INTEGER NOT NULL, `endedAt` INTEGER NOT NULL, `ending` TEXT NOT NULL, `felt` TEXT, `small` INTEGER NOT NULL, `fromPlan` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "epochDay",
+            "columnName": "epochDay",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "startedAt",
+            "columnName": "startedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "endedAt",
+            "columnName": "endedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "ending",
+            "columnName": "ending",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "felt",
+            "columnName": "felt",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "small",
+            "columnName": "small",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fromPlan",
+            "columnName": "fromPlan",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_runs_epochDay",
+            "unique": false,
+            "columnNames": [
+              "epochDay"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_runs_epochDay` ON `${TABLE_NAME}` (`epochDay`)"
+          }
+        ]
+      },
+      {
+        "tableName": "run_movements",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `runId` INTEGER NOT NULL, `movementId` TEXT NOT NULL, `target` INTEGER NOT NULL, `count` INTEGER NOT NULL, `selfReported` INTEGER NOT NULL, `madeEasier` INTEGER NOT NULL, `skipped` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "runId",
+            "columnName": "runId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "movementId",
+            "columnName": "movementId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "target",
+            "columnName": "target",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "count",
+            "columnName": "count",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "selfReported",
+            "columnName": "selfReported",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "madeEasier",
+            "columnName": "madeEasier",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "skipped",
+            "columnName": "skipped",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_run_movements_runId",
+            "unique": false,
+            "columnNames": [
+              "runId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_run_movements_runId` ON `${TABLE_NAME}` (`runId`)"
+          },
+          {
+            "name": "index_run_movements_movementId",
+            "unique": false,
+            "columnNames": [
+              "movementId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_run_movements_movementId` ON `${TABLE_NAME}` (`movementId`)"
+          }
+        ]
+      },
+      {
+        "tableName": "sore_areas",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `area` TEXT NOT NULL, `reportedOnDay` INTEGER NOT NULL, `clearedOnDay` INTEGER)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "area",
+            "columnName": "area",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "reportedOnDay",
+            "columnName": "reportedOnDay",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "clearedOnDay",
+            "columnName": "clearedOnDay",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_sore_areas_reportedOnDay",
+            "unique": false,
+            "columnNames": [
+              "reportedOnDay"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_sore_areas_reportedOnDay` ON `${TABLE_NAME}` (`reportedOnDay`)"
+          }
+        ]
+      },
+      {
+        "tableName": "daily_prompts",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`epochDay` INTEGER NOT NULL, `opened` INTEGER NOT NULL, PRIMARY KEY(`epochDay`))",
+        "fields": [
+          {
+            "fieldPath": "epochDay",
+            "columnName": "epochDay",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "opened",
+            "columnName": "opened",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "epochDay"
+          ]
+        }
+      },
+      {
+        "tableName": "documents",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `epochDay` INTEGER NOT NULL, `kind` TEXT NOT NULL, `fromWho` TEXT NOT NULL, `savedAt` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "epochDay",
+            "columnName": "epochDay",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "kind",
+            "columnName": "kind",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "fromWho",
+            "columnName": "fromWho",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "savedAt",
+            "columnName": "savedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_documents_epochDay",
+            "unique": false,
+            "columnNames": [
+              "epochDay"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_documents_epochDay` ON `${TABLE_NAME}` (`epochDay`)"
+          }
+        ]
+      },
+      {
+        "tableName": "document_pages",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `documentId` INTEGER NOT NULL, `at` INTEGER NOT NULL, `image` BLOB NOT NULL, `text` TEXT NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "documentId",
+            "columnName": "documentId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "at",
+            "columnName": "at",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "image",
+            "columnName": "image",
+            "affinity": "BLOB",
+            "notNull": true
+          },
+          {
+            "fieldPath": "text",
+            "columnName": "text",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_document_pages_documentId",
+            "unique": false,
+            "columnNames": [
+              "documentId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_document_pages_documentId` ON `${TABLE_NAME}` (`documentId`)"
+          }
+        ]
+      },
+      {
+        "tableName": "plans",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `label` TEXT NOT NULL, `createdAt` INTEGER NOT NULL, `reviewDay` INTEGER, `archivedAt` INTEGER)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "label",
+            "columnName": "label",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "createdAt",
+            "columnName": "createdAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "reviewDay",
+            "columnName": "reviewDay",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "archivedAt",
+            "columnName": "archivedAt",
+            "affinity": "INTEGER"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "plan_items",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `planId` INTEGER NOT NULL, `line` TEXT NOT NULL, `movementId` TEXT, `manyKind` TEXT NOT NULL, `manyValue` INTEGER NOT NULL, `manySets` INTEGER NOT NULL, `oftenKind` TEXT NOT NULL, `oftenTimes` INTEGER NOT NULL, `eachSide` INTEGER NOT NULL, `confirmedAt` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "planId",
+            "columnName": "planId",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "line",
+            "columnName": "line",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "movementId",
+            "columnName": "movementId",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "manyKind",
+            "columnName": "manyKind",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "manyValue",
+            "columnName": "manyValue",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "manySets",
+            "columnName": "manySets",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "oftenKind",
+            "columnName": "oftenKind",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "oftenTimes",
+            "columnName": "oftenTimes",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "eachSide",
+            "columnName": "eachSide",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "confirmedAt",
+            "columnName": "confirmedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_plan_items_planId",
+            "unique": false,
+            "columnNames": [
+              "planId"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_plan_items_planId` ON `${TABLE_NAME}` (`planId`)"
+          }
+        ]
+      },
+      {
+        "tableName": "patterns",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `tag` TEXT NOT NULL, `measure` TEXT NOT NULL, `direction` TEXT NOT NULL, `weeksWith` INTEGER NOT NULL, `weeksWithout` INTEGER NOT NULL, `splitNumerator` INTEGER NOT NULL, `splitDenominator` INTEGER NOT NULL, `sentence` TEXT NOT NULL, `detail` TEXT NOT NULL, `foundOnDay` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "tag",
+            "columnName": "tag",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "measure",
+            "columnName": "measure",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "direction",
+            "columnName": "direction",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "weeksWith",
+            "columnName": "weeksWith",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "weeksWithout",
+            "columnName": "weeksWithout",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "splitNumerator",
+            "columnName": "splitNumerator",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "splitDenominator",
+            "columnName": "splitDenominator",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sentence",
+            "columnName": "sentence",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "detail",
+            "columnName": "detail",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "foundOnDay",
+            "columnName": "foundOnDay",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_patterns_tag",
+            "unique": false,
+            "columnNames": [
+              "tag"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_patterns_tag` ON `${TABLE_NAME}` (`tag`)"
+          }
+        ]
+      },
+      {
+        "tableName": "experiments",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `variable` TEXT NOT NULL, `measureId` TEXT NOT NULL, `startedOnDay` INTEGER NOT NULL, `switchOnDay` INTEGER NOT NULL, `endsOnDay` INTEGER NOT NULL, `stoppedAt` INTEGER, `resultHeadline` TEXT, `resultDetail` TEXT)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "variable",
+            "columnName": "variable",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "measureId",
+            "columnName": "measureId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "startedOnDay",
+            "columnName": "startedOnDay",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "switchOnDay",
+            "columnName": "switchOnDay",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "endsOnDay",
+            "columnName": "endsOnDay",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "stoppedAt",
+            "columnName": "stoppedAt",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "resultHeadline",
+            "columnName": "resultHeadline",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "resultDetail",
+            "columnName": "resultDetail",
+            "affinity": "TEXT"
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        }
+      },
+      {
+        "tableName": "visit_summaries",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `generatedAt` INTEGER NOT NULL, `windowStartDay` INTEGER NOT NULL, `windowEndDay` INTEGER NOT NULL, `paragraphs` TEXT NOT NULL, `questions` TEXT NOT NULL, `briefJson` TEXT NOT NULL, `byModel` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "generatedAt",
+            "columnName": "generatedAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "windowStartDay",
+            "columnName": "windowStartDay",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "windowEndDay",
+            "columnName": "windowEndDay",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "paragraphs",
+            "columnName": "paragraphs",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "questions",
+            "columnName": "questions",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "briefJson",
+            "columnName": "briefJson",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "byModel",
+            "columnName": "byModel",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_visit_summaries_generatedAt",
+            "unique": false,
+            "columnNames": [
+              "generatedAt"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_visit_summaries_generatedAt` ON `${TABLE_NAME}` (`generatedAt`)"
+          }
+        ]
+      },
+      {
+        "tableName": "notices",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`noticeId` TEXT NOT NULL, `shownAt` INTEGER NOT NULL, PRIMARY KEY(`noticeId`))",
+        "fields": [
+          {
+            "fieldPath": "noticeId",
+            "columnName": "noticeId",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "shownAt",
+            "columnName": "shownAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "noticeId"
+          ]
+        }
+      },
+      {
+        "tableName": "reminders_sent",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `type` TEXT NOT NULL, `sentAt` INTEGER NOT NULL)",
+        "fields": [
+          {
+            "fieldPath": "id",
+            "columnName": "id",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "type",
+            "columnName": "type",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "sentAt",
+            "columnName": "sentAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": true,
+          "columnNames": [
+            "id"
+          ]
+        },
+        "indices": [
+          {
+            "name": "index_reminders_sent_sentAt",
+            "unique": false,
+            "columnNames": [
+              "sentAt"
+            ],
+            "orders": [],
+            "createSql": "CREATE INDEX IF NOT EXISTS `index_reminders_sent_sentAt` ON `${TABLE_NAME}` (`sentAt`)"
+          }
+        ]
+      },
+      {
+        "tableName": "settings",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`key` TEXT NOT NULL, `value` TEXT NOT NULL, PRIMARY KEY(`key`))",
+        "fields": [
+          {
+            "fieldPath": "key",
+            "columnName": "key",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "value",
+            "columnName": "value",
+            "affinity": "TEXT",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "key"
+          ]
+        }
+      },
+      {
+        "tableName": "exclusions",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`exclusion` TEXT NOT NULL, `chosenAt` INTEGER NOT NULL, PRIMARY KEY(`exclusion`))",
+        "fields": [
+          {
+            "fieldPath": "exclusion",
+            "columnName": "exclusion",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "chosenAt",
+            "columnName": "chosenAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "exclusion"
+          ]
+        }
+      },
+      {
+        "tableName": "readiness",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`flag` TEXT NOT NULL, `answeredYes` INTEGER NOT NULL, `answeredAt` INTEGER NOT NULL, PRIMARY KEY(`flag`))",
+        "fields": [
+          {
+            "fieldPath": "flag",
+            "columnName": "flag",
+            "affinity": "TEXT",
+            "notNull": true
+          },
+          {
+            "fieldPath": "answeredYes",
+            "columnName": "answeredYes",
+            "affinity": "INTEGER",
+            "notNull": true
+          },
+          {
+            "fieldPath": "answeredAt",
+            "columnName": "answeredAt",
+            "affinity": "INTEGER",
+            "notNull": true
+          }
+        ],
+        "primaryKey": {
+          "autoGenerate": false,
+          "columnNames": [
+            "flag"
+          ]
+        }
+      }
+    ],
+    "setupQueries": [
+      "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '047d875cb72d0e88e9e9e34fc920ab58')"
+    ]
+  }
+}

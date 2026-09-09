@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <!--
+      Scanning a page, and the plan that can come out of it. ADDENDUM-03 Parts 5, 6
+      and 7. One button for every piece of paper: somebody standing in a hallway
+      holding a sheet should not have to classify it before the app will look at it.
+    -->
+
+    <string name="scan_something">Scan something</string>
+    <string name="scan_sub">A sheet from your therapist, a letter, anything on paper</string>
+    <string name="scan_title">Scan something</string>
+    <string name="scan_take">Take the photo</string>
+    <string name="scan_another_page">Add another page</string>
+    <string name="scan_done">That\'s all of it</string>
+    <string name="scan_stays_here">This stays on your phone. The words are read here, on this device, and nothing is sent anywhere.</string>
+    <string name="scan_no_camera">This phone has no camera the app can use. Everything else works.</string>
+    <string name="scan_needs_camera">The app needs the camera to photograph a page. Nothing else uses it.</string>
+    <string name="scan_allow">Allow the camera</string>
+    <string name="scan_reading">Reading the page</string>
+    <string name="scan_nothing_read">No words came off that one. Try again with more light, or keep it as a photo.</string>
+    <plurals name="scan_pages">
+        <item quantity="one">One page</item>
+        <item quantity="other">%1$d pages</item>
+    </plurals>
+
+    <!-- The one question, after the app has looked. -->
+    <string name="found_exercises">This looks like exercises someone gave you. Add them?</string>
+    <string name="found_report">This looks like a report from a therapist. Explain it in plain words?</string>
+    <string name="found_unclear">I\'m not sure what this is. What would you like to do?</string>
+    <string name="found_out_of_scope">This isn\'t something the app reads. It\'s saved here if you want to keep it.</string>
+    <string name="found_add_them">Add the exercises</string>
+    <string name="found_explain">Explain it</string>
+    <string name="found_keep">Just keep it</string>
+    <string name="found_who">Who is it from?</string>
+    <string name="found_who_hint">Your physio, your doctor, anyone</string>
+    <string name="found_saw">What the app saw on the page</string>
+
+    <!-- Confirming a plan, which is the only way anything is ever saved. -->
+    <string name="plan_title">What they gave you</string>
+    <string name="plan_intro">Here\'s what the app read. Check each line and change anything it got wrong. Nothing is saved until you say so.</string>
+    <string name="plan_label">Whose is this?</string>
+    <string name="plan_label_hint">Your physio, your OT</string>
+    <string name="plan_save">Save the plan</string>
+    <string name="plan_guessed">The app guessed this one</string>
+    <string name="plan_unmatched">The app didn\'t recognise this one</string>
+    <string name="plan_more_than_one">This could be more than one thing</string>
+    <string name="plan_no_number">No number was given</string>
+    <string name="plan_theirs">This is your therapist\'s, not ours. We\'ll keep track of it and leave it as they set it.</string>
+    <!--
+      "10 reps, twice a day". Both numbers are counts and the words between them agree
+      with neither, so a plural would give identical items in every language.
+    -->
+    <string name="plan_reps" tools:ignore="PluralsCandidate">%1$d each time</string>
+    <string name="plan_sets" tools:ignore="PluralsCandidate">%1$d rounds of %2$d</string>
+    <string name="plan_hold" tools:ignore="PluralsCandidate">Hold %1$d seconds</string>
+    <string name="plan_minutes" tools:ignore="PluralsCandidate">%1$d minutes</string>
+    <string name="plan_a_day" tools:ignore="PluralsCandidate">%1$d times a day</string>
+    <string name="plan_a_week" tools:ignore="PluralsCandidate">%1$d times a week</string>
+    <string name="plan_other_day">Every other day</string>
+    <string name="plan_each_side">Each side</string>
+
+    <!-- How the two plans sit beside each other on Today. -->
+    <string name="plan_from">From your %1$s</string>
+    <string name="plan_also">Also, if you want more</string>
+    <string name="plan_also_off">Turn the app\'s extras off</string>
+    <string name="plan_also_on">Turn the app\'s extras back on</string>
+    <string name="plan_on_theirs_too">This one\'s on your %1$s\'s list too.</string>
+    <string name="plan_conflict">Your plan has %1$s, and you said you avoid %2$s. Ask your therapist about it. We\'ll leave it in for now.</string>
+    <string name="plan_review">When do you next see them?</string>
+    <string name="plan_review_none">Not set</string>
+    <string name="plan_review_soon">You see your %1$s on %2$s. Your page is ready.</string>
+    <string name="plan_export">Make the page for your appointment</string>
+
+    <!-- Everything photographed, kept forever. -->
+    <string name="documents_title">Your documents</string>
+    <string name="documents_none">Nothing scanned yet.</string>
+    <string name="documents_from">From %1$s</string>
+    <string name="documents_open">Open</string>
+    <string name="documents_remove">Remove this document</string>
+
+</resources>

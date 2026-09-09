@@ -10,9 +10,11 @@ import com.kamsiob.steadyhealth.data.dao.BodyDao
 import com.kamsiob.steadyhealth.data.dao.CheckDao
 import com.kamsiob.steadyhealth.data.dao.CheckInDao
 import com.kamsiob.steadyhealth.data.dao.DailyPromptDao
+import com.kamsiob.steadyhealth.data.dao.DocumentDao
 import com.kamsiob.steadyhealth.data.dao.LadderDao
 import com.kamsiob.steadyhealth.data.dao.NotesDao
 import com.kamsiob.steadyhealth.data.dao.NoticeDao
+import com.kamsiob.steadyhealth.data.dao.PlanDao
 import com.kamsiob.steadyhealth.data.dao.ProfileDao
 import com.kamsiob.steadyhealth.data.dao.ReminderDao
 import com.kamsiob.steadyhealth.data.dao.RunDao
@@ -24,6 +26,8 @@ import com.kamsiob.steadyhealth.data.entity.CheckEntity
 import com.kamsiob.steadyhealth.data.entity.CheckInEntity
 import com.kamsiob.steadyhealth.data.entity.CheckInTagEntity
 import com.kamsiob.steadyhealth.data.entity.DailyPromptEntity
+import com.kamsiob.steadyhealth.data.entity.DocumentEntity
+import com.kamsiob.steadyhealth.data.entity.DocumentPageEntity
 import com.kamsiob.steadyhealth.data.entity.ExclusionEntity
 import com.kamsiob.steadyhealth.data.entity.ExperimentEntity
 import com.kamsiob.steadyhealth.data.entity.ItemRatingEntity
@@ -33,6 +37,8 @@ import com.kamsiob.steadyhealth.data.entity.NoticeEntity
 import com.kamsiob.steadyhealth.data.entity.PatternEntity
 import com.kamsiob.steadyhealth.data.entity.PersonSynonymEntity
 import com.kamsiob.steadyhealth.data.entity.PhotoEntity
+import com.kamsiob.steadyhealth.data.entity.PlanEntity
+import com.kamsiob.steadyhealth.data.entity.PlanItemEntity
 import com.kamsiob.steadyhealth.data.entity.ReadinessEntity
 import com.kamsiob.steadyhealth.data.entity.ReminderSentEntity
 import com.kamsiob.steadyhealth.data.entity.RunEntity
@@ -82,6 +88,10 @@ import net.zetetic.database.sqlcipher.driver.SQLCipherDriver
         RunMovementEntity::class,
         SoreAreaEntity::class,
         DailyPromptEntity::class,
+        DocumentEntity::class,
+        DocumentPageEntity::class,
+        PlanEntity::class,
+        PlanItemEntity::class,
         PatternEntity::class,
         ExperimentEntity::class,
         VisitSummaryEntity::class,
@@ -93,9 +103,13 @@ import net.zetetic.database.sqlcipher.driver.SQLCipherDriver
     ],
     // Version 2 adds the three tables ADDENDUM-03's session needs. Purely additive,
     // so the migration is generated rather than written, and nobody's rows move.
-    version = 3,
+    version = 4,
     exportSchema = true,
-    autoMigrations = [AutoMigration(from = 1, to = 2), AutoMigration(from = 2, to = 3)],
+    autoMigrations = [
+        AutoMigration(from = 1, to = 2),
+        AutoMigration(from = 2, to = 3),
+        AutoMigration(from = 3, to = 4),
+    ],
 )
 abstract class SteadyDatabase : RoomDatabase() {
 
@@ -113,6 +127,8 @@ abstract class SteadyDatabase : RoomDatabase() {
     abstract fun notices(): NoticeDao
     abstract fun reminders(): ReminderDao
     abstract fun dailyPrompts(): DailyPromptDao
+    abstract fun documents(): DocumentDao
+    abstract fun plans(): PlanDao
     abstract fun profile(): ProfileDao
 
     companion object {

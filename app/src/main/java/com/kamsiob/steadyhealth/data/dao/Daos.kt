@@ -11,6 +11,8 @@ import com.kamsiob.steadyhealth.data.entity.CheckEntity
 import com.kamsiob.steadyhealth.data.entity.CheckInEntity
 import com.kamsiob.steadyhealth.data.entity.CheckInTagEntity
 import com.kamsiob.steadyhealth.data.entity.DailyPromptEntity
+import com.kamsiob.steadyhealth.data.entity.DocumentEntity
+import com.kamsiob.steadyhealth.data.entity.DocumentPageEntity
 import com.kamsiob.steadyhealth.data.entity.ExclusionEntity
 import com.kamsiob.steadyhealth.data.entity.ExperimentEntity
 import com.kamsiob.steadyhealth.data.entity.ItemRatingEntity
@@ -20,6 +22,8 @@ import com.kamsiob.steadyhealth.data.entity.NoticeEntity
 import com.kamsiob.steadyhealth.data.entity.PatternEntity
 import com.kamsiob.steadyhealth.data.entity.PersonSynonymEntity
 import com.kamsiob.steadyhealth.data.entity.PhotoEntity
+import com.kamsiob.steadyhealth.data.entity.PlanEntity
+import com.kamsiob.steadyhealth.data.entity.PlanItemEntity
 import com.kamsiob.steadyhealth.data.entity.ReadinessEntity
 import com.kamsiob.steadyhealth.data.entity.ReminderSentEntity
 import com.kamsiob.steadyhealth.data.entity.RunEntity
@@ -378,6 +382,51 @@ interface ProfileDao {
 
     @Query("DELETE FROM settings")
     suspend fun deleteAllSettings()
+}
+
+@Dao
+interface DocumentDao {
+    @Upsert
+    suspend fun put(document: DocumentEntity): Long
+
+    @Upsert
+    suspend fun putPage(page: DocumentPageEntity)
+
+    @Query("SELECT * FROM documents ORDER BY epochDay DESC")
+    suspend fun all(): List<DocumentEntity>
+
+    @Query("SELECT * FROM document_pages WHERE documentId = :documentId ORDER BY `at`")
+    suspend fun pagesOf(documentId: Long): List<DocumentPageEntity>
+
+    @Query("DELETE FROM document_pages WHERE documentId = :documentId")
+    suspend fun deletePages(documentId: Long)
+
+    @Query("DELETE FROM documents WHERE id = :documentId")
+    suspend fun delete(documentId: Long)
+}
+
+@Dao
+interface PlanDao {
+    @Upsert
+    suspend fun put(plan: PlanEntity): Long
+
+    @Upsert
+    suspend fun putItem(item: PlanItemEntity)
+
+    @Query("SELECT * FROM plans WHERE archivedAt IS NULL ORDER BY createdAt")
+    suspend fun live(): List<PlanEntity>
+
+    @Query("SELECT * FROM plans ORDER BY createdAt")
+    suspend fun all(): List<PlanEntity>
+
+    @Query("SELECT * FROM plan_items WHERE planId = :planId ORDER BY id")
+    suspend fun itemsOf(planId: Long): List<PlanItemEntity>
+
+    @Delete
+    suspend fun deleteItem(item: PlanItemEntity)
+
+    @Query("DELETE FROM plans WHERE id = :planId")
+    suspend fun delete(planId: Long)
 }
 
 @Dao

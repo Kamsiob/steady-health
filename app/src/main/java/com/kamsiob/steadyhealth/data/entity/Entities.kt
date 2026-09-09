@@ -337,6 +337,90 @@ data class RunMovementEntity(
 )
 
 /**
+ * One piece of paper somebody photographed. ADDENDUM-03 Parts 5 and 7.
+ *
+ * The photograph is always kept and always viewable beside anything the app made
+ * from it, so this row outlives whatever was extracted. [kind] is what the classifier
+ * decided, kept so the app can say what it thought it was looking at rather than
+ * asking again, and [fromWho] is whatever the person typed, which may be nothing.
+ */
+@Entity(tableName = "documents", indices = [Index("epochDay")])
+data class DocumentEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val epochDay: Long,
+    val kind: String,
+    val fromWho: String,
+    val savedAt: Long,
+)
+
+/**
+ * One page of one document, as it was photographed.
+ *
+ * The bytes live in the encrypted database rather than in a file beside it, so that
+ * "documents live in the encrypted store" is a property of where they are rather than
+ * of remembering to encrypt them. It also means export and delete reach them without
+ * either having to know about a second place.
+ *
+ * The frames used for reading text are never written here. Only the page somebody
+ * chose to keep.
+ */
+@Entity(tableName = "document_pages", indices = [Index("documentId")])
+data class DocumentPageEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val documentId: Long,
+    val at: Int,
+    val image: ByteArray,
+    /** The text read off this page, kept so a reading can cite it without the photo. */
+    val text: String,
+) {
+    // A ByteArray in a data class means equals compares references, which is wrong
+    // for a row. Room does not care, but anything that puts these in a set would.
+    override fun equals(other: Any?): Boolean =
+        this === other || (other is DocumentPageEntity && id == other.id)
+
+    override fun hashCode(): Int = id.hashCode()
+}
+
+/**
+ * A programme somebody was given. ADDENDUM-03 Part 6.
+ *
+ * More than one can exist at once, each labelled, because a physio plan and an OT
+ * plan are two plans and merging them would be the app deciding they are one.
+ * [reviewDay] is when they next see whoever gave it to them, and is the only date in
+ * this app that looks forward.
+ */
+@Entity(tableName = "plans")
+data class PlanEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val label: String,
+    val createdAt: Long,
+    val reviewDay: Long? = null,
+    val archivedAt: Long? = null,
+)
+
+/**
+ * One line of one plan, as it was given and as the app matched it.
+ *
+ * [line] is never rewritten. The numbers are stored as their parts rather than as
+ * text, so that nothing has to parse them again and so a hold can never be read back
+ * as repetitions. Nothing in the app writes to these columns except the person.
+ */
+@Entity(tableName = "plan_items", indices = [Index("planId")])
+data class PlanItemEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val planId: Long,
+    val line: String,
+    val movementId: String?,
+    val manyKind: String,
+    val manyValue: Int,
+    val manySets: Int,
+    val oftenKind: String,
+    val oftenTimes: Int,
+    val eachSide: Boolean,
+    val confirmedAt: Long,
+)
+
+/**
  * One daily prompt that went out, and whether it was opened.
  *
  * One row a day at most, which is what the day being the key says. Whether it was

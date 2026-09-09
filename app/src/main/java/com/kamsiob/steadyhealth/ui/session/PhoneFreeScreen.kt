@@ -2,10 +2,12 @@ package com.kamsiob.steadyhealth.ui.session
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import com.kamsiob.steadyhealth.R
+import com.kamsiob.steadyhealth.session.Counted
 import com.kamsiob.steadyhealth.ui.components.NoteBlock
 import com.kamsiob.steadyhealth.ui.components.Paragraph
 import com.kamsiob.steadyhealth.ui.components.PrimaryButton
@@ -17,6 +19,14 @@ import com.kamsiob.steadyhealth.ui.theme.SteadyPalette
 import com.kamsiob.steadyhealth.ui.theme.SteadyText
 import com.kamsiob.steadyhealth.ui.theme.SteadyType
 
+/** "Asked for 8", "Asked for 30 seconds", "Asked for 2 minutes". */
+@Composable
+private fun asked(row: PhoneFreeRow): String = when (row.counted) {
+    Counted.Hold -> pluralStringResource(R.plurals.no_phone_asked_seconds, row.asked, row.asked)
+    Counted.Minutes -> pluralStringResource(R.plurals.no_phone_asked_minutes, row.asked, row.asked)
+    else -> stringResource(R.string.no_phone_asked, row.asked)
+}
+
 /** One movement of a session somebody is doing away from the phone. */
 data class PhoneFreeRow(
     val movementId: String,
@@ -25,6 +35,8 @@ data class PhoneFreeRow(
     val stopRule: String,
     val asked: Int,
     val managed: Int,
+    /** Repetitions, seconds or minutes. The screen has to say which. */
+    val counted: Counted = Counted.Reps,
 )
 
 /** What the phone-free screen draws. */
@@ -74,8 +86,11 @@ fun PhoneFreeScreen(
         },
     ) {
         if (state.logging) {
+            val timed = state.rows.any { it.counted != Counted.Reps && it.counted != Counted.Taps }
             SteadyText(
-                text = stringResource(R.string.no_phone_how_many),
+                text = stringResource(
+                    if (timed) R.string.no_phone_how_long else R.string.no_phone_how_many,
+                ),
                 style = SteadyType.ScreenTitleBig,
                 color = SteadyPalette.Navy,
                 modifier = Modifier.semantics { heading() },
@@ -84,7 +99,7 @@ fun PhoneFreeScreen(
                 Stepper(
                     label = row.name,
                     value = row.managed.toString(),
-                    supporting = stringResource(R.string.no_phone_asked, row.asked),
+                    supporting = asked(row),
                     onDown = { onManaged(row.movementId, row.managed - 1) },
                     onUp = { onManaged(row.movementId, row.managed + 1) },
                 )
@@ -96,7 +111,7 @@ fun PhoneFreeScreen(
         state.rows.forEach { row ->
             SectionTitle(row.name)
             Paragraph(row.setup)
-            Paragraph(stringResource(R.string.no_phone_asked, row.asked))
+            Paragraph(asked(row))
             NoteBlock(row.stopRule)
         }
     }

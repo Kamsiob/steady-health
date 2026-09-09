@@ -90,7 +90,10 @@ fun SettingsScreen(
     modifier: Modifier = Modifier,
 ) {
     SteadyScreen(
-        title = stringResource(R.string.settings_title),
+        // Headed by the name on the tab. Somebody who taps You and lands on a screen
+        // headed Settings has to work out that they are the same place. It keeps the
+        // Settings title when it is reached as a screen rather than as the tab.
+        title = stringResource(if (onBack == null) R.string.tab_you else R.string.settings_title),
         onBack = onBack,
         modifier = modifier,
         help = Place.Settings,

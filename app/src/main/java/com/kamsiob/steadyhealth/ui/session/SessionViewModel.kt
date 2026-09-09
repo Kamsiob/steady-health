@@ -204,6 +204,7 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
                     stopRule = step.movement.stopRule,
                     asked = step.target,
                     managed = step.target,
+                    counted = step.movement.counted,
                 )
             },
         )

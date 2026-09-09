@@ -33,6 +33,16 @@ EXEMPT = {
     "card_no_calories_summary": "same card",
     "card_no_calories_body": "same card",
     "card_no_calories_source": "a citation, printed as published",
+    # "report" is banned as the app's own noun for its own output: this app never
+    # produces a report about anybody, and never calls anything it made one. It is not
+    # banned as the name of a document somebody is holding, which has the word printed
+    # at the top of it. ADDENDUM-03 Part 5 writes these sentences itself, and Part 7 is
+    # titled "reading reports and letters". Refusing to name the object in the person's
+    # hand would leave the app unable to say what it is looking at.
+    "found_report": "names the document the person is holding, not anything the app made",
+    "help_scan_q2": "same",
+    "help_scan_a2": "same",
+    "read_kind_report": "same",
 }
 
 PATTERN = {word: re.compile(r"(?<![a-z-])" + re.escape(word) + r"(?![a-z-])", re.I) for word in WORDS}

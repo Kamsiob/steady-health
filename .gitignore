@@ -50,5 +50,8 @@ Thumbs.db
 
 # Anything captured from a real device that has not been reviewed. Screenshots
 # that ship are added deliberately, one by one, under docs/screenshots/.
+__pycache__/
+*.pyc
+
 docs/screenshots/raw/
 docs/screenshots/gate/

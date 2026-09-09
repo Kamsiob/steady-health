@@ -4,15 +4,12 @@
 
     <!--
       Permissions are added in the phase that needs them, never ahead of it, so
-      that what this file asks for and what the app does stay the same thing.
-      Right now it asks for nothing, which means this build cannot open a network
-      connection, read a sensor, or see the camera.
+      that what this file asks for and what the app does stay the same thing. This
+      build still cannot open a network connection.
 
-      Planned, each with the one sentence that justifies it to a person:
+      Still to come, each with the one sentence that justifies it to a person:
         ACTIVITY_RECOGNITION  counts your steps while a walk is running.
-        CAMERA                counts your push-ups, and takes the Sunday photo.
         ACCESS_FINE_LOCATION  measures distance, only if you turn it on.
-        POST_NOTIFICATIONS    shows a reminder, only if you turn one on.
         INTERNET              downloads the optional reader once, if you ask.
     -->
 
@@ -22,6 +19,23 @@
       what this permission can ever produce at two notifications a week.
     -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!--
+      Asked the first time somebody taps "Scan something", never before, and only for
+      as long as the camera screen is open. ADDENDUM-03 Part 5: the page is
+      photographed, the text is read off it on this phone, and the frames used for
+      reading are never written to disk. The app works exactly the same if it is
+      refused, minus that one button.
+    -->
+    <uses-permission android:name="android.permission.CAMERA" />
+
+    <!--
+      Declared so that a phone with no camera can still install the app. Somebody
+      using this on an old tablet loses one feature, not the whole thing.
+    -->
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
 
     <!--
       A buzz on every rep, set and rest end, so a session can be followed with the
