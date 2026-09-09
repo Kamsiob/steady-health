@@ -1,6 +1,7 @@
 package com.kamsiob.steadyhealth.ui
 
 import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.result.contract.ActivityResultContracts.RequestPermission
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -17,6 +18,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.LifecycleResumeEffect
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -34,6 +36,12 @@ import com.kamsiob.steadyhealth.ui.components.SteadyTabBar
 import com.kamsiob.steadyhealth.ui.nav.Route
 import com.kamsiob.steadyhealth.ui.nav.Tab
 import com.kamsiob.steadyhealth.ui.onboarding.OnboardingFlow
+import com.kamsiob.steadyhealth.ui.scan.Camera
+import com.kamsiob.steadyhealth.ui.scan.CameraPreview
+import com.kamsiob.steadyhealth.ui.scan.PageFoundScreen
+import com.kamsiob.steadyhealth.ui.scan.PlanConfirmScreen
+import com.kamsiob.steadyhealth.ui.scan.ScanScreen
+import com.kamsiob.steadyhealth.ui.scan.ScanViewModel
 import com.kamsiob.steadyhealth.ui.screens.AbilitiesScreen
 import com.kamsiob.steadyhealth.ui.screens.AbilityDetailScreen
 import com.kamsiob.steadyhealth.ui.screens.AskScreen
@@ -89,6 +97,7 @@ fun SteadyApp(openSession: Boolean = false) {
     val tryViewModel: TryViewModel = viewModel()
     val sessionViewModel: SessionViewModel = viewModel()
     val sessionsViewModel: SessionsViewModel = viewModel()
+    val scanViewModel: ScanViewModel = viewModel()
     val onboarded by viewModel.onboardingComplete.collectAsStateWithLifecycle()
 
     when (onboarded) {
@@ -105,6 +114,7 @@ fun SteadyApp(openSession: Boolean = false) {
             tryViewModel,
             sessionViewModel,
             sessionsViewModel,
+            scanViewModel,
         )
     }
 }
@@ -122,6 +132,7 @@ private fun Tabs(
     tryViewModel: TryViewModel,
     sessionViewModel: SessionViewModel,
     sessionsViewModel: SessionsViewModel,
+    scanViewModel: ScanViewModel,
 ) {
     val navController = rememberNavController()
     var tab by rememberSaveable { mutableStateOf(Tab.Today) }
@@ -155,6 +166,7 @@ private fun Tabs(
                             tryViewModel = tryViewModel,
                             sessionViewModel = sessionViewModel,
                             sessionsViewModel = sessionsViewModel,
+                            scanViewModel = scanViewModel,
                             navController = navController,
                         )
                     }
@@ -162,6 +174,7 @@ private fun Tabs(
                     dailyRoutes(viewModel, navController, back)
 
                     sessionsRoutes(sessionsViewModel, sessionViewModel, navController, back)
+                    scanRoutes(scanViewModel, navController, back)
 
                     askRoutes(askViewModel, navController, back)
                     checkRoutes(checkViewModel, navController, back) {
@@ -176,6 +189,7 @@ private fun Tabs(
                     settingsRoutes(
                         viewModel = settingsViewModel,
                         askViewModel = askViewModel,
+                        scanViewModel = scanViewModel,
                         navController = navController,
                         back = back,
                         onSummary = {
@@ -357,6 +371,7 @@ private fun TabBody(
     tryViewModel: TryViewModel,
     sessionViewModel: SessionViewModel,
     sessionsViewModel: SessionsViewModel,
+    scanViewModel: ScanViewModel,
     navController: NavHostController,
 ) {
     when (tab) {
@@ -434,6 +449,10 @@ private fun TabBody(
                     sessionsViewModel.openLogPast()
                     navController.navigate(Route.LOG_PAST)
                 },
+                onScan = {
+                    scanViewModel.open()
+                    navController.navigate(Route.SCAN)
+                },
             )
         }
 
@@ -445,7 +464,7 @@ private fun TabBody(
             }
             SettingsScreen(
                 state = state,
-                actions = settingsActions(settingsViewModel, askViewModel, navController),
+                actions = settingsActions(settingsViewModel, askViewModel, scanViewModel, navController),
                 onBack = null,
             )
         }
@@ -677,6 +696,74 @@ private fun NavGraphBuilder.askRoutes(
 }
 
 /**
+ * Scanning a page, and the plan that can come out of it.
+ *
+ * ADDENDUM-03 Parts 5 and 6. Three screens in a line: the camera, the one question,
+ * and the confirmation. Its own builder because it is one flow rather than three
+ * places, and because nothing else in the app can reach the middle of it.
+ */
+private fun NavGraphBuilder.scanRoutes(
+    viewModel: ScanViewModel,
+    navController: NavHostController,
+    back: () -> Unit,
+) {
+    composable(Route.SCAN) {
+        val state by viewModel.state.collectAsStateWithLifecycle()
+        val context = LocalContext.current
+        val camera = remember { Camera(context) }
+        val ask = rememberLauncherForActivityResult(
+            ActivityResultContracts.RequestPermission(),
+        ) { viewModel.allowedNow() }
+
+        LifecycleResumeEffect(Unit) {
+            viewModel.allowedNow()
+            onPauseOrDispose { }
+        }
+
+        ScanScreen(
+            state = state,
+            onTake = { camera.take(viewModel::took) },
+            onAllow = { ask.launch(android.Manifest.permission.CAMERA) },
+            onFinish = {
+                viewModel.finished()
+                navController.navigate(Route.PAGE_FOUND)
+            },
+            onBack = back,
+            preview = { CameraPreview(camera) },
+        )
+    }
+
+    composable(Route.PAGE_FOUND) {
+        val state by viewModel.state.collectAsStateWithLifecycle()
+        PageFoundScreen(
+            state = state,
+            onWho = viewModel::setWho,
+            onAddExercises = {
+                viewModel.proposePlan()
+                navController.navigate(Route.PLAN_CONFIRM)
+            },
+            // Part 7's reading is Phase 4 and behind a flag. Until then this keeps the
+            // page, which is what every path here does anyway, rather than offering
+            // something the app cannot do yet.
+            onExplain = { viewModel.keep { navController.popBackStack(Route.TABS, false) } },
+            onKeep = { viewModel.keep { navController.popBackStack(Route.TABS, false) } },
+            onBack = back,
+        )
+    }
+
+    composable(Route.PLAN_CONFIRM) {
+        val draft by viewModel.draft.collectAsStateWithLifecycle()
+        PlanConfirmScreen(
+            state = draft,
+            onLabel = viewModel::setPlanLabel,
+            onDrop = viewModel::dropItem,
+            onSave = { viewModel.savePlan { navController.popBackStack(Route.TABS, false) } },
+            onBack = back,
+        )
+    }
+}
+
+/**
  * The screens that hang off the Sessions tab.
  *
  * Their own builder because Tabs was one line past detekt's length rule, and because
@@ -742,6 +829,7 @@ private fun NavGraphBuilder.sessionsRoutes(
 private fun settingsActions(
     viewModel: SettingsViewModel,
     askViewModel: AskViewModel,
+    scanViewModel: ScanViewModel,
     navController: NavHostController,
 ) = SettingsActions(
     onGettingAround = { navController.navigate(Route.GETTING_AROUND) },
@@ -760,11 +848,16 @@ private fun settingsActions(
     },
     onWeekTarget = viewModel::setWeekTarget,
     onDaily = { viewModel.setReminder(ReminderKind.Daily, it) },
+    onScan = {
+        scanViewModel.open()
+        navController.navigate(Route.SCAN)
+    },
 )
 
 private fun NavGraphBuilder.settingsRoutes(
     viewModel: SettingsViewModel,
     askViewModel: AskViewModel,
+    scanViewModel: ScanViewModel,
     navController: NavHostController,
     back: () -> Unit,
     onSummary: () -> Unit,
@@ -774,7 +867,7 @@ private fun NavGraphBuilder.settingsRoutes(
         val state by viewModel.settings.collectAsStateWithLifecycle()
         SettingsScreen(
             state = state,
-            actions = settingsActions(viewModel, askViewModel, navController),
+            actions = settingsActions(viewModel, askViewModel, scanViewModel, navController),
             onBack = back,
         )
     }

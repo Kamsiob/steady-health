@@ -113,11 +113,13 @@ enum class Signal(val points: Pointing) {
  * cannot work on the page in their hand. Two clues are needed before the app
  * will name anything, and thin pages come back Unclear.
  *
- * Out of scope wins ties. A blood test, an imaging page and a medication list
- * must never be handed to the reader in Part 7, so the out of scope clues are
- * checked first, a single one of them is enough on a page with nothing else to
- * say, and being wrong in that direction only costs the person the sentence
- * "This isn't something the app reads".
+ * Out of scope overrules. A blood test, an imaging page and a medication list
+ * must never be handed to the reader in Part 7, so what the page looks like is
+ * worked out first and the out of scope clues are then allowed to overrule it. A
+ * single one of them is enough on any page the app was not going to name anyway,
+ * because Unclear is not a refusal: Part 5's unclear screen offers the reader as
+ * one of its two buttons, so a lab page that came back Unclear would still reach
+ * the reader. Being wrong in that direction costs the person one sentence.
  *
  * Every clue carries its own name into the result, so a page can be argued with
  * rather than only disagreed with.
@@ -142,8 +144,11 @@ sealed interface PageKind {
     /**
      * Something the app will keep but will not read.
      *
-     * [pointsAt] is whichever of the three fired most, only so the page can be
-     * labelled. Nothing downstream is allowed to treat it as a finding.
+     * [pointsAt] is whichever of the three fired most, and it is here for the log
+     * and for a bug report rather than for the screen. Part 5 gives this outcome
+     * exactly one sentence and that sentence does not name the kind of page, so a
+     * screen that read this aloud would be the app telling somebody what their own
+     * document is. Nothing downstream is allowed to treat it as a finding.
      */
     data class OutOfScope(
         val pointsAt: Pointing,
@@ -155,7 +160,19 @@ sealed interface PageKind {
         /** Two clues before the app will name what it is looking at. One is a coincidence. */
         const val ENOUGH_TO_SAY = 2
 
-        /** Two clues and the page is out of scope outright, whatever else is on it. */
+        /**
+         * Clues from one out of scope family before the page is out of scope
+         * outright, whatever else is on it.
+         *
+         * Counted inside a family rather than across all three, which is the
+         * difference between a page that is a blood test and a page that borrowed
+         * two ordinary words. A real lab page fires several lab clues and a real
+         * medication list fires several medicine ones, so nothing genuinely out of
+         * scope is lost by asking for two of a kind. What is gained is that an
+         * exercise sheet reading "Technique: keep your knee over your toes" and
+         * "ice it as needed for soreness" is still an exercise sheet, rather than
+         * one imaging word plus one medicine word adding up to a scan.
+         */
         const val ENOUGH_TO_STAY_OUT = 2
 
         /** Under this many words there is nothing to classify, only a guess to make. */
@@ -176,30 +193,45 @@ sealed interface PageKind {
         /**
          * Classify one page of extracted text.
          *
-         * The order is the safety order, not the likelihood order. Out of scope is
-         * settled before anything else is asked, then thin pages, then the two kinds
-         * the app can act on.
+         * The order is the safety order, not the likelihood order. What the page
+         * looks like is worked out first and out of scope is then allowed to
+         * overrule it. Doing it the other way round reads as the safer order and is
+         * not, because the question the overrule has to be able to answer is
+         * whether the page was going to be named at all.
          */
         fun of(text: String): PageKind {
             val page = Page(text)
             val fired = Clues.all.filter { it.fires(page) }.map(Clue::signal)
+            val looks = looksLike(page, fired)
             val out = fired.filter { it.points.outOfScope }
-            val exercises = fired.filter { it.points == Pointing.Exercises }
-            val report = fired.filter { it.points == Pointing.ReportOrLetter }
+            if (out.isEmpty()) return looks
 
-            // A single out of scope clue is enough when the page has nothing else to
-            // say, because the alternative on such a page is Unclear, and Unclear
-            // offers to explain it.
-            val thin = exercises.size + report.size < ENOUGH_TO_SAY
-            if (out.size >= ENOUGH_TO_STAY_OUT || (out.isNotEmpty() && thin)) {
-                return OutOfScope(pointsAt = worstOf(out), signals = fired)
+            // Two of a kind, or one of anything on a page the app was not going to
+            // name. Unclear is the second half of that on purpose: Part 5's unclear
+            // screen offers the reader as one of its buttons, so an unnamed page
+            // with a lab word on it is still a page somebody can ask the app to
+            // explain, and that is the outcome this exists to prevent.
+            val family = worstOf(out)
+            val ofAKind = out.count { it.points == family }
+            return if (ofAKind >= ENOUGH_TO_STAY_OUT || looks is Unclear) {
+                OutOfScope(pointsAt = family, signals = fired)
+            } else {
+                looks
             }
-            if (page.words < ENOUGH_WORDS) return Unclear(fired)
+        }
 
-            // Prose is required rather than counted. A clinic name and a date at the
-            // top of an exercise sheet is a letterhead, and a letterhead is not a
-            // letter; what makes a page a report is that somebody wrote sentences.
-            val looksLikeExercises = exercises.size >= ENOUGH_TO_SAY
+        /**
+         * What the page looks like, before out of scope gets a say.
+         *
+         * Prose is required rather than counted. A clinic name and a date at the top
+         * of an exercise sheet is a letterhead, and a letterhead is not a letter;
+         * what makes a page a report is that somebody wrote sentences.
+         */
+        private fun looksLike(page: Page, fired: List<Signal>): PageKind {
+            if (page.words < ENOUGH_WORDS) return Unclear(fired)
+            val exercises = fired.count { it.points == Pointing.Exercises }
+            val report = fired.filter { it.points == Pointing.ReportOrLetter }
+            val looksLikeExercises = exercises >= ENOUGH_TO_SAY
             val looksLikeReport =
                 report.size >= ENOUGH_TO_SAY && Signal.ProseParagraphs in report
             return when {
@@ -214,8 +246,9 @@ sealed interface PageKind {
          * Which of the three out of scope kinds to label the page with.
          *
          * The one with the most clues, and on a tie the one declared first, which
-         * puts blood work ahead of imaging ahead of medicines. The tie only decides
-         * a label, never whether the page is read.
+         * puts blood work ahead of imaging ahead of medicines. This also decides
+         * which family has to reach [ENOUGH_TO_STAY_OUT], so the strongest one is
+         * the one that gets to speak; the tie itself only picks a label.
          */
         private fun worstOf(out: List<Signal>): Pointing =
             Pointing.entries.filter { it.outOfScope }

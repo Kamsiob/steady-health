@@ -72,6 +72,7 @@ data class SettingsActions(
     val onAsk: () -> Unit,
     val onWeekTarget: (Int) -> Unit,
     val onDaily: (Boolean) -> Unit,
+    val onScan: () -> Unit,
 )
 
 /**
@@ -102,6 +103,12 @@ fun SettingsScreen(
             heading = stringResource(R.string.settings_getting_around),
             subtitle = state.gettingAroundLabel,
             onClick = actions.onGettingAround,
+        )
+
+        ListItem(
+            heading = stringResource(R.string.scan_something),
+            subtitle = stringResource(R.string.scan_sub),
+            onClick = actions.onScan,
         )
 
         // Asking a question moved here when the help dot took the top right corner of

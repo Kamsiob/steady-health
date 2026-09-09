@@ -171,7 +171,7 @@ class AccessibilityTest {
                         exclusionsLabel = "Nothing",
                         pemLabel = "No",
                     ),
-                    actions = SettingsActions({}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}),
+                    actions = SettingsActions({}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}, {}),
                     onBack = {},
                 )
             }

@@ -27,10 +27,17 @@ enum class ManualPath(val id: String) {
 /**
  * One job a model does, and the way that job is done without it.
  *
- * From AI.md and ADDENDUM-03 Part 7. This is the declarative capability metadata that
+ * This is the declarative capability metadata that
  * standards/kamsiob-project-template.md section C7 asks for: the screen lists what a
  * download would change by reading these, rather than carrying a hardcoded sentence
  * per model that goes stale the first time a job moves.
+ *
+ * Four entries and not nine. AI.md names nine jobs, and these four are the ones Part
+ * 7 puts on the screen: "Turns what you say into what the app tracks, tags your
+ * notes, writes the weekly note", and "Reads and explains reports and letters". The
+ * others already carry their own written fallback where they live, so they would add
+ * rows to a screen that Part 7 has already worded and change nothing about the
+ * choice. Read this as the screen's list rather than as the whole of AI.md.
  */
 enum class ModelJob(val id: String, val manual: ManualPath) {
 
@@ -80,7 +87,14 @@ enum class Licence(val id: String, val termsAcceptedBeforeDownload: Boolean) {
  */
 enum class OptionalModel(
     val id: String,
-    /** The weights this names. To be re-verified at build time. See Sizes. */
+    /**
+     * The weights this names, as the app currently believes them to be spelled.
+     *
+     * ADDENDUM-03 Part 7: "Verify the current identifier, size, and recommended
+     * on-device path at build time." Nobody has verified this string against a
+     * published artefact yet, so it is a name to check rather than a name to trust,
+     * and it is kept in one place for that reason.
+     */
     val weights: String,
     val bytes: Long,
     val licence: Licence,
@@ -135,8 +149,7 @@ enum class OptionalModel(
      * that a size and a free space subtract to something a person would recognise.
      *
      * TO BE RE-VERIFIED AT BUILD TIME. If a published size differs, change it here
-     * and nowhere else, and the tests in
-     * ModelRoomTest will say what changed.
+     * and nowhere else, and the size tests in ModelRoomTest will say what changed.
      */
     object Sizes {
         const val ABOUT_TWO_AND_A_HALF_GB = 2_500_000_000L

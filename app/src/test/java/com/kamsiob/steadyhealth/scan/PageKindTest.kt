@@ -176,9 +176,40 @@ class PageKindTest {
     @Test
     fun everyClueThatFiresPointsWhereTheResultWent() {
         val sheet = PageKind.of(BULLETED_SHEET)
-        assertThat(sheet.signals.map(Signal::points)).containsExactly(
-            *List(sheet.signals.size) { Pointing.Exercises }.toTypedArray(),
-        )
+        // The emptiness check is not decoration. Without it the line below holds
+        // for a page that fired nothing at all, and a test that passes on silence
+        // is not testing the thing it names.
+        assertThat(sheet.signals).isNotEmpty()
+        assertThat(sheet.signals.map(Signal::points).toSet()).containsExactly(Pointing.Exercises)
+    }
+
+    @Test
+    fun aPageTheAppCannotNameIsOutOfScopeIfAnythingOnItWasOutOfScope() {
+        // The half read lab page. Two clues point at a report and neither is prose,
+        // so on its own this page is Unclear, and Part 5's unclear screen offers to
+        // explain it. One laboratory is enough to take that offer away.
+        val kind = PageKind.of(HALF_READ_LAB_PAGE)
+        assertWithMessage("signals were ${PageKind.of(HALF_READ_LAB_PAGE).signals}")
+            .that(kind)
+            .isInstanceOf(PageKind.OutOfScope::class.java)
+    }
+
+    @Test
+    fun twoBorrowedWordsFromTwoDifferentPlacesDoNotCondemnASheet() {
+        // "Technique" is an imaging heading and "as needed for" is how a medicine is
+        // taken, and both are ordinary English on a physio handout. Two clues are
+        // needed from one family, because one of each is a coincidence and this page
+        // is a sheet by every other measure on it.
+        val kind = PageKind.of(SHEET_WITH_BORROWED_WORDS)
+        assertWithMessage("signals were ${PageKind.of(SHEET_WITH_BORROWED_WORDS).signals}")
+            .that(kind)
+            .isInstanceOf(PageKind.Exercises::class.java)
+    }
+
+    @Test
+    fun bothCarriesTheCluesFromBothHalvesOfThePage() {
+        val signals = PageKind.of(DISCHARGE_WITH_PROGRAMME).signals.map(Signal::points).toSet()
+        assertThat(signals).containsAtLeast(Pointing.Exercises, Pointing.ReportOrLetter)
     }
 
     @Test
@@ -335,6 +366,28 @@ class PageKindTest {
             Notes from Thursday
             Ask about the knee before starting squats again
             Bring the sheet from last time
+        """.trimIndent()
+
+        /**
+         * A lab page whose results column did not photograph. What is left is a
+         * header that looks like any clinic's, and one word that says where it came
+         * from.
+         */
+        val HALF_READ_LAB_PAGE = """
+            Meridian Clinical Laboratory
+            Referring physician: Dr H Aylmer
+            Date of service: 4 March 2026
+            Sample received in good condition and processed the same day
+        """.trimIndent()
+
+        val SHEET_WITH_BORROWED_WORDS = """
+            Riverside Physical Therapy
+            Home programme for Margaret Doyle
+
+            Technique: keep your knee over your toes and go slowly
+            1. Sit to stands from a dining chair. 3 sets of 10, twice a day.
+            2. Heel raises holding the counter. 2 sets of 12, each side.
+            3. Ice the knee afterwards as needed for soreness.
         """.trimIndent()
 
         val LAB_PAGE = """

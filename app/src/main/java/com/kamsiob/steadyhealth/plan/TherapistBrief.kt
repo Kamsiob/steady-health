@@ -62,7 +62,14 @@ data class PlanDone(
     val lineId: String,
     val epochDay: Long,
     val result: Int,
-    val target: Int,
+    /**
+     * The number the line asked for on that day, or nothing when it named none.
+     *
+     * Kept on each time it was done rather than read off the line later, because the
+     * line can change partway through the stretch and the number a Tuesday was aiming
+     * at is not recoverable from the wording the line carries now.
+     */
+    val target: Int?,
     /** True when the person typed the number rather than the phone counting it. */
     val selfCounted: Boolean = false,
     /** True when they took the easier version of the movement and said so. */
@@ -77,6 +84,10 @@ data class PlanDone(
  * was bad or what they were doing at the time. [words] is never paraphrased and never
  * summarised, and [duringLineId] is what turns "my knee hurt" into something a
  * therapist can act on.
+ *
+ * [Area.None] is a real answer and not a missing one: it is what the app records when
+ * somebody says something hurts and would rather not say where. It is kept for the
+ * same reason the rest of this is kept, and the screen already has a word for it.
  */
 data class SaidHurt(
     val area: Area,
@@ -91,10 +102,19 @@ data class Rated(val epochDay: Long, val felt: Felt)
 /**
  * Everything the page is built from. Plain lists, so this is a JVM unit test away.
  *
- * [otherSessionDays] counts days with a session the app suggested rather than one
- * from this plan. It is here because a therapist reading the page should know what
- * else the person has been doing, and it is a number of its own rather than part of
- * the plan's because LOGIC.md 17 says the two are never merged.
+ * [otherDays] is the days with a session the app suggested rather than one from this
+ * plan. A therapist reading the page should know what else the person has been doing,
+ * and it is counted on its own rather than folded into the plan's days because
+ * LOGIC.md 17 says the two are never merged.
+ *
+ * It arrives as days and not as a count on purpose. This file decides the stretch the
+ * page covers, and a caller cannot know it in advance, so a caller handing over a
+ * number would sooner or later hand over one covering a different stretch than the one
+ * printed at the top of the page.
+ *
+ * [done], [hurt] and [ratings] may hold more than this plan's: everything belonging to
+ * another plan or to another stretch of days is left out here rather than at the call
+ * site, so there is one place where that is true.
  */
 data class BriefInputs(
     val plan: TherapistPlan,
@@ -104,7 +124,7 @@ data class BriefInputs(
     val ratings: List<Rated> = emptyList(),
     /** The day of the last appointment, when the person set one. Starts the window. */
     val sinceDay: Long? = null,
-    val otherSessionDays: Int = 0,
+    val otherDays: List<Long> = emptyList(),
 )
 
 /** The fewest, the usual and the most somebody managed on one line. */
@@ -125,6 +145,16 @@ data class WhatHappened(
     val onDays: List<Long>,
     val times: Int,
     val counts: Counts?,
+    /**
+     * The numbers the line asked for on the days it was done, ascending, no repeats.
+     *
+     * One number nearly always, and a renderer prints it beside what was managed. Two
+     * or more when the line changed partway through, and that is the case this exists
+     * for: [PlanLine.given] carries the line as it reads today, so a renderer holding
+     * only that would print this week's number against results that were never aiming
+     * at it. Empty when the line named no number, which plenty of sheets do.
+     */
+    val asked: List<Int>,
     val marks: Marks,
 ) {
     val days: Int get() = onDays.size
@@ -164,7 +194,14 @@ data class HurtEntry(
     /** Days it was mentioned, counted in days rather than in mentions. */
     val days: Int,
     val lastDay: Long,
-    /** The plan lines being done when it was said, in the therapist's own words. */
+    /**
+     * The plan lines being done when it was said, in the therapist's own words.
+     *
+     * Empty when it was said outside this plan, which happens and is left empty rather
+     * than filled in from somewhere else. What hurt belongs to the person and not to
+     * one plan, so it stays on the page either way, but naming a line of this plan for
+     * a day that had nothing to do with it would be the worst answer available.
+     */
     val during: List<String>,
     /** Their own sentences, most recent first, at most [TherapistBriefs.MOST_SAID_EACH]. */
     val said: List<Said>,
@@ -221,7 +258,13 @@ data class TherapistBrief(
     val lines: List<PlanLine>,
     val hurt: List<HurtEntry>,
     val ratings: List<RatingCount>,
-    /** The days rated hard, most recent first, for reading against the days that hurt. */
+    /**
+     * The days rated hard, most recent first, for reading against the days that hurt.
+     *
+     * At most [TherapistBriefs.MOST_HARD_DAYS] of them, and the whole number of
+     * sessions rated hard is in [ratings] rather than here, so a renderer printing the
+     * dates prints the count beside them and neither one stands in for the other.
+     */
     val hardDays: List<Long>,
     /** Sentences that did not fit, counted so that nothing is quietly dropped. */
     val moreSaid: Int,
@@ -259,11 +302,18 @@ object TherapistBriefs {
      * back than [LONGEST_WINDOW]. Anything outside it is left out rather than folded
      * in, because a number covering a different stretch of days than the one printed
      * at the top of the page is a number that will be misread.
+     *
+     * A record of something done is kept only when it belongs to a line of this plan,
+     * for the same reason. ADDENDUM-03 Part 6 keeps a physio plan and an OT plan
+     * separate, and a caller holding one list for both would otherwise put the OT's
+     * days into the count at the top of the physio's page, where they would read as
+     * the physio's own.
      */
     fun of(inputs: BriefInputs): TherapistBrief {
         val from = windowStart(inputs)
         val to = inputs.today
-        val done = inputs.done.filter { it.epochDay in from..to }
+        val ours = inputs.plan.lines.map { it.id }.toSet()
+        val done = inputs.done.filter { it.epochDay in from..to && it.lineId in ours }
         val hurt = inputs.hurt.filter { it.onDay in from..to }
         val ratings = inputs.ratings.filter { it.epochDay in from..to }
         val byLine = done.groupBy { it.lineId }
@@ -275,7 +325,7 @@ object TherapistBriefs {
             toDay = to,
             reviewDay = inputs.plan.reviewDay,
             daysWithPlan = done.map { it.epochDay }.distinct().size,
-            otherSessionDays = inputs.otherSessionDays,
+            otherSessionDays = inputs.otherDays.filter { it in from..to }.distinct().size,
         )
         return TherapistBrief(
             heading = heading,
@@ -306,6 +356,7 @@ object TherapistBriefs {
             onDays = done.map { it.epochDay }.distinct().sorted(),
             times = done.size,
             counts = counts(done.map { it.result }),
+            asked = done.mapNotNull { it.target }.distinct().sorted(),
             marks = Marks(
                 madeEasier = done.count { it.madeEasier },
                 selfCounted = done.count { it.selfCounted },

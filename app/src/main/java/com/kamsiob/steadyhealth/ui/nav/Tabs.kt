@@ -64,4 +64,7 @@ object Route {
     const val PHONE_FREE = "phone-free"
     const val PAST_SESSION = "past-session"
     const val SUNDAY = "sunday"
+    const val SCAN = "scan"
+    const val PAGE_FOUND = "page-found"
+    const val PLAN_CONFIRM = "plan-confirm"
 }

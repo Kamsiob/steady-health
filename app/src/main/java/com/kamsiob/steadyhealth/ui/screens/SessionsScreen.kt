@@ -63,6 +63,7 @@ fun SessionsScreen(
     onMovement: (String) -> Unit,
     onRepeat: (Long) -> Unit,
     onLogPast: () -> Unit,
+    onScan: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     SteadyScreen(title = null, onBack = null, modifier = modifier, help = Place.Sessions) {
@@ -95,6 +96,15 @@ fun SessionsScreen(
                 )
             }
         }
+
+        // ADDENDUM-03 Part 5: one button for every piece of paper, in Sessions and in
+        // You. Somebody standing in a hallway holding a sheet should not have to
+        // decide what kind of sheet it is before the app will look at it.
+        ListItem(
+            heading = stringResource(R.string.scan_something),
+            subtitle = stringResource(R.string.scan_sub),
+            onClick = onScan,
+        )
 
         ListItem(
             heading = stringResource(R.string.sessions_log_past),

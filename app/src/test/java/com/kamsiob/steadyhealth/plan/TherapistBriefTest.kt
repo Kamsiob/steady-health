@@ -16,7 +16,9 @@ import org.junit.Test
  * a line nobody did says so rather than reading as a nought. The numbers are counts
  * and dates and never a share of anything. What the person said hurt is kept in their
  * own words, on the day they said it, beside the line they were doing at the time.
- * And nothing from outside the stretch of days printed at the top is folded in.
+ * And nothing from outside the stretch of days printed at the top is folded in, which
+ * holds for the app's own sessions and for another therapist's plan as much as it does
+ * for dates.
  */
 class TherapistBriefTest {
 
@@ -208,10 +210,107 @@ class TherapistBriefTest {
 
     @Test
     fun theAppsOwnSessionsSitBesideThePlanAndNeverInsideIt() {
-        val brief = TherapistBriefs.of(mixedMonth().copy(otherSessionDays = 6))
+        val days = listOf(TODAY - 1, TODAY - 1, TODAY - 3, TODAY - 5)
 
-        assertThat(brief.heading.otherSessionDays).isEqualTo(6)
-        assertThat(brief.heading.daysWithPlan).isEqualTo(17)
+        val brief = TherapistBriefs.of(mixedMonth().copy(otherDays = days))
+
+        assertWithMessage("two of the app's own on one day is one day")
+            .that(brief.heading.otherSessionDays)
+            .isEqualTo(3)
+        assertWithMessage("and none of them reaches the plan's own count")
+            .that(brief.heading.daysWithPlan)
+            .isEqualTo(17)
+    }
+
+    @Test
+    fun theAppsOwnSessionsFromBeforeTheWindowAreNotCountedInIt() {
+        val days = listOf(TODAY, TODAY - GIVEN_DAYS_AGO - 1, TODAY - 300)
+
+        val brief = TherapistBriefs.of(mixedMonth().copy(otherDays = days))
+
+        assertWithMessage("the number stands under the dates printed at the top of the page")
+            .that(brief.heading.otherSessionDays)
+            .isEqualTo(1)
+    }
+
+    @Test
+    fun anotherPlansDaysNeverLandInThisPlansCount() {
+        val theirs = (0..4).map { back ->
+            PlanDone("occupational_therapy_line", TODAY - back, result = 6, target = 6)
+        }
+
+        val brief = TherapistBriefs.of(mixedMonth().let { it.copy(done = it.done + theirs) })
+
+        assertWithMessage("a physio plan and an OT plan stay separate")
+            .that(brief.heading.daysWithPlan)
+            .isEqualTo(17)
+        assertThat(brief.lines.map { it.lineId })
+            .containsExactly(SIT_TO_STAND_ID, HEEL_RAISES_ID, WALL_PUSH_UPS_ID)
+            .inOrder()
+    }
+
+    @Test
+    fun theNumberTheLineAskedForIsKeptAsItWasOnTheDay() {
+        val done = listOf(
+            PlanDone(HEEL_RAISES_ID, TODAY, result = 15, target = 15),
+            PlanDone(HEEL_RAISES_ID, TODAY - 1, result = 14, target = 15),
+            PlanDone(HEEL_RAISES_ID, TODAY - 22, result = 10, target = 10),
+        )
+
+        val brief = TherapistBriefs.of(BriefInputs(plan = plan(), today = TODAY, done = done))
+
+        assertWithMessage("a line that changed shows both numbers, not just today's")
+            .that(brief.lines.first { it.lineId == HEEL_RAISES_ID }.happened.asked)
+            .containsExactly(10, 15)
+            .inOrder()
+    }
+
+    @Test
+    fun aLineThatNamedNoNumberAsksForNothingRatherThanForNought() {
+        val unsaid = PlannedLine(
+            id = "line_4",
+            item = PlanItem(
+                line = "bridges",
+                movement = null,
+                howMany = HowMany.Unsaid,
+                howOften = HowOften.Unsaid,
+                sureness = Sureness.Unmatched,
+            ),
+        )
+        val done = listOf(PlanDone("line_4", TODAY, result = 8, target = null))
+
+        val brief = TherapistBriefs.of(
+            BriefInputs(plan = plan(lines = listOf(unsaid)), today = TODAY, done = done),
+        )
+
+        val happened = brief.lines.first().happened
+        assertWithMessage("no number was asked for, and nought is not the answer to that")
+            .that(happened.asked)
+            .isEmpty()
+        assertThat(happened.counts).isEqualTo(Counts(fewest = 8, usual = 8, most = 8))
+    }
+
+    @Test
+    fun theHardDaysNamedAreCappedAndTheWholeCountStaysInTheRatings() {
+        val ratings = (0..9).map { back -> Rated(TODAY - back, Felt.Hard) }
+
+        val brief = TherapistBriefs.of(BriefInputs(plan = plan(), today = TODAY, ratings = ratings))
+
+        assertThat(brief.hardDays).hasSize(TherapistBriefs.MOST_HARD_DAYS)
+        assertWithMessage("the dates are a sample and the count is not")
+            .that(brief.ratings)
+            .containsExactly(RatingCount(Felt.Hard, 10))
+    }
+
+    @Test
+    fun aRatingFromBeforeTheWindowIsNotCountedInIt() {
+        val brief = TherapistBriefs.of(mixedMonth().copy(sinceDay = TODAY - 7))
+
+        assertThat(brief.ratings).containsExactly(
+            RatingCount(Felt.AboutRight, 2),
+            RatingCount(Felt.Hard, 2),
+        ).inOrder()
+        assertThat(brief.hardDays).containsExactly(TODAY - 1, TODAY - 6).inOrder()
     }
 
     @Test

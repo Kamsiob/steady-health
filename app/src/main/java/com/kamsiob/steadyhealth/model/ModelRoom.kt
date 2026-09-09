@@ -27,13 +27,35 @@ enum class Connection(val id: String) {
  * of them describes the phone or the person as lacking something: the phone either
  * has the room or it does not, and a metered connection is a question rather than a
  * problem.
+ *
+ * The bytes carried by [Ready] and [NeedsATap] are what would still be spendable
+ * afterwards, with the margin already set aside. That is not the phone's free space
+ * after the download, which is a gigabyte more, so a screen that printed this as
+ * "left on your phone" would show somebody a nought that is not true.
  */
 sealed interface CanAdd {
 
     /** It is already on the phone. Nothing to offer, and a remove option instead. */
     data object AlreadyHere : CanAdd
 
-    /** There is room and the connection is free. [roomLeftAfter] is bytes. */
+    /**
+     * This build does not offer it yet, whatever the phone could hold.
+     *
+     * ADDENDUM-03 Part 7 under LICENSING: "A health tech attorney reviews this
+     * boundary once before release; record it as BLOCKED until they have, and ship
+     * the feature behind a flag that is off until it clears." Answered before
+     * anything is said about room, because asking somebody to free up three gigabytes
+     * for a download that cannot start is worse than saying nothing at all.
+     */
+    data object NotOfferedYet : CanAdd
+
+    /**
+     * There is room and the connection is free, so nothing measured here is in the way.
+     *
+     * Not the same as permission to start. [Licence.termsAcceptedBeforeDownload] may
+     * still have terms to show first, and that gate is the screen's because only the
+     * screen can show them and take the acceptance.
+     */
     data class Ready(val roomLeftAfter: Long) : CanAdd
 
     /**
@@ -48,7 +70,14 @@ sealed interface CanAdd {
     /** There is nothing to download over at the moment. Try again later, and no more. */
     data object NotConnected : CanAdd
 
-    /** How many more bytes free would make it possible, with the margin counted in. */
+    /**
+     * How many more free bytes would make it possible, with the margin inside the number.
+     *
+     * The margin is counted in on purpose. If it were left out, a phone that is
+     * already inside the margin would be told it is short by the size of the model
+     * alone, and somebody who freed up exactly that much would be refused a second
+     * time with a smaller number, which is the worst way to be told anything.
+     */
     data class NotEnoughRoom(val shortBy: Long) : CanAdd
 }
 
@@ -98,9 +127,9 @@ data class Choice(val model: OptionalModel, val canAdd: CanAdd)
  */
 data class ModelRoom(
     val freeBytes: Long,
-    val installed: Set<OptionalModel>,
-    val connection: Connection,
-    val choices: List<Choice>,
+    val installed: Set<OptionalModel> = emptySet(),
+    val connection: Connection = Connection.None,
+    val offered: Set<OptionalModel> = OFFERED_NOW,
 ) {
 
     /**
@@ -118,9 +147,20 @@ data class ModelRoom(
     val byHand: Set<ManualPath>
         get() = OptionalModel.entries.filterNot { it in installed }.flatMap { it.byHand }.toSet()
 
-    /** The answer for one model, without hunting through [choices]. */
+    /**
+     * The whole screen: both models, in declaration order, whatever the phone can take.
+     *
+     * Worked out from the three numbers above rather than handed in, so there is no
+     * way to hold a ModelRoom whose rows disagree with its own free space, and no way
+     * to ask about a model the list happens not to contain. A row that says how much
+     * more room it would need is more use than a row that is not there, and Part 7
+     * asks the screen to show each size.
+     */
+    val choices: List<Choice> get() = OptionalModel.entries.map { Choice(it, canAdd(it)) }
+
+    /** The answer for one model, without walking [choices]. */
     fun canAdd(model: OptionalModel): CanAdd =
-        choices.first { it.model == model }.canAdd
+        canAdd(model, freeBytes, installed, connection, offered)
 
     companion object {
 
@@ -141,7 +181,25 @@ data class ModelRoom(
          */
         const val HEADROOM_BYTES = 1_000_000_000L
 
-        /** Free bytes minus the margin, never below nought. */
+        /**
+         * The models this build is allowed to offer at all, whatever the phone holds.
+         *
+         * ADDENDUM-03 Part 7 under LICENSING puts document reading behind a flag that
+         * is off until a health tech attorney has reviewed the HAI-DEF boundary, so
+         * until then the true answer about that download is that it is not on offer,
+         * not that it would fit. The narrow set is the default on purpose: a caller
+         * that has the clearance passes a wider one, and a caller that forgets to
+         * pass anything cannot turn the feature on by omission.
+         */
+        val OFFERED_NOW: Set<OptionalModel> = setOf(OptionalModel.YourOwnWords)
+
+        /**
+         * Free bytes minus the margin, never below nought, for the screen's own line.
+         *
+         * Floored because a person does not have minus half a gigabyte of room, and
+         * that is also why the refusal in [canAdd] does its own subtraction instead
+         * of starting here.
+         */
         fun spare(freeBytes: Long): Long =
             (freeBytes - HEADROOM_BYTES).coerceAtLeast(0)
 
@@ -150,41 +208,29 @@ data class ModelRoom(
             models.filterNot { it in installed }.sumOf { it.bytes }
 
         /**
-         * The whole screen, in one value.
-         *
-         * Both models always appear, in declaration order, whatever the phone can
-         * take. A row that says how much more room it would need is more use than a
-         * row that is not there, and Part 7 asks the screen to show each size.
-         */
-        fun of(
-            freeBytes: Long,
-            installed: Set<OptionalModel> = emptySet(),
-            connection: Connection = Connection.None,
-        ): ModelRoom = ModelRoom(
-            freeBytes = freeBytes,
-            installed = installed,
-            connection = connection,
-            choices = OptionalModel.entries.map {
-                Choice(it, canAdd(it, freeBytes, installed, connection))
-            },
-        )
-
-        /**
          * Whether this model can be added right now.
          *
-         * The order of the checks is the order of how permanent the answer is. Room
-         * is asked before the connection because being short of space is the answer
-         * that is still true in an hour, and telling somebody on mobile data to wait
-         * for wi-fi when the download would not fit either way wastes their evening.
+         * The order of the checks is the order of how permanent the answer is. What
+         * the build offers at all comes before room, because a number to free up is
+         * only worth printing next to something that could then be downloaded. Room
+         * comes before the connection because being short of space is the answer that
+         * is still true in an hour, and telling somebody on mobile data to wait for
+         * wi-fi when the download would not fit either way wastes their evening.
          */
         fun canAdd(
             model: OptionalModel,
             freeBytes: Long,
             installed: Set<OptionalModel>,
             connection: Connection,
+            offered: Set<OptionalModel> = OFFERED_NOW,
         ): CanAdd {
             if (model in installed) return CanAdd.AlreadyHere
-            val left = spare(freeBytes) - model.bytes
+            if (model !in offered) return CanAdd.NotOfferedYet
+            // The margin comes off before any flooring, not after. Going through
+            // spare() would report a phone that is already inside the margin as short
+            // by the size of the model alone, which is less than it would actually
+            // have to free, and the second refusal is the one nobody forgives.
+            val left = freeBytes - HEADROOM_BYTES - model.bytes
             if (left < 0) return CanAdd.NotEnoughRoom(shortBy = -left)
             return when (connection) {
                 Connection.None -> CanAdd.NotConnected
@@ -194,17 +240,24 @@ data class ModelRoom(
         }
 
         /**
-         * Bytes left after adding these, or null when they do not fit.
+         * Bytes still spendable after adding these, or null when they do not fit.
          *
          * Null rather than a negative number, so that a screen cannot render a
-         * shortfall as though it were room.
+         * shortfall as though it were room. A phone already inside the margin holds
+         * nothing more, so it answers null there too.
          */
         fun roomLeftAfter(models: Set<OptionalModel>, freeBytes: Long, installed: Set<OptionalModel>): Long? {
-            val left = spare(freeBytes) - needed(models, installed)
+            val left = freeBytes - HEADROOM_BYTES - needed(models, installed)
             return if (left >= 0) left else null
         }
 
-        /** True when both would fit at once, which is the "Both" row in Part 7. */
+        /**
+         * True when both would fit at once, which is the "Both" row in Part 7.
+         *
+         * Room only. Whether both are on offer is a different question, asked by
+         * [canAdd], and running the two together would hide a licence behind a
+         * storage answer.
+         */
         fun bothFit(freeBytes: Long, installed: Set<OptionalModel> = emptySet()): Boolean =
             roomLeftAfter(OptionalModel.entries.toSet(), freeBytes, installed) != null
 
