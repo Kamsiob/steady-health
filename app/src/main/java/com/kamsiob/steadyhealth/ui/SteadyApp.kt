@@ -691,6 +691,7 @@ private fun NavGraphBuilder.checkRoutes(
             onTap = viewModel::tap,
             onStop = viewModel::stop,
             onSkip = viewModel::skip,
+            onConfirmSeen = viewModel::confirmSeen,
             onBack = { navController.popBackStack(Route.TABS, inclusive = false) },
         )
     }

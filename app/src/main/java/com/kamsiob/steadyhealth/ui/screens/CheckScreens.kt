@@ -35,8 +35,18 @@ import com.kamsiob.steadyhealth.ui.theme.SteadySpacing
 import com.kamsiob.steadyhealth.ui.theme.SteadyText
 import com.kamsiob.steadyhealth.ui.theme.SteadyType
 
-/** The four things this check will ask for, before it starts. */
-data class CheckIntroUiState(val measures: List<String> = emptyList())
+/**
+ * The four things this check will ask for, before it starts.
+ *
+ * The lede and the safety line come in already worded rather than being read off a
+ * resource here, because the check is four different measures in the four versions of
+ * the app and the sentence about what is needed has to say what is actually needed.
+ */
+data class CheckIntroUiState(
+    val measures: List<String> = emptyList(),
+    val lede: String = "",
+    val safety: String = "",
+)
 
 /**
  * The offer to do the check.
@@ -67,12 +77,12 @@ fun CheckIntroScreen(
             color = SteadyPalette.Navy,
             modifier = Modifier.semantics { heading() },
         )
-        Paragraph(stringResource(R.string.check_intro_lede))
+        Paragraph(state.lede)
 
         SectionTitle(stringResource(R.string.check_intro_what))
         state.measures.forEach { ListItem(heading = it) }
 
-        NoteBlock(stringResource(R.string.check_intro_safety))
+        NoteBlock(state.safety)
     }
 }
 
@@ -91,6 +101,16 @@ data class CheckMeasureUiState(
     /** True when the person taps to count rather than the phone counting. */
     val byHand: Boolean = false,
     val running: Boolean = false,
+    /**
+     * What the app already watched them do, offered instead of doing it again.
+     *
+     * ADDENDUM-03 Phase 6, the monthly confirm. Blank when there is nothing to
+     * offer, which is most of the time in the first month and less of the time
+     * afterwards. It never becomes a result on its own: confirming it is a tap the
+     * person makes, and until they make it nothing is recorded.
+     */
+    val alreadySeen: String = "",
+    val alreadySeenValue: Int = 0,
 )
 
 /**
@@ -102,11 +122,13 @@ data class CheckMeasureUiState(
  * actually counting rather than showing a number it made up.
  */
 @Composable
+@Suppress("LongParameterList") // One screen, one callback for each thing on it.
 fun CheckMeasureScreen(
     state: CheckMeasureUiState,
     onTap: () -> Unit,
     onStop: () -> Unit,
     onSkip: () -> Unit,
+    onConfirmSeen: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -120,6 +142,18 @@ fun CheckMeasureScreen(
                 SecondaryButton(label = stringResource(R.string.check_stop), onClick = onStop)
             } else if (state.running) {
                 PrimaryButton(label = stringResource(R.string.check_stop), onClick = onStop)
+            } else if (state.alreadySeen.isNotBlank()) {
+                // Confirming is the primary action when there is something to
+                // confirm. Doing it again is right there under it, and neither is
+                // presented as the better answer.
+                PrimaryButton(
+                    label = stringResource(R.string.check_confirm_seen),
+                    onClick = onConfirmSeen,
+                )
+                SecondaryButton(
+                    label = stringResource(R.string.check_do_it_anyway),
+                    onClick = onTap,
+                )
             } else {
                 PrimaryButton(label = stringResource(R.string.check_intro_start), onClick = onTap)
                 SecondaryButton(label = stringResource(R.string.check_skip), onClick = onSkip)
@@ -138,6 +172,16 @@ fun CheckMeasureScreen(
             modifier = Modifier.semantics { heading() },
         )
         Paragraph(state.how)
+
+        // Above the count, because when there is something to confirm the count is
+        // a zero and a zero at the top of a screen reads as a verdict.
+        if (state.alreadySeen.isNotBlank() && !state.running) {
+            NoteBlock(
+                heading = stringResource(R.string.check_seen_heading),
+                text = state.alreadySeen,
+                tint = SteadyPalette.SkyL,
+            )
+        }
 
         Spacer(Modifier.height(SteadySpacing.ListGap))
 

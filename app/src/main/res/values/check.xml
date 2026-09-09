@@ -10,8 +10,18 @@
     <string name="check_done">Done</string>
 
     <string name="check_intro_title">A short check</string>
+    <!--
+      One lede and one safety line per way of getting around. The check is not the
+      same four measures in the four versions of the app, so a single sentence
+      naming a chair and a wall was telling two of the four to fetch furniture they
+      were never going to be asked to use.
+    -->
     <string name="check_intro_lede">Ten minutes, a chair and a wall. It tells you what you can do now and what it was before.</string>
     <string name="check_intro_safety">Sturdy chair or wall within reach. Stop if anything hurts. Skip this if you have had a fracture or surgery in the last three months.</string>
+    <string name="check_intro_lede_wheel">Ten minutes, a band and a clear stretch. It tells you what you can do now and what it was before.</string>
+    <string name="check_intro_safety_wheel">Brakes on, and somebody nearby the first few times. Stop if anything hurts. Skip this if you have had a fracture or surgery in the last three months.</string>
+    <string name="check_intro_lede_bed">Ten minutes, in bed, with a towel. It tells you what you can do now and what it was before.</string>
+    <string name="check_intro_safety_bed">Rest as long as you need between. Stop if anything hurts. Skip this if you have had a fracture or surgery in the last three months.</string>
     <string name="check_intro_start">Start</string>
     <string name="check_intro_later">Not now</string>
     <string name="check_intro_what">What it measures</string>
@@ -188,12 +198,17 @@
     <string name="ability_plain_carry">Lifting and holding</string>
     <string name="ability_plain_steady">Balance on your feet</string>
     <string name="ability_plain_transfer">Moving from one seat to another</string>
-    <string name="ability_plain_wheel">Distance, at your own pace</string>
-    <string name="ability_plain_seated">Sitting unsupported</string>
-    <string name="ability_plain_bed_up">Sitting up</string>
-    <string name="ability_plain_breathe">Breathing, slow and steady</string>
-    <string name="ability_plain_grip">Holding on</string>
-    <string name="ability_plain_ankles">Ankles and feet</string>
+    <!--
+      Three nouns, the same as the on-feet line above, because Go is Go. The
+      earlier "distance, at your own pace" was the only one of the eleven that
+      described how rather than what, and "at your own pace" beside four lines of
+      plain nouns reads as somebody being let off.
+    -->
+    <string name="ability_plain_wheel">Wheeling, distance, pace</string>
+    <string name="ability_plain_seated">Balance, sitting and reaching</string>
+    <string name="ability_plain_bed_up">Sitting up, and to the edge</string>
+    <string name="ability_plain_breathe">Breathing, and moving your legs</string>
+    <string name="ability_plain_ankles">Reaching, turning, ankles</string>
 
     <!-- The life sentences. The engine picks; nothing writes one. -->
     <string name="life_get_up_low_chair">You can get out of a low chair without pushing off now.</string>
@@ -231,5 +246,19 @@
     <string name="surer_both">That got easier, and you said you feel surer about %1$s too.</string>
     <string name="surer_not_yet">That got easier, but you don\'t feel any surer about %1$s yet. That often follows later.</string>
     <string name="surer_anyway">The numbers held, and you feel surer about %1$s than you did.</string>
+
+
+    <!--
+      The monthly confirm. ADDENDUM-03 Phase 6.
+
+      Every sentence here names the day and the number and says which of them the
+      phone counted, because a number offered without saying where it came from is
+      a number somebody has to take on trust. Nothing is recorded until they tap.
+    -->
+    <string name="check_seen_heading">You have already done this</string>
+    <string name="check_seen_counted" tools:ignore="PluralsCandidate">The phone counted %1$d on %2$s. If that still sounds about right, you can use it and skip this one.</string>
+    <string name="check_seen_typed" tools:ignore="PluralsCandidate">You put down %1$d on %2$s. If that still sounds about right, you can use it and skip this one.</string>
+    <string name="check_confirm_seen">That still sounds right</string>
+    <string name="check_do_it_anyway">Do it now instead</string>
 
 </resources>

@@ -8,9 +8,11 @@ import com.kamsiob.steadyhealth.R
 import com.kamsiob.steadyhealth.data.AbilityRepository
 import com.kamsiob.steadyhealth.data.CheckRepository
 import com.kamsiob.steadyhealth.data.ProfileRepository
+import com.kamsiob.steadyhealth.data.RunRepository
 import com.kamsiob.steadyhealth.data.SteadyDatabase
 import com.kamsiob.steadyhealth.domain.AbilityDomain
 import com.kamsiob.steadyhealth.domain.AbilityState
+import com.kamsiob.steadyhealth.domain.GettingAround
 import com.kamsiob.steadyhealth.engine.AbilityEngine
 import com.kamsiob.steadyhealth.engine.Confidence
 import com.kamsiob.steadyhealth.engine.HowCounted
@@ -18,6 +20,8 @@ import com.kamsiob.steadyhealth.engine.LifeSentences
 import com.kamsiob.steadyhealth.engine.Measure
 import com.kamsiob.steadyhealth.engine.MeasureUnit
 import com.kamsiob.steadyhealth.engine.Measures
+import com.kamsiob.steadyhealth.engine.Passive
+import com.kamsiob.steadyhealth.engine.Seen
 import com.kamsiob.steadyhealth.engine.SurerLine
 import com.kamsiob.steadyhealth.engine.Warmth
 import com.kamsiob.steadyhealth.sensing.Motion
@@ -37,6 +41,8 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.time.format.FormatStyle
 
 /**
  * The monthly check, start to finish.
@@ -65,6 +71,7 @@ class CheckViewModel(application: Application) : AndroidViewModel(application) {
      */
     private val db get() = SteadyDatabase.get(getApplication())
     private val profile get() = ProfileRepository(db)
+    private val runs get() = RunRepository(db)
     private val checks get() = CheckRepository(db)
     private val abilities get() = AbilityRepository(db)
     private val motion by lazy { Motion(application) }
@@ -93,21 +100,53 @@ class CheckViewModel(application: Application) : AndroidViewModel(application) {
     val finished: StateFlow<Boolean> = _finished.asStateFlow()
 
     private var plan: List<Measure> = emptyList()
+    private var alreadySeen: Map<String, Seen> = emptyMap()
     private var at = 0
     private var taken = mutableMapOf<String, Double>()
     private var counting: Job? = null
     private var byHandCount = 0
 
     fun open() = viewModelScope.launch {
-        plan = Measures.check(profile.gettingAround(), profile.exclusions())
+        val way = profile.gettingAround()
+        plan = Measures.check(way, profile.exclusions())
         at = 0
         taken = mutableMapOf()
         _finished.value = false
-        _intro.value = CheckIntroUiState(measures = plan.map { string(nameOf(it)) })
+        _intro.value = CheckIntroUiState(
+            measures = plan.map { string(nameOf(it)) },
+            lede = string(ledeFor(way)),
+            safety = string(safetyFor(way)),
+        )
     }
 
-    fun start() {
+    /**
+     * What the check needs, in the words of this version of the app.
+     *
+     * A chair and a wall are what the on-feet check needs. The wheelchair check is a
+     * band and a clear stretch and the bed check is a towel, so saying chair and wall
+     * to either of them names furniture they will never be asked to use and reads as
+     * the real version of the check being somewhere else.
+     */
+    @StringRes
+    private fun ledeFor(way: GettingAround) = when (way) {
+        GettingAround.Wheelchair -> R.string.check_intro_lede_wheel
+        GettingAround.InBed -> R.string.check_intro_lede_bed
+        else -> R.string.check_intro_lede
+    }
+
+    @StringRes
+    private fun safetyFor(way: GettingAround) = when (way) {
+        GettingAround.Wheelchair -> R.string.check_intro_safety_wheel
+        GettingAround.InBed -> R.string.check_intro_safety_bed
+        else -> R.string.check_intro_safety
+    }
+
+    fun start() = viewModelScope.launch {
         at = 0
+        // Read once for the whole check rather than per measure, so that the same
+        // history answers every screen and nothing changes underneath somebody who
+        // went back a step.
+        alreadySeen = Passive.seen(plan, runs.history(), today())
         showMeasure()
     }
 
@@ -131,7 +170,37 @@ class CheckViewModel(application: Application) : AndroidViewModel(application) {
             countingLine = string(countingLineOf(measure)),
             byHand = measure.counted != HowCounted.ByMotion,
             running = false,
+            alreadySeen = seenLine(measure),
+            alreadySeenValue = alreadySeen[measure.id]?.value?.toInt() ?: 0,
         )
+    }
+
+    /**
+     * What the app already saw, worded, or nothing. ADDENDUM-03 Phase 6.
+     *
+     * The day and the number, and which of the two counted it, because a number
+     * offered without saying where it came from is a number somebody has to take on
+     * trust and this app does not ask for that anywhere else.
+     */
+    private fun seenLine(measure: Measure): String {
+        val seen = alreadySeen[measure.id] ?: return ""
+        val day = LocalDate.ofEpochDay(seen.onDay)
+            .format(DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG))
+        val words = if (seen.counted) R.string.check_seen_counted else R.string.check_seen_typed
+        return string(words, seen.value.toInt(), day)
+    }
+
+    /**
+     * Take what the app already saw as this measure's result.
+     *
+     * The only path by which a passively captured number becomes a record, and it
+     * runs through a button somebody pressed. Passive itself writes nothing.
+     */
+    fun confirmSeen() {
+        val measure = plan.getOrNull(at) ?: return
+        val seen = alreadySeen[measure.id] ?: return
+        taken[measure.id] = seen.value
+        next()
     }
 
     /**

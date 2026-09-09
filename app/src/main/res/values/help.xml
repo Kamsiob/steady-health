@@ -47,7 +47,7 @@
     <string name="help_session_a3">For some movements, yes, if the phone is on you. For everything else, tap the ring once each time. Either way you can correct the number afterwards.</string>
 
     <!-- Move. -->
-    <string name="help_move_what">Everything you can do, and everything you have done. Sessions, walks, and the movements the app knows.</string>
+    <string name="help_move_what">Everything you can do, and everything you have done. Today\'s session, every movement the app knows, and every session already saved.</string>
     <string name="help_move_p1">The top of the screen is what is available now.</string>
     <string name="help_move_p2">Below it is what you have already done, most recent first.</string>
     <string name="help_move_q1">Can I pick my own movement?</string>
