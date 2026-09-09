@@ -50,6 +50,14 @@ data class AbilityDetailUiState(
     val items: List<TrackedItemState> = emptyList(),
     /** Set when this ability has gone quieter and the note has not been shown. */
     val quieter: QuieterUiState? = null,
+    /**
+     * Whether weight is part of this app for this person. MASTER_SPEC 6.1.
+     *
+     * The row below it predates the setting and offered the weight page to
+     * everybody. Weight is one of the levers and not the point, and somebody who
+     * never turned it on should not meet it at the bottom of an ability.
+     */
+    val weighsIn: Boolean = false,
 )
 
 /**
@@ -121,12 +129,14 @@ fun AbilityDetailScreen(
             }
         }
 
-        Spacer(Modifier.height(SteadySpacing.ListGap))
-        ListItem(
-            heading = stringResource(R.string.weight_label),
-            subtitle = stringResource(R.string.ability_weight_lever),
-            onClick = onWeight,
-        )
+        if (state.weighsIn) {
+            Spacer(Modifier.height(SteadySpacing.ListGap))
+            ListItem(
+                heading = stringResource(R.string.weight_label),
+                subtitle = stringResource(R.string.ability_weight_lever),
+                onClick = onWeight,
+            )
+        }
     }
 }
 

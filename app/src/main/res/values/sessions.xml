@@ -8,7 +8,12 @@
 
     <string name="sessions_today">Today</string>
     <string name="sessions_library">Everything you can do</string>
-    <string name="sessions_library_sub">Tap any of these to read it, or start it on its own.</string>
+    <!--
+      What tapping actually does, which is start it. The old words promised a page
+      to read that does not exist, and a sentence that describes a screen somebody
+      cannot reach is worse than a shorter one that is true.
+    -->
+    <string name="sessions_library_sub">Tap any of these to do it on its own, whenever you like.</string>
     <string name="sessions_history">What you have done</string>
     <string name="sessions_history_empty">Nothing yet. The first session is on Today.</string>
     <string name="sessions_try_this">Try this now</string>

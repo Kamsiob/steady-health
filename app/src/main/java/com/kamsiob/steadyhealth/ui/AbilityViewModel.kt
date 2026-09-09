@@ -1,6 +1,7 @@
 package com.kamsiob.steadyhealth.ui
 
 import android.app.Application
+import androidx.annotation.StringRes
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.kamsiob.steadyhealth.R
@@ -86,7 +87,8 @@ class AbilityViewModel(application: Application) : AndroidViewModel(application)
         val changes = AbilityEngine.lastChanges(domain, results)
 
         _detail.value = AbilityDetailUiState(
-            name = context.getString(nameFor(domain)),
+            weighsIn = profile.weighsIn(),
+            name = context.getString(AbilityWords.name(profile.gettingAround(), domain)),
             lifeSentence = sentenceFor(domain, measured, items.firstOrNull()?.text),
             before = beforeSentence(
                 domain = domain,
@@ -188,7 +190,7 @@ class AbilityViewModel(application: Application) : AndroidViewModel(application)
             }
             if (lost > 0 && profile.showNumbers()) {
                 val amount = "${Convert.weightLabel(lost, profile.units())} ${unitLabel(profile.units())}"
-                add(context.getString(R.string.fed_weight, amount))
+                add(context.getString(fedWeightLine(profile.gettingAround()), amount))
             }
         }
     }
@@ -240,7 +242,7 @@ class AbilityViewModel(application: Application) : AndroidViewModel(application)
             days = "$moved",
             asALever = if (lost > 0 && showNumbers) {
                 context.getString(
-                    R.string.weight_as_lever,
+                    asALeverLine(profile.gettingAround()),
                     "${Convert.weightLabel(lost, units)} ${unitLabel(units)}",
                 )
             } else {
@@ -260,13 +262,6 @@ class AbilityViewModel(application: Application) : AndroidViewModel(application)
         } else {
             theirWords.orEmpty()
         }
-    }
-
-    private fun nameFor(domain: AbilityDomain) = when (domain) {
-        AbilityDomain.GetUp -> R.string.ability_get_up
-        AbilityDomain.Go -> R.string.ability_go
-        AbilityDomain.Carry -> R.string.ability_carry
-        AbilityDomain.Steady -> R.string.ability_steady
     }
 
     private fun unitLabel(units: Units): String = getApplication<Application>().getString(
@@ -313,6 +308,27 @@ class AbilityViewModel(application: Application) : AndroidViewModel(application)
     }
 
     /** The ladder a session is recorded against, for this way of getting around. */
+    /**
+     * Where the weight shows up, in the words of each way of getting around.
+     *
+     * Stairs and the floor are two things a wheelchair user is not carrying it up,
+     * and a sentence about somebody else's stairs is the app telling them this
+     * number is not really about them.
+     */
+    @StringRes
+    private fun fedWeightLine(way: GettingAround) = when (way) {
+        GettingAround.Wheelchair -> R.string.fed_weight_wheel
+        GettingAround.InBed -> R.string.fed_weight_bed
+        else -> R.string.fed_weight
+    }
+
+    @StringRes
+    private fun asALeverLine(way: GettingAround) = when (way) {
+        GettingAround.Wheelchair -> R.string.weight_as_lever_wheel
+        GettingAround.InBed -> R.string.weight_as_lever_bed
+        else -> R.string.weight_as_lever
+    }
+
     private fun primaryLadder(way: GettingAround) = when (way) {
         GettingAround.OnFeet, GettingAround.Walker -> Ladder.Walking
         GettingAround.Wheelchair -> Ladder.Wheeling

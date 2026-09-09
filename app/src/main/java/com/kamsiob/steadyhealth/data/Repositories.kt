@@ -492,7 +492,15 @@ class ProfileRepository(private val db: SteadyDatabase) {
 
     suspend fun setAnchor(value: Anchor) = put(ANCHOR, value.id)
 
-    suspend fun weighsIn(): Boolean = get(WEIGHS_IN)?.toBoolean() ?: true
+    /**
+     * Whether weight is part of this app for this person. Off until they say so.
+     *
+     * MASTER_SPEC 6.1: "Weight is not on Today and never has its own tab. It is off
+     * by default." It defaulted to on, so everybody got the weight rows until they
+     * went and turned them off, which is the opposite of what that sentence asks and
+     * the opposite of how everything else optional in this app behaves.
+     */
+    suspend fun weighsIn(): Boolean = get(WEIGHS_IN)?.toBoolean() ?: false
 
     suspend fun setWeighsIn(value: Boolean) = put(WEIGHS_IN, value.toString())
 

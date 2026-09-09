@@ -7,6 +7,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import com.kamsiob.steadyhealth.R
+import com.kamsiob.steadyhealth.domain.AbilityDomain
 import com.kamsiob.steadyhealth.ui.components.ListItem
 import com.kamsiob.steadyhealth.ui.components.NoteBlock
 import com.kamsiob.steadyhealth.ui.components.Paragraph
@@ -23,6 +24,13 @@ import com.kamsiob.steadyhealth.ui.theme.SteadyType
 data class LibraryRow(
     val id: String,
     val name: String,
+    /**
+     * The ability it feeds, as the enum rather than as the sentence.
+     *
+     * [feeds] is the sentence and is what a row shows. This is here so a screen can
+     * put the rows under headings without reading the words back out of one.
+     */
+    val domain: AbilityDomain,
     val feeds: String,
     val needs: String,
     val leftOut: Boolean,
@@ -60,6 +68,7 @@ fun SessionsScreen(
     onGo: () -> Unit,
     onSomethingSmall: () -> Unit,
     onWithoutThePhone: () -> Unit,
+    onExtras: () -> Unit,
     onMovement: (String) -> Unit,
     onRepeat: (Long) -> Unit,
     onLogPast: () -> Unit,
@@ -80,6 +89,7 @@ fun SessionsScreen(
                 onGo = onGo,
                 onSomethingSmall = onSomethingSmall,
                 onWithoutThePhone = onWithoutThePhone,
+                onExtras = onExtras,
             )
         }
 
@@ -118,7 +128,16 @@ fun SessionsScreen(
             ListItem(
                 heading = row.name,
                 subtitle = "${row.feeds} · ${row.needs}",
-                value = if (row.leftOut) stringResource(R.string.library_left_out) else null,
+                // Part 20 asks for "the library with Try this now", and the label is
+                // what makes the row's one action honest: tapping starts the
+                // movement on its own, which is a thing worth being told before
+                // rather than after. A movement left out says that instead, because
+                // for that row it is the more important of the two.
+                value = if (row.leftOut) {
+                    stringResource(R.string.library_left_out)
+                } else {
+                    stringResource(R.string.sessions_try_this)
+                },
                 onClick = { onMovement(row.id) },
             )
         }
