@@ -6,9 +6,11 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.lifecycle.lifecycleScope
+import com.kamsiob.steadyhealth.data.ContextRepository
 import com.kamsiob.steadyhealth.data.DailyPromptRepository
 import com.kamsiob.steadyhealth.data.SteadyDatabase
 import com.kamsiob.steadyhealth.remind.Reminding
+import com.kamsiob.steadyhealth.sensing.DaySteps
 import com.kamsiob.steadyhealth.ui.SteadyApp
 import com.kamsiob.steadyhealth.ui.theme.SteadyTheme
 import com.kamsiob.steadyhealth.widget.START_SESSION
@@ -30,11 +32,35 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
         recordOpenedFromPrompt()
+        readTheStepCounter()
         val fromWidget = intent?.getBooleanExtra(START_SESSION, false) == true
         intent?.removeExtra(START_SESSION)
         setContent {
             SteadyTheme {
                 SteadyApp(openSession = fromWidget)
+            }
+        }
+    }
+
+    /**
+     * The phone's own step count, read once on the way in. Part 8 item 1.
+     *
+     * Here rather than in a service or a periodic job, because the app has neither
+     * and is not getting one. The counter is asked once when somebody opens the app,
+     * the listener unregisters itself on the first reading, and what is written down
+     * is that reading and today's date. Nothing wakes the phone for it.
+     *
+     * It does nothing at all until somebody turns the line on, since [DaySteps]
+     * checks the permission first and returns without touching the sensor.
+     */
+    private fun readTheStepCounter() {
+        val steps = DaySteps(applicationContext)
+        if (!steps.available || !steps.allowed) return
+        val today = LocalDate.now(ZoneId.systemDefault()).toEpochDay()
+        steps.readOnce { sinceBoot ->
+            lifecycleScope.launch {
+                ContextRepository(SteadyDatabase.get(applicationContext))
+                    .setStepReading(today, sinceBoot)
             }
         }
     }

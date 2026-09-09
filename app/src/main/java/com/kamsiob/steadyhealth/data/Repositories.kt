@@ -77,6 +77,10 @@ import com.kamsiob.steadyhealth.engine.VisitInputs
 import com.kamsiob.steadyhealth.engine.VisitSummaryEngine
 import com.kamsiob.steadyhealth.engine.WeekOfDays
 import com.kamsiob.steadyhealth.engine.WeightEngine
+import com.kamsiob.steadyhealth.erase.Erase
+import com.kamsiob.steadyhealth.export.EverySheet
+import com.kamsiob.steadyhealth.export.Picture
+import com.kamsiob.steadyhealth.export.Pictures
 import com.kamsiob.steadyhealth.export.Sheet
 import com.kamsiob.steadyhealth.places.Places
 import com.kamsiob.steadyhealth.places.Said
@@ -1010,115 +1014,29 @@ class VisitRepository(private val db: SteadyDatabase) {
  */
 class DataRepository(private val db: SteadyDatabase) {
 
-    /** Every table, as a spreadsheet somebody can open in anything. */
-    suspend fun sheets(): List<Sheet> = listOf(
-        Sheet(
-            name = "weigh-ins",
-            rows = listOf(listOf("date", "weight_kg", "smoothed_kg", "source")) +
-                db.weighIns().allOnce().map {
-                    listOf(
-                        date(it.epochDay),
-                        it.rawKg.toString(),
-                        it.smoothedKg.toString(),
-                        it.source,
-                    )
-                },
-        ),
-        Sheet(
-            name = "days",
-            rows = listOf(listOf("date", "what_you_said", "sleep_hours", "how_it_went", "tags")) +
-                daysWithTags(),
-        ),
-        Sheet(
-            name = "sessions",
-            rows = listOf(listOf("date", "kind", "step", "minutes", "could_you_talk")) +
-                db.sessions().allOnce().map {
-                    listOf(
-                        date(it.epochDay),
-                        it.ladder,
-                        it.stepIndex.toString(),
-                        (it.durationSeconds / SECONDS_PER_MINUTE).toString(),
-                        it.talkTest.orEmpty(),
-                    )
-                },
-        ),
-        Sheet(
-            name = "checks",
-            rows = listOf(listOf("date", "measure", "ability", "value")) +
-                db.checks().allMeasuresOnce().map {
-                    listOf(date(it.epochDay), it.measureId, it.domain, it.value.toString())
-                },
-        ),
-        Sheet(
-            name = "your-list",
-            rows = listOf(listOf("date", "what_you_wanted", "ability", "rating", "how_sure")) +
-                itemRatings(),
-        ),
-    )
+    /**
+     * Every table, as a spreadsheet somebody can open in anything.
+     *
+     * The sheets themselves are in [EverySheet], one file, so that a test can hold
+     * the whole set against the schema and say which table has nowhere to appear.
+     * They were five sheets covering seven of thirty-one tables when this class
+     * held them, which is the shape a list gets into when it is grown a sheet at a
+     * time next to whatever else the class was doing.
+     */
+    suspend fun sheets(): List<Sheet> = EverySheet.of(db)
 
-    private suspend fun daysWithTags(): List<List<String>> {
-        val tags = db.checkIns().allTagsOnce().groupBy { it.checkInId }
-        return db.checkIns().allOnce().map { day ->
-            listOf(
-                date(day.epochDay),
-                day.sentence,
-                day.sleepHalfHours?.let { (it / 2.0).toString() }.orEmpty(),
-                day.dayRating.orEmpty(),
-                tags[day.id].orEmpty().joinToString(" ") { it.tag },
-            )
-        }
-    }
-
-    private suspend fun itemRatings(): List<List<String>> =
-        db.abilities().itemsOnce().flatMap { item ->
-            db.abilities().ratingsFor(item.id).map { rating ->
-                listOf(
-                    date(rating.epochDay),
-                    item.text,
-                    item.domain,
-                    rating.rating.toString(),
-                    rating.sureness?.toString().orEmpty(),
-                )
-            }
-        }
+    /** The photographed pages, as picture files, because PRIVACY.md says photos. */
+    suspend fun pictures(): List<Picture> = Pictures.of(db)
 
     /**
      * Delete everything, immediately.
      *
-     * Every table, then the database file and its key. PRIVACY.md says there is no
-     * copy anywhere else to delete, and that sentence is only true if this leaves
-     * nothing: not an empty database, not an unused key in the Keystore, not a
-     * stray write-ahead log.
+     * Every table, the database file, its key, everything the app left in the cache
+     * on its way to the share sheet, and the daily job. [Erase] holds the whole of
+     * it and says why each part is there; PRIVACY.md says there is no copy anywhere
+     * else to delete, and that sentence is about all five of those.
      */
-    suspend fun deleteEverything(context: android.content.Context) {
-        db.weighIns().deleteAll()
-        db.checkIns().deleteAll()
-        db.checkIns().deleteAllTags()
-        db.synonyms().deleteAll()
-        db.sessions().deleteAll()
-        db.ladders().deleteAllStates()
-        db.ladders().deleteAllNames()
-        db.abilities().deleteAllItems()
-        db.abilities().deleteAllRatings()
-        db.checks().deleteAllChecks()
-        db.checks().deleteAllMeasures()
-        db.runs().deleteAllRuns()
-        db.runs().deleteAllRunMovements()
-        db.runs().deleteAllSore()
-        db.notes().deleteAllNotes()
-        db.notes().deleteAllPatterns()
-        db.notices().deleteAll()
-        db.profile().deleteAllSettings()
-        db.profile().clearExclusions()
-        db.profile().clearReadiness()
-        SteadyDatabase.destroy(context)
-    }
-
-    private fun date(epochDay: Long): String = LocalDate.ofEpochDay(epochDay).toString()
-
-    private companion object {
-        const val SECONDS_PER_MINUTE = 60
-    }
+    suspend fun deleteEverything(context: android.content.Context) = Erase.everything(context, db)
 }
 
 /** What has been sent, so the ceiling can be counted honestly. */
@@ -1516,6 +1434,19 @@ class ContextRepository(private val db: SteadyDatabase) {
         put("steps_${day - A_FORTNIGHT - 1}", "")
     }
 
+    /**
+     * Whether the day between sessions line is wanted at all.
+     *
+     * On by default, which is the one exception ADDENDUM-03 Part 8 makes: "all
+     * optional and off by default except the passive day-between-sessions line." On
+     * changes nothing by itself, because the phone's counter needs a permission that
+     * is only ever asked for at the switch, so a fresh install is on and silent until
+     * somebody says yes.
+     */
+    suspend fun upAndAboutOn(): Boolean = get(UP_AND_ABOUT_ON)?.toBoolean() ?: true
+
+    suspend fun setUpAndAboutOn(value: Boolean) = put(UP_AND_ABOUT_ON, value.toString())
+
     /** The days the up and about line has already been said, so it is not said twice. */
     suspend fun upAndAboutSaid(): Set<Long> =
         get(UP_AND_ABOUT).orEmpty().split(" ").mapNotNull { it.toLongOrNull() }.toSet()
@@ -1529,6 +1460,7 @@ class ContextRepository(private val db: SteadyDatabase) {
         const val A_FORTNIGHT = 14L
         const val A_FEW = 4
         const val UP_AND_ABOUT = "up_and_about_said"
+        const val UP_AND_ABOUT_ON = "up_and_about_on"
         const val CHAIR_HEIGHT = "chair_height"
         const val CHAIR_FROM = "chair_from"
         const val CHAIR_CHANGED_ON = "chair_changed_on"

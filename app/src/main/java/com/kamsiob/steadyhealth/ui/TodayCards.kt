@@ -5,6 +5,7 @@ import androidx.annotation.PluralsRes
 import androidx.annotation.StringRes
 import com.kamsiob.steadyhealth.R
 import com.kamsiob.steadyhealth.data.AbilityRepository
+import com.kamsiob.steadyhealth.data.ContextRepository
 import com.kamsiob.steadyhealth.data.PlanRepository
 import com.kamsiob.steadyhealth.data.ProfileRepository
 import com.kamsiob.steadyhealth.data.RunRepository
@@ -12,6 +13,8 @@ import com.kamsiob.steadyhealth.data.SteadyDatabase
 import com.kamsiob.steadyhealth.domain.AbilityDomain
 import com.kamsiob.steadyhealth.domain.Exclusion
 import com.kamsiob.steadyhealth.domain.GettingAround
+import com.kamsiob.steadyhealth.engine.DayBetween
+import com.kamsiob.steadyhealth.engine.UpAndAbout
 import com.kamsiob.steadyhealth.plan.HowMany
 import com.kamsiob.steadyhealth.plan.HowOften
 import com.kamsiob.steadyhealth.plan.PlanItem
@@ -261,7 +264,26 @@ class TodayCards(private val application: Application, private val db: SteadyDat
     }
 
     suspend fun noticedLines(today: Long): List<String> =
-        Noticed.all(runs.history(), today, profile.anchorDay()).map { say(it) }
+        listOfNotNull(upAndAbout(today)) +
+            Noticed.all(runs.history(), today, profile.anchorDay()).map { say(it) }
+
+    /**
+     * The one line about the day between sessions, or nothing. Part 8 item 1.
+     *
+     * Beside what the app noticed rather than in a place of its own, because that is
+     * what it is: something the app noticed, with no goal attached and nothing to
+     * tap. Every rule about when it appears is in DayBetween, which is pure, and this
+     * writes down that it was said so that it is not said two days running.
+     */
+    private suspend fun upAndAbout(today: Long): String? {
+        val context = ContextRepository(db)
+        if (!context.upAndAboutOn()) return null
+        val days = DayBetween.daysFrom(context.stepReadings())
+        val said = context.upAndAboutSaid()
+        if (DayBetween.today(days, today, said) != UpAndAbout.MoreThanUsual) return null
+        if (today !in said) context.sayUpAndAbout(today)
+        return string(R.string.up_and_about)
+    }
 
     private fun say(noticed: Noticed): String =
         when (noticed) {
