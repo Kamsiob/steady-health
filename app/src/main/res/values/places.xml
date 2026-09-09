@@ -5,12 +5,12 @@
       The places you move through. ADDENDUM-03 Part 8 item 2.
 
       Six questions and one plain fix each. Every rule about the words is in the
-      KDoc of Places.kt and every one of them is visible here: no score, no total,
-      no product, no brand, and not one sentence about falling, danger or risk.
+      KDoc of Places.kt and every one of them is visible here: nothing counted, no
+      total, no product, no brand, and not one sentence about falling or danger.
       The frame is the places, which is what they are.
     -->
     <string name="places_title">The places you move through</string>
-    <string name="places_intro">Six questions about the rooms you use most. There is no score at the end and nothing to buy. Answer what you know and leave the rest.</string>
+    <string name="places_intro">Six questions about the rooms you use most. Nothing gets added up at the end and there is nothing to buy. Answer what you know and leave the rest.</string>
     <string name="places_repeat">You can go through this again whenever you like.</string>
     <string name="places_sorted">Already like that</string>
     <string name="places_not_yet">Not yet</string>
@@ -22,7 +22,7 @@
     <string name="places_again">Start again with all six</string>
     <string name="places_done_action">Done</string>
     <string name="places_offer">Have a look at the places you move through</string>
-    <string name="places_offer_sub">Six questions, once. No score, nothing to buy.</string>
+    <string name="places_offer_sub">Six questions, once. Nothing to add up, nothing to buy.</string>
 
     <string name="place_stairs_light_where">The stairs</string>
     <string name="place_stairs_light_question">Can you see every step from the top and from the bottom, with the light on?</string>
