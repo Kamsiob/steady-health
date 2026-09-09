@@ -8,6 +8,12 @@
 #   tools/all-gates.sh          -> the whole thing
 #   tools/all-gates.sh --quick  -> everything that needs no phone
 #
+# ONE AT A TIME, ALWAYS. Two of these driving the phone together makes
+# `uiautomator dump` return an empty screen for both, and the gates then report
+# that the app has gone blank. That is a fault in the harness and it looks exactly
+# like a fault in the app. This script runs them in sequence; do not start one by
+# hand while it is going.
+#
 # What it does to the phone: installs this one app as an upgrade, drives it by
 # tapping what is on the screen, and changes two settings inside it that two of
 # the gates are about, putting both back at the end. It never uninstalls, never
