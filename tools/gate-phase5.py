@@ -17,7 +17,9 @@ application.
 """
 
 import os
+import re
 import sys
+import time
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
@@ -32,16 +34,41 @@ WAYS = [
     ("Mostly in bed or a chair", "in bed or a chair"),
 ]
 
+def every_name():
+    """Every movement name, read out of the library itself.
+
+    Read rather than listed, so the gate cannot drift from the app. A gate with its
+    own copy of a list somebody else edits is a gate that quietly stops checking.
+    """
+    source = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "app", "src",
+                          "main", "java", "com", "kamsiob", "steadyhealth", "session",
+                          "Movements.kt")
+    with open(source, encoding="utf-8") as file:
+        return set(re.findall(r'name = "([^"]+)"', file.read()))
+
+
+EVERY_NAME = every_name()
+
 # A session is a warm up, movements with a target, and a way out. The ready
 # screen carries all three, so it is the one screen worth asserting on.
 MUST_HAVE = ["I'm ready"]
 
-# A week of sessions without repeating needs more than a handful. Every way has at
-# least thirty movements, so this is a floor and not a target.
-ENOUGH_MOVEMENTS = 12
+# A week of sessions without repeating needs more than a handful. Every way sees at
+# least thirty movements, so this is a floor and not a target, and it is counted
+# against the names below rather than against everything on the screen.
+ENOUGH_MOVEMENTS = 8
 
 # Nothing on a seated or bed session may ask somebody to stand or walk. These
 # are the movement names that would mean the library was filtered wrongly.
+# Movements that belong to a wheelchair or a bed. At least one has to be in a seated
+# library and none may be in a standing one, which is the check that says this is a
+# different library rather than a shorter one.
+SEATED_ONLY = [
+    "Wheeling", "Transfers", "Lifts from the armrests", "Bed to the chair",
+    "Rolling onto your side", "Sitting up to the edge", "Bridges in bed",
+    "Knee rolls", "Easy pushes", "Shuffling in the seat",
+]
+
 ON_FEET_ONLY = [
     "A walk", "A brisk walk", "Stairs", "Wall push ups", "Counter push ups",
     "Step ups", "Heel to toe walking", "Marching on the spot", "Chair stands",
@@ -70,6 +97,11 @@ def one_way(device, label, name, seated):
     # today, and the gates run one after another so it is usually the second.
     device.one_of("Start", "Do another")
     ready = device.scan()
+    if not ready:
+        # The read can land in the gap between one screen and the next. One retry,
+        # because a blank screen is the reader losing the race and not the app.
+        time.sleep(1.5)
+        ready = device.scan()
     print("   ready:", sorted(t for t in ready if len(t) > 3)[:10])
 
     ok = True
@@ -85,23 +117,36 @@ def one_way(device, label, name, seated):
             ok = False
 
     # And the library, which is the other place a way of getting around has to be
-    # honoured. An empty one is as much a failure as a wrong one. It is below the
-    # fold, so this scans rather than reads: counting what fits on the screen would
-    # be measuring the phone.
+    # honoured. It is below the fold, so this scans rather than reads.
+    #
+    # What it checks is which movements are there, not how many. A count came out
+    # at thirteen for somebody on their feet who can see fifty, because the rows
+    # share subtitles and a scan gathers distinct words: it was counting kinds of
+    # row. Names are the honest thing to look at, and they answer the question
+    # better anyway, which is whether this is a different library rather than a
+    # shorter one.
     back_to_today(device)
     device.tap("Sessions")
     device.tap("Everything you can do")
     library = device.scan()
-    movements = sorted(t for t in library if t.startswith("For "))
-    print(f"   library rows: {len(movements)}")
-    if len(movements) < ENOUGH_MOVEMENTS:
-        print(f"   FAIL ({name}): only {len(movements)} movements in the library")
+    names = sorted(t for t in library if t in EVERY_NAME)
+    print(f"   library names seen: {len(names)}")
+    if len(names) < ENOUGH_MOVEMENTS:
+        print(f"   FAIL ({name}): only {len(names)} movements in the library")
         ok = False
-    if seated:
-        wrong = [m for m in ON_FEET_ONLY if m in library]
-        if wrong:
-            print(f"   FAIL ({name}): the library still lists {wrong}")
-            ok = False
+
+    wrong = [m for m in ON_FEET_ONLY if m in library] if seated else []
+    if wrong:
+        print(f"   FAIL ({name}): the library still lists {wrong}")
+        ok = False
+
+    theirs = [m for m in SEATED_ONLY if m in library]
+    if seated and not theirs:
+        print(f"   FAIL ({name}): none of {SEATED_ONLY} in the library")
+        ok = False
+    if not seated and theirs:
+        print(f"   FAIL ({name}): offered {theirs}, which is for a wheelchair or a bed")
+        ok = False
 
     return ok
 
