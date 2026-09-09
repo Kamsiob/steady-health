@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!--
+      The places you move through. ADDENDUM-03 Part 8 item 2.
+
+      Six questions and one plain fix each. Every rule about the words is in the
+      KDoc of Places.kt and every one of them is visible here: no score, no total,
+      no product, no brand, and not one sentence about falling, danger or risk.
+      The frame is the places, which is what they are.
+    -->
+    <string name="places_title">The places you move through</string>
+    <string name="places_intro">Six questions about the rooms you use most. There is no score at the end and nothing to buy. Answer what you know and leave the rest.</string>
+    <string name="places_repeat">You can go through this again whenever you like.</string>
+    <string name="places_sorted">Already like that</string>
+    <string name="places_not_yet">Not yet</string>
+    <string name="places_not_sure">Not sure</string>
+    <string name="places_fix">One thing that helps</string>
+    <string name="places_done">That is all six.</string>
+    <string name="places_done_none">Nothing you flagged. Worth going through again if anything changes.</string>
+    <string name="places_done_some">Here is what you said you would look at. Nothing here is a job, and the app will not ask about it again.</string>
+    <string name="places_again">Start again with all six</string>
+    <string name="places_done_action">Done</string>
+    <string name="places_offer">Have a look at the places you move through</string>
+    <string name="places_offer_sub">Six questions, once. No score, nothing to buy.</string>
+
+    <string name="place_stairs_light_where">The stairs</string>
+    <string name="place_stairs_light_question">Can you see every step from the top and from the bottom, with the light on?</string>
+    <string name="place_stairs_light_fix">A switch at both ends is the usual fix. Where there is only one, a plug-in light partway down does the same job for a few pounds.</string>
+    <string name="place_night_route_where">The way to the bathroom at night</string>
+    <string name="place_night_route_question">If you get up in the night, is there light the whole way without hunting for a switch?</string>
+    <string name="place_night_route_fix">A small light that comes on by itself in the hall or by the skirting board, so the route is lit before you are properly awake.</string>
+    <string name="place_rugs_cables_where">The floor you cross most</string>
+    <string name="place_rugs_cables_question">Are the rugs flat and the cables out of the way along the route you walk most often?</string>
+    <string name="place_rugs_cables_fix">Double sided tape holds a rug corner down. A cable can usually go behind the furniture rather than across the floor.</string>
+    <string name="place_something_to_hold_where">Where you would reach out</string>
+    <string name="place_something_to_hold_question">Is there something solid to hold at the places you already put a hand out, on the stairs or getting up?</string>
+    <string name="place_something_to_hold_fix">Notice where your hand goes on its own. That is where a rail belongs, and a joiner will fit one in under an hour.</string>
+    <string name="place_near_the_bed_where">Beside the bed</string>
+    <string name="place_near_the_bed_question">Is the floor beside your bed clear, with the light and anything you need within reach of sitting up?</string>
+    <string name="place_near_the_bed_fix">The lamp, your glasses and the phone on the side you get out of, and nothing on the floor between the bed and the door.</string>
+    <string name="place_indoor_shoes_where">What you wear indoors</string>
+    <string name="place_indoor_shoes_question">Do you have something on your feet indoors that fastens and holds your heel?</string>
+    <string name="place_indoor_shoes_fix">A pair of indoor shoes that fasten, kept by the bed. Backless slippers come off at the moment you would rather they did not.</string>
+
+</resources>

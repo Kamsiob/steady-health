@@ -56,6 +56,7 @@ import com.kamsiob.steadyhealth.engine.Experiment
 import com.kamsiob.steadyhealth.engine.ExperimentEngine
 import com.kamsiob.steadyhealth.engine.Gap
 import com.kamsiob.steadyhealth.engine.ItemHistory
+import com.kamsiob.steadyhealth.engine.ItemMonth
 import com.kamsiob.steadyhealth.engine.Ladders
 import com.kamsiob.steadyhealth.engine.MeasureResult
 import com.kamsiob.steadyhealth.engine.Measures
@@ -76,6 +77,8 @@ import com.kamsiob.steadyhealth.engine.VisitSummaryEngine
 import com.kamsiob.steadyhealth.engine.WeekOfDays
 import com.kamsiob.steadyhealth.engine.WeightEngine
 import com.kamsiob.steadyhealth.export.Sheet
+import com.kamsiob.steadyhealth.places.Places
+import com.kamsiob.steadyhealth.places.Said
 import com.kamsiob.steadyhealth.session.Area
 import com.kamsiob.steadyhealth.session.ChairHeight
 import com.kamsiob.steadyhealth.session.Done
@@ -322,9 +325,44 @@ class AbilityRepository(private val db: SteadyDatabase) {
             TrackedItemEntity(text = text.trim(), domain = domain.id, createdAt = at, archivedAt = null),
         )
 
-    suspend fun rate(itemId: Long, epochDay: Long, rating: Int, at: Long) {
-        db.abilities().upsertRating(ItemRatingEntity(itemId, epochDay, rating.coerceIn(0, MAX_RATING), at))
+    /**
+     * The monthly answer about one item.
+     *
+     * [sureness] is passed through as given, null included, so that skipping the
+     * second question writes a row that says it was skipped rather than one that says
+     * zero. Passing null over an answer already there does not erase it, because the
+     * only way to reach this is by answering, and re-answering the first question is
+     * not a retraction of the second.
+     */
+    suspend fun rate(
+        itemId: Long,
+        epochDay: Long,
+        rating: Int,
+        at: Long,
+        sureness: Int? = null,
+    ) {
+        val already = db.abilities().ratingsFor(itemId).firstOrNull { it.epochDay == epochDay }
+        db.abilities().upsertRating(
+            ItemRatingEntity(
+                itemId = itemId,
+                epochDay = epochDay,
+                rating = rating.coerceIn(0, MAX_RATING),
+                recordedAt = at,
+                sureness = (sureness ?: already?.sureness)?.coerceIn(0, MAX_RATING),
+            ),
+        )
     }
+
+    /** The months of one item, as the confidence engine wants them. */
+    suspend fun months(itemId: Long): List<ItemMonth> =
+        db.abilities().ratingsFor(itemId).map {
+            ItemMonth(
+                itemId = it.itemId,
+                epochDay = it.epochDay,
+                rating = it.rating,
+                sureness = it.sureness,
+            )
+        }
 
     suspend fun latestRating(itemId: Long): ItemRatingEntity? =
         db.abilities().ratingsFor(itemId).maxByOrNull { it.epochDay }
@@ -998,7 +1036,7 @@ class DataRepository(private val db: SteadyDatabase) {
         ),
         Sheet(
             name = "your-list",
-            rows = listOf(listOf("date", "what_you_wanted", "ability", "rating")) +
+            rows = listOf(listOf("date", "what_you_wanted", "ability", "rating", "how_sure")) +
                 itemRatings(),
         ),
     )
@@ -1019,7 +1057,13 @@ class DataRepository(private val db: SteadyDatabase) {
     private suspend fun itemRatings(): List<List<String>> =
         db.abilities().itemsOnce().flatMap { item ->
             db.abilities().ratingsFor(item.id).map { rating ->
-                listOf(date(rating.epochDay), item.text, item.domain, rating.rating.toString())
+                listOf(
+                    date(rating.epochDay),
+                    item.text,
+                    item.domain,
+                    rating.rating.toString(),
+                    rating.sureness?.toString().orEmpty(),
+                )
             }
         }
 
@@ -1410,6 +1454,26 @@ class ContextRepository(private val db: SteadyDatabase) {
 
     suspend fun setAgreedToTerms(id: String, value: Boolean) =
         put("model_terms_$id", value.toString())
+
+    /**
+     * What was said about the six places. ADDENDUM-03 Part 8 item 2.
+     *
+     * Six settings rather than a table, because that is all it is: six answers from a
+     * fixed list of six questions, overwritten whenever somebody goes through it
+     * again. Nothing here keeps a history of what a house used to be like.
+     */
+    suspend fun places(): Map<String, Said> = Places.all
+        .mapNotNull { question ->
+            get("place_${'$'}{question.id}")
+                ?.let(Said::fromId)
+                ?.let { question.id to it }
+        }
+        .toMap()
+
+    suspend fun setPlace(id: String, said: Said) = put("place_${'$'}id", said.id)
+
+    /** Going through it again starts from nothing, which is what again means. */
+    suspend fun forgetPlaces() = Places.all.forEach { put("place_${'$'}{it.id}", "") }
 
     private companion object {
         const val CHAIR_HEIGHT = "chair_height"

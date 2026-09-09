@@ -175,6 +175,12 @@ class VoiceTest {
             "STEP-1" to setOf("card_muscle_meds_source"),
             "SURMOUNT-1" to setOf("card_muscle_meds_source"),
             "JMIR" to setOf("card_smoothed_source"),
+            // Three more of the same kind, from the cards ADDENDUM-03 Part 8
+            // added: a recovery programme, a study group, and a cohort study.
+            // Each is the name the reader would search for.
+            "ERAS" to setOf("card_after_operation_source"),
+            "PROT-AGE" to setOf("card_protein_source"),
+            "PURE" to setOf("card_grip_source"),
         )
 
         /**

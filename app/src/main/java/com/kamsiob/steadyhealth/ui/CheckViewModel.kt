@@ -12,11 +12,13 @@ import com.kamsiob.steadyhealth.data.SteadyDatabase
 import com.kamsiob.steadyhealth.domain.AbilityDomain
 import com.kamsiob.steadyhealth.domain.AbilityState
 import com.kamsiob.steadyhealth.engine.AbilityEngine
+import com.kamsiob.steadyhealth.engine.Confidence
 import com.kamsiob.steadyhealth.engine.HowCounted
 import com.kamsiob.steadyhealth.engine.LifeSentences
 import com.kamsiob.steadyhealth.engine.Measure
 import com.kamsiob.steadyhealth.engine.MeasureUnit
 import com.kamsiob.steadyhealth.engine.Measures
+import com.kamsiob.steadyhealth.engine.SurerLine
 import com.kamsiob.steadyhealth.sensing.Motion
 import com.kamsiob.steadyhealth.sensing.RepCounter
 import com.kamsiob.steadyhealth.ui.screens.CheckDoneUiState
@@ -225,8 +227,18 @@ class CheckViewModel(application: Application) : AndroidViewModel(application) {
      */
     private fun loadRatings() = viewModelScope.launch {
         val items = abilities.items().map { item ->
-            val before = abilities.latestRating(item.id)?.rating ?: DEFAULT_RATING
-            RateAgainItem(id = item.id, text = item.text, rating = before, before = before)
+            val last = abilities.latestRating(item.id)
+            val before = last?.rating ?: DEFAULT_RATING
+            RateAgainItem(
+                id = item.id,
+                text = item.text,
+                rating = before,
+                before = before,
+                // Last month's answer is not carried forward as this month's. The
+                // second question starts unanswered every time, because a prefilled
+                // number that nobody touched would be recorded as an answer.
+                sureness = null,
+            )
         }
         _rateAgain.value = items
         if (items.isEmpty()) finish()
@@ -238,16 +250,76 @@ class CheckViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    /** The second question. ADDENDUM-03 Part 18. Answered only if it is touched. */
+    fun sureness(itemId: Long, sureness: Int) {
+        _rateAgain.update { list ->
+            list.map { if (it.id == itemId) it.copy(sureness = sureness) else it }
+        }
+    }
+
     /** Save the ratings, then read the result. */
     fun ratingsDone() = viewModelScope.launch {
         val now = System.currentTimeMillis()
-        _rateAgain.value.forEach { abilities.rate(it.id, today(), it.rating, now) }
+        _rateAgain.value.forEach { abilities.rate(it.id, today(), it.rating, now, it.sureness) }
         finish()
     }
 
+    /**
+     * The confidence sentence, or nothing. ADDENDUM-03 Part 18.
+     *
+     * One item, the first that has something to say, so that a person with four
+     * things on their list gets one sentence rather than four. The ability state is
+     * the one the measures just produced for the ability that item belongs to, which
+     * is why this is worked out here and not in Progress: this is the only moment
+     * where both halves are from the same morning.
+     */
+    private suspend fun surer(states: Map<String, AbilityState>): String {
+        return abilities.items().firstNotNullOfOrNull { item ->
+            val months = abilities.months(item.id).sortedBy { it.epochDay }
+            val line = Confidence.line(
+                // Same when nothing was measured for that ability this month.
+                // "We did not look" is not a finding, and the sentence for Same
+                // is the honest one either way.
+                state = states[item.domain] ?: AbilityState.Same,
+                was = months.getOrNull(months.size - 2),
+                now = months.lastOrNull(),
+                itemText = item.text,
+            )
+            when (line) {
+                is SurerLine.BothMoved -> string(R.string.surer_both, line.itemText)
+                is SurerLine.NotYet -> string(R.string.surer_not_yet, line.itemText)
+                is SurerLine.SurerAnyway -> string(R.string.surer_anyway, line.itemText)
+                SurerLine.Quiet -> null
+            }
+        }.orEmpty()
+    }
+
+    /**
+     * What this month's measures said, one answer per ability.
+     *
+     * Quieter wins over Better within an ability, which is AbilityEngine's own rule:
+     * an ability where one measure went up and another went the other way is not
+     * Better, and reporting it as such is the app choosing the flattering half.
+     */
+    private fun statesByDomain(
+        measured: List<Measure>,
+        rows: List<CheckResultRow>,
+    ): Map<String, AbilityState> =
+        measured.zip(rows)
+            .groupBy { it.first.domain.id }
+            .mapValues { (_, pairs) ->
+                val states = pairs.map { it.second.state }
+                when {
+                    states.any { it == AbilityState.Quieter } -> AbilityState.Quieter
+                    states.any { it == AbilityState.Better } -> AbilityState.Better
+                    else -> AbilityState.Same
+                }
+            }
+
     private fun finish() = viewModelScope.launch {
         val previous = checks.results()
-        val rows = plan.filter { it.id in taken }.map { measure ->
+        val measured = plan.filter { it.id in taken }
+        val rows = measured.map { measure ->
             val history = previous.filter { it.measureId == measure.id }.sortedBy { it.epochDay }
             row(measure, taken.getValue(measure.id), history.lastOrNull()?.value)
         }
@@ -281,6 +353,7 @@ class CheckViewModel(application: Application) : AndroidViewModel(application) {
             },
             rows = rows + ratingRows,
             anySame = (rows + ratingRows).any { it.state == AbilityState.Same },
+            surer = surer(statesByDomain(measured, rows)),
         )
         _finished.value = true
     }

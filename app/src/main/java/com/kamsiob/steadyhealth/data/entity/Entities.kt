@@ -132,6 +132,18 @@ data class ItemRatingEntity(
     val epochDay: Long,
     val rating: Int,
     val recordedAt: Long,
+    /**
+     * How sure they feel about it, 0 to 10. ADDENDUM-03 Part 18.
+     *
+     * On the same row as the doing rather than in a table of its own, because the two
+     * are asked in the same breath about the same thing on the same day, and a second
+     * table would let them drift apart.
+     *
+     * Nullable, and it stays nullable. Part 18 calls it "a second optional monthly
+     * rating": null means the question was passed over, which is a different thing
+     * from a zero, and Confidence.wayOf is built on that difference.
+     */
+    val sureness: Int? = null,
 )
 
 /** One monthly check, and the measures taken inside it. LOGIC.md 7b. */

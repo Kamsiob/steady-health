@@ -103,13 +103,14 @@ import net.zetetic.database.sqlcipher.driver.SQLCipherDriver
     ],
     // Version 2 adds the three tables ADDENDUM-03's session needs. Purely additive,
     // so the migration is generated rather than written, and nobody's rows move.
-    version = 5,
+    version = 6,
     exportSchema = true,
     autoMigrations = [
         AutoMigration(from = 1, to = 2),
         AutoMigration(from = 2, to = 3),
         AutoMigration(from = 3, to = 4),
         AutoMigration(from = 4, to = 5),
+        AutoMigration(from = 5, to = 6),
     ],
 )
 abstract class SteadyDatabase : RoomDatabase() {

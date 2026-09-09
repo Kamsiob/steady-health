@@ -157,6 +157,13 @@
     <!-- ===================== Screen 7b: Rate each ===================== -->
     <string name="rate_title">Right now, how hard is each one?</string>
     <string name="rate_scale">Zero is can\'t do it at all. Ten is easy.</string>
+    <!--
+      The second monthly question. ADDENDUM-03 Part 18. Deliberately not framed as
+      confidence, which is a word about a personality, but as how sure you feel
+      about one thing, which is a question about that thing.
+    -->
+    <string name="rate_sure">And how sure do you feel about it? Same scale.</string>
+    <string name="rate_sure_of">How sure you feel about %1$s</string>
     <string name="rate_why">The app asks again once a month. The difference between then and now is the whole point.</string>
 
     <!-- ===================== Screen 8: Anchor ===================== -->

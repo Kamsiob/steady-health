@@ -221,4 +221,15 @@
     <string name="life_bed_grip">You can hold a cup steadily now.</string>
     <string name="life_bed_ankles">Your ankles move freely through the whole range now.</string>
 
+
+    <!--
+      The confidence sentence. ADDENDUM-03 Part 18 gives two of these almost word
+      for word and they are kept. Every one of them reports two things the person
+      supplied and joins them with nothing stronger than "and" or "but". None of
+      them tells anybody how to feel about either half.
+    -->
+    <string name="surer_both">That got easier, and you said you feel surer about %1$s too.</string>
+    <string name="surer_not_yet">That got easier, but you don\'t feel any surer about %1$s yet. That often follows later.</string>
+    <string name="surer_anyway">The numbers held, and you feel surer about %1$s than you did.</string>
+
 </resources>

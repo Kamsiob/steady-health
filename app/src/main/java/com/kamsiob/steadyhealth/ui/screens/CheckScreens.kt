@@ -197,8 +197,20 @@ private fun Dots(count: Int) {
     }
 }
 
-/** One thing on the person's list, being rated again. */
-data class RateAgainItem(val id: Long, val text: String, val rating: Int, val before: Int)
+/**
+ * One thing on the person's list, being rated again.
+ *
+ * [sureness] is the second question, ADDENDUM-03 Part 18, and it is null until it is
+ * answered. Null and zero are different answers here and stay different all the way
+ * down to the column they are written in.
+ */
+data class RateAgainItem(
+    val id: Long,
+    val text: String,
+    val rating: Int,
+    val before: Int,
+    val sureness: Int? = null,
+)
 
 /**
  * The person's own list, re-rated. LOGIC.md 3b: "Re-rated monthly with the check."
@@ -213,6 +225,7 @@ data class RateAgainItem(val id: Long, val text: String, val rating: Int, val be
 fun RateAgainScreen(
     items: List<RateAgainItem>,
     onRate: (Long, Int) -> Unit,
+    onSureness: (Long, Int) -> Unit,
     onDone: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
@@ -238,6 +251,17 @@ fun RateAgainScreen(
                 onRate = { onRate(item.id, it) },
                 label = item.text,
             )
+
+            // The second question, under the first rather than on a screen of its
+            // own. Part 18 calls it optional and it looks optional: it has no
+            // Skip, because leaving a row alone is already skipping it, and a
+            // Skip button would make passing over it feel like a decision.
+            Paragraph(stringResource(R.string.rate_sure))
+            RatingRow(
+                rating = item.sureness ?: 0,
+                onRate = { onSureness(item.id, it) },
+                label = stringResource(R.string.rate_sure_of, item.text),
+            )
         }
     }
 }
@@ -256,6 +280,13 @@ data class CheckDoneUiState(
     val wanted: String = "",
     val rows: List<CheckResultRow> = emptyList(),
     val anySame: Boolean = false,
+    /**
+     * What an ability did and how sure they feel, in one sentence. Part 18.
+     *
+     * At most one, and blank most months. It is the strongest sentence the app has
+     * and saying it every month about every item would spend it.
+     */
+    val surer: String = "",
 )
 
 /**
@@ -299,6 +330,10 @@ fun CheckDoneScreen(
         state.rows.forEach { row ->
             ListItem(heading = row.name, subtitle = row.value, value = row.stateLabel)
         }
+
+        // Under the numbers rather than over them. It is a sentence about what the
+        // numbers meant, and it reads as one only once they have been seen.
+        if (state.surer.isNotBlank()) Paragraph(state.surer)
 
         if (state.anySame) {
             NoteBlock(
