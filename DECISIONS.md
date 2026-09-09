@@ -1248,6 +1248,49 @@ have moved out of it. What is left is Today and the walk, which share four piece
 mutable state, and ADDENDUM-03 Part 21 rebuilds the walk in Phase 5. Splitting it now
 means untangling that state twice. The suppression carries the reasoning in the file.
 
+### The other three ways into a therapist's plan
+
+**Speaking a plan uses the on-device recogniser or nothing.** Android's ordinary
+`SpeechRecognizer` sends the audio to Google's servers, and the app's standing rule is
+that everything runs locally and the internet is only ever touched by something the
+person switched on. A recording of somebody describing their own therapy is exactly
+what that rule is for, and there is no wording that makes sending it acceptable. So
+`PlanVoice` only ever calls `createOnDeviceSpeechRecognizer`, gated on API 33 because
+that is where `isOnDeviceRecognitionAvailable` arrived and the app will not create a
+recogniser it cannot first ask about. Where the phone cannot do it, the screen says one
+sentence and offers typing, which is the same screen the typed way in uses. The
+fallback that would work is the one that sends somebody's voice to a server, so there
+is no fallback, and the microphone is asked for on the tap that needs it and never on a
+phone the app has already decided it cannot use.
+
+**A spoken sentence is cut in `PlanMatching`, not before it.** `lines` already cut on
+"and" where both halves named a movement on their own, which is exactly Part 6's spoken
+example. It now cuts on the comma under the same rule, for "chair stands, heel raises
+and a walk", where only the last join is a word. The rule is what makes the comma safe:
+"heel raises, 3 sets of 10, twice a day" has pieces that name no movement, so that line
+stays whole and its numbers stay attached. Cutting in the speech screen instead would
+have been a second vocabulary for the same job, and the scanned sheet would not have
+got the fix.
+
+**One chooser in front of the camera, and every caller repointed.** Sessions and You
+used to open the camera directly. They open the four ways now, and the camera is behind
+the first row, so nothing reaches it without passing the chooser. The camera row is
+also the only one of the four that is not about a plan, since Part 5 sends a letter or
+an appointment card down the same path, and the line under the title says so rather
+than leaving somebody holding a letter to guess.
+
+**The three new screens each hold their own view model, scoped to their own back stack
+entry.** Each is one screen with one answer on it and nothing to share, and leaving the
+screen is then what lets go of what it was holding, which for the spoken one is the
+microphone. The draft they all fill is still `ScanViewModel`'s, because that is what
+saves a plan, and one draft is what keeps "nothing is saved unconfirmed" a property of
+the app rather than of each way in.
+
+**Picking from the library offers warm ups and cool downs, which Sessions does not.** A
+sheet can ask for shoulder rolls or calf stretches, and a list that could not offer them
+would send that person back to typing. `TodayCards.library` took a `pieces` argument for
+it, defaulted to what every existing caller already got.
+
 ### Where the phases stand
 
 Phases 1, 2 and 3 are done, each with its gate run on the phone. 27 instrumented tests
@@ -1266,3 +1309,563 @@ Ceilings and variants are in the session engine. The other ways of getting aroun
 work, but have only been walked on the on-feet path.
 
 **Phases 6, 7 and 8 have not started.**
+
+### The wheelchair and bed libraries, and why `ways` lost its default
+
+`Movement.ways` defaulted to on feet and with a walker, which meant a movement was
+tagged for somebody standing up unless whoever added it remembered otherwise. Nine
+had gone in that way, among them the bridges and every kind of chair stand, where the
+default happened to be right, and nothing in the build would have said so if it had
+been wrong. The default is gone. The compiler now asks the question of every new
+movement, which is the only check that cannot be forgotten.
+
+The two thin libraries were written out rather than borrowed. A movement belongs to a
+way when its setup line can be followed exactly as written by somebody who gets around
+that way, and where the sentence would have to change it is a second movement with its
+own id and its own words. That is why "Hold something, lift one foot, and circle the
+ankle" stayed on feet and `warm_seated_ankles` was written beside it, and why bridging
+in a bed is `bed_bridge` rather than `glute_bridge` with the floor taken out of it: one
+of them needs somebody to get down on the floor first and the other does not.
+
+A wheelchair user's chair is not something the room might be missing, so pressure
+relief lifts, transfers and sitting unsupported ask for nothing rather than for a
+sturdy chair. The chair question in onboarding is about a chair to stand up from.
+
+The band press now carries the pushing exclusion. LOGIC.md section 5 offers it as the
+replacement for the pushing ladder, which is a different question from whether the app
+may put a press into a session for somebody who said no pushing or pressing. The
+ladder still does what LOGIC.md says; the session does not.
+
+### Three things the four ways found in the session engine
+
+A fortnight of planned sessions for each of the four ways, which is what
+`EveryWayTest` runs, found three faults that a single plan could not.
+
+**Steady was never offered.** `chooseMain` took one movement per ability in the order
+`AbilityDomain` declares them and stopped at three, and Steady is declared fourth. The
+abilities are now taken least recently fed first, so all four come round.
+
+**A session could be sixteen minutes.** The Go movement chosen on the second day was
+the ten minute brisk walk, because it was the one that had gone longest without being
+done. Movements are now chosen against what the session has room for, worked out
+before anything is picked from what the warm up and the cool down leave of eight
+minutes.
+
+**Every session opened and closed the same way.** The warm up was the first on the
+list and the cool down the first two, every day. Both now rotate on recency like
+everything else, which is also why the seated and bed libraries have four cool downs
+each rather than the two they could have had.
+
+The cool down threshold moved with them. It was read against the opening, so a session
+that came to seven minutes with a cool down on the end was told it was under five and
+did not get one. It is now read against the finished session, which is what
+ADDENDUM-03 Part 1 means by a session over five minutes.
+
+### The permission nobody typed
+
+An audit of the four ways into a therapist's plan asked one question: does any audio,
+text or image leave the phone by any path they opened. Nothing they opened does. The
+spoken way builds only `createOnDeviceSpeechRecognizer`, on every path including the
+error path and the say it again path, never falls back to the networked recogniser, and
+does not lean on `EXTRA_PREFER_OFFLINE` to be true. Nothing anywhere in `app/src` logs
+anything: there is not one `Log.` and not one `println` in it.
+
+The merged manifest was another matter. `android.permission.INTERNET` was in the built
+app and nobody typed it. `com.google.mlkit:text-recognition` reads a page with a model
+that ships inside the APK and needs no network to do it, but it arrives with Google's
+usage telemetry transport attached, `transport-backend-cct`, which declares the
+permission and sends events of its own through `Transport.send`. So the top of
+AndroidManifest.xml said this build cannot open a network connection while the built
+app could.
+
+It is taken back out with `tools:node="remove"`, which is one line and reversible,
+rather than by cutting the transport out of the dependency graph, which would leave ML
+Kit calling a class that is not there on a phone nobody here can try it on.
+`PermissionsTest` reads the merged manifest the build produced rather than the one in
+src/main, because the one in src/main was never where the problem was. Part 7's
+optional reader is the only thing that will ever want the permission, and that is the
+day the node goes and it is declared properly.
+
+Two smaller things went with it. The spoken screen let go of its recogniser only when
+its entry left the back stack, so walking forward to the confirmation screen left one
+constructed and the phone counting the microphone as held; pausing the screen now
+destroys it, and a late callback from a recogniser that has been let go is ignored
+rather than shown. And Android stops presenting its own microphone question after a
+second refusal without telling the app, which left "Allow the microphone" as a button
+that did nothing when pressed, so the typing row now sits under that sentence from the
+first time the screen is opened.
+
+### The backup is one more file inside the same export zip
+
+Phase 8 asks for export, import, delete, backup and restore. Export and delete were
+built in Phase 6 as CSV and PDF in a zip, which is what PRIVACY.md promises in those
+words and is not changing. But CSV is for a person: it formats the dates, drops the
+ids that join a day to its tags and a plan to its lines, and flattens the tags into a
+column. Nothing can be rebuilt from it, and pretending otherwise would produce an
+import that quietly loses whatever it could not parse back.
+
+So the backup is a separate file, `backup.json`, written into the same zip beside the
+spreadsheets. One artifact: somebody who kept their export can open the spreadsheets
+and can put everything back, and did not have to decide in advance which of those they
+were going to need. The alternative, a second thing to export and keep somewhere else,
+is the one that is not there on the day it is wanted.
+
+The rows in it are the Room entities themselves, serialised by kotlinx.serialization,
+rather than a second set of shapes written beside them. A parallel set of row types is
+a place for a column to go missing, and the column that goes missing is not noticed
+until somebody restores. Reversal: none contemplated; if the zip ever gets too large
+for a phone to build in memory, the JSON gets streamed into the zip rather than built
+as a string first, and nothing else changes.
+
+PRIVACY.md's sentence lists "spreadsheets, your photos, and a one-page summary". The
+zip now also carries the backup. That sentence is still true and is not weakened by
+one more file being in there, but it is no longer the whole list, and PRIVACY.md is a
+binding document with an effective date on it. Adding the clause is an owner edit, and
+it is recorded here rather than made. The app's own copy does say it: the export row
+now reads "The same zip holds a backup this app can read back".
+
+### Restore replaces everything; it never merges
+
+Two histories of the same person cannot be joined honestly. The same day can hold two
+different sentences, a weight from each, two ratings of the same thing a fortnight
+apart. There is no rule that picks between them that is not the app inventing what
+somebody meant, and whatever such a rule chose, nobody could check it afterwards,
+because the two versions would be mixed and the join would be invisible.
+
+Replacing is the one outcome that can be described in a sentence before it happens,
+and a person can decide about a sentence. So the screen says everything here will be
+replaced by what is in the file, asks once with "Keep what is here" as the primary
+button under the thumb, and then does exactly that. It is one transaction, so the app
+is never left holding half of one history and half of another.
+
+### An older backup restores; a newer one is refused
+
+A backup from a later version can hold a column this build has nowhere to put. Reading
+it as far as it goes would put back most of somebody's history and drop the rest, and
+the dropped part is invisible: they would find out months later by noticing something
+missing, if ever. So it is refused by its header, with a sentence saying to update the
+app, and nothing is touched.
+
+Older has to work, because that is the whole point of a backup. Room's auto migrations
+do not apply: they turn a database on disk into a newer one, and a backup is a file. So
+a table added since the file was written comes back empty, and a column added since
+comes back as the value a new row would get, which is the default on the property in
+the entity. That is not a guess. It is exactly what Room's auto migration put into the
+rows that were already on the phone when the column arrived, so a restored row and a
+migrated row end up saying the same thing. Today that is one column, `item_ratings`.`sureness`,
+which comes back null, meaning the second monthly question was not put, which is
+different from a zero and is what `Confidence.wayOf` is built on.
+
+The rule this depends on is that any column added to a table after that table existed
+must have a default in Kotlin. `BackupCompletenessTest` checks that against every
+schema version Room has written, so the next person to add a column finds out from a
+test rather than from somebody's failed restore.
+
+### Forgetting a table is a failing test, because reflection cannot see @Database
+
+This file already says a table that first appears in a later phase "is exactly the kind
+that gets left out of the export and is not noticed until somebody tries to restore".
+So the backup is designed so that leaving one out is not possible quietly.
+
+Reflection over the `@Database` annotation is the obvious way and it does not work:
+Room's annotations are `AnnotationRetention.BINARY`, so they are not in the built code
+and nothing at runtime can ask `SteadyDatabase` what entities it has. What is available
+is better. Room writes a schema JSON for every version at build time, generated from
+that same annotation, and they are checked in. `BackupCompletenessTest` reads the
+newest one and holds it against the backup: every table in the database has a list in
+the file, every column of every table is in that list, the restore registry covers
+exactly those tables, and the schema version written into every backup is the version
+the database is at.
+
+Three more things make the rest of the path structural rather than remembered. The
+`Backup` class gives none of its thirty-one lists a default, so building one is a
+constructor call that does not compile until the new table is passed. Restore walks one
+list of tables and nothing else, so a table cannot be emptied and then not refilled.
+And the backup reads through its own queries, one `SELECT *` per table, rather than
+through the queries the screens use, several of which leave rows out on purpose.
+
+It was tried both ways round before being believed. Adding a dummy entity to
+`SteadyDatabase` and bumping the version turned four tests red naming `dummy_things`;
+adding it without bumping the version, so Room rewrote the existing schema file in
+place, still turned three of them red. Then the dummy entity was removed and everything
+went green again.
+
+### Part 6 read end to end, once the four ways in existed
+
+Four ways into a therapist's plan now exist and all four end on one confirmation
+screen, which is the arrangement Part 6 asks for. Reading the rest of Part 6 against
+what the app actually draws turned up five sentences the specification asks for and
+the app either did not say, said in the wrong place, or said too often. A source
+reading test now holds the arrangement itself: every way in leaves for the same route,
+there is one confirmation screen, a plan is written in exactly one place, and the view
+model behind the three ways with no page behind them holds nothing that could write.
+
+**Two plans were one list.** The card read every live line through one flat query and
+then took the label off whichever plan came back first, so somebody with a physio plan
+and an OT plan was shown both sets of movements under the physio's name. The database
+was right all along, since saving inserts a plan rather than replacing one; it was the
+reading that merged them. Plans and their lines now come back together, the eyebrow
+stops naming one therapist the moment there is a second, and each plan carries its own
+name above its own lines. The same bug had two smaller copies: the sentence about a
+movement on both lists named the wrong therapist, and the appointment line named the
+oldest plan rather than the plan carrying the date.
+
+**The clash was flagged a day late.** Part 6 flags a plan movement that goes against
+something the person said they avoid. It was said on Today's card and nowhere else,
+which meant that somebody picking wall push ups off the library, having told the app
+they avoid pushing, heard nothing until the next morning. It is now said on the
+confirmation screen as well, where the sheet is still in their hand. One sentence in
+one place feeds both, so the two cannot drift into being two different sentences about
+the same thing. Nothing is removed and nothing is blocked: the line stays and the save
+button stays, which is Part 6's own instruction.
+
+**"Once" was every time.** "This is your therapist's, not ours" was a permanent block
+on the confirmation screen, drawn on every plan anybody ever confirmed. Part 6 says
+once. It is now the sand block the rest of the app uses for a sentence it owes
+somebody one time, and it is marked read when a plan is saved as well as when the
+small dismiss is tapped. Marking it only on the dismiss would have left it standing
+for everybody who read it and moved on, which is most people, and that is the
+repetition this was meant to end. Getting to a saved plan means having passed it.
+
+The other "once" in Part 6, the line about a movement being on the therapist's list
+too, is deliberately not treated the same way. It is one sentence however many
+movements overlap, and it is said whenever the overlap is true, because it explains
+why a movement somebody expected is missing from the suggestions below it. An
+explanation of what is on the screen today has to be on the screen today. The line
+about whose plan this is is a fact about the app; that one keeps.
+
+**One tap was three.** "The person can turn the app's extras off entirely, in one tap,
+and many will." The only switch was in You, behind a tab, a scroll and a switch, and
+the two strings written for the card were unused. The tap is now on the card itself,
+under the suggestions it turns off, on Today and on Sessions, writing the same setting
+the You tab writes. The row stays when they are off, saying so and offering them back,
+because a tap that removes the only way to undo it is a trap.
+
+**Small things.** A label is trimmed on the way in, so "physio " and "physio" are the
+same therapist, and a label of nothing but spaces falls back to the plain word rather
+than printing "From your" with nothing after it. The flat query that merged the two
+plans is gone rather than left sitting there, because its comment said a session was
+built from it and nothing builds a session from it.
+
+**Still not built, and named here rather than quietly left.** Part 6 says "when a
+therapist's plan exists, IT IS the session ... and it is what Start runs". Start does
+not run it. `startTodays` plans through `SessionEngine` from the person's own history
+and never opens the plan table, so the card offers the therapist's movements and the
+button under it runs the app's own. Nothing else in Part 6 can be finished around
+that: what was done against the plan, the tracking, and the export's "what was
+prescribed, what was done and when" all rest on the plan having been run. The export
+back is the other one: it renders the first live plan only, so a second therapist's
+plan is not on the page taken to the appointment.
+
+## Export everything, delete everything, held to the words, September 9 2026
+
+PRIVACY.md makes two promises with strong words in them. "Export everything at any
+time from Settings as ordinary files: spreadsheets, your photos, and a one-page
+summary." And "Deletion is immediate and complete, and there is no copy anywhere else
+to delete." Both were checked against what the code does rather than against what it
+says it does. Neither was true.
+
+### The export carried seven tables out of thirty-one
+
+Five sheets: weigh-ins, days, sessions, checks, your-list. Between them they read
+`weigh_ins`, `check_ins`, `check_in_tags`, `sessions`, `measure_results`,
+`tracked_items` and `item_ratings`. The other twenty-four tables were in the database
+and in no spreadsheet: waist, blood pressure, photos, runs and what was done in them,
+sore areas, the monthly check's own answer, the Sunday write-ups, the patterns, the
+try-it-and-see comparisons, the visit summaries, the scanned documents and their
+pages, the plans and their lines, the phrases somebody taught the app, the names they
+gave their own steps, where they are on each ladder, the settings, which is where
+height and age live, what they asked to leave out, the readiness answers, and the
+record of what the app itself said and when.
+
+Nothing was removed to get there. Tables arrived phase by phase and sheets did not,
+which is the failure the schema was designed at version 1 to avoid and which happened
+anyway, because designing the schema early does not make anybody write the sheet.
+
+There are now twenty-four sheets covering all thirty-one tables, in
+`export/EverySheet.kt`. Each one declares the tables it carries beside itself, and
+`EverySheetTest` holds that declaration against the schema files Room writes at build
+time, the same files `BackupCompletenessTest` uses. Add a table and
+`everyTableInTheDatabaseIsInASpreadsheet` fails and names it. Proven by removing `waist`
+from one sheet's declaration and watching that test go red on that table.
+
+The sheets are held to table coverage, not column coverage, and that is deliberate.
+The backup is checked column by column because it has to reconstruct the database. The
+spreadsheets are for a person to read: they format dates, drop the ids that join one
+table to another, and leave out `briefJson`, which is the model's own working. Forcing
+column coverage would drag all of that back into files somebody has to read.
+
+### The export read through the screens' queries, which drop rows on purpose
+
+`your-list` read `itemsOnce()`, which hides an ability somebody put away. Had a plans
+sheet existed it would have read `live()`, which hides a plan they finished with, and
+a sore sheet would have read `soreOnce()`, which hides an area that has cleared. Every
+one of those omissions is right for the screen it was written for and wrong for an
+export, and each is invisible: the file is there, the rows in it are correct, and the
+missing ones are missing only to somebody who knew they existed.
+
+Every sheet now reads through the backup's own unfiltered `SELECT *` queries and sorts
+in Kotlin. That is the same argument `BackupDaos.kt` already makes, applied to the
+other half of the promise.
+
+### "Your photos" was three words the export did not keep
+
+The zip held spreadsheets and a summary. The only photographs this app has are the
+pages somebody scanned, and they live in `document_pages` as bytes. They reached the
+zip only once `backup.json` existed, as Base64 inside a file only this app reads. A
+photograph a person cannot look at is not a photograph.
+
+The pages now go into the zip as the JPEGs they already are, under
+`photos/paper-<id>-page-<n>.jpg`, and the paperwork sheet prints that same name in its
+`picture_file` column so a row and its picture are found together. The name is built
+in one place, `Pictures.nameOf`, because two copies of that rule would drift and the
+spreadsheet would point at files that are not there.
+
+Still open, and not ours to close: the `photos` table is the Sunday photograph from
+LOGIC.md, it stores a `fileName`, and nothing in the app writes a row or a file yet.
+The sheet is there and will be empty until that feature exists. When it is built, the
+file it writes has to go into the zip beside these and into the deletion below.
+
+### The eighteen delete calls were doing nothing, and were also incomplete
+
+`deleteEverything` named about eighteen delete calls and then called
+`SteadyDatabase.destroy`, which deletes the file. Two things were wrong.
+
+They were not reachable in their effect. Whatever they deleted, the next line deleted
+the file that held it. Nothing could observe the difference.
+
+And they were incomplete, in a way that read as complete. Twenty tables of thirty-one.
+Waist, blood pressure, photos, documents, document pages, plans, plan items, visit
+summaries, experiments, reminders sent and daily prompts had no delete call. Anybody
+reading that list would have taken it for the list.
+
+It is now one line, `db.clearAllTables()`, which Room generates from the same
+`@Database` the app runs on, so it cannot be short by eleven tables. It is kept rather
+than dropped for the case where deleting the files does not complete, and it is
+honest about being the second line of defence rather than the mechanism.
+
+The per-table `deleteAll` queries stay on the DAOs. `Daos.kt` says they exist because
+"delete everything, immediately, and there is no other copy" is a promise the app has
+to be able to keep, and that is still a fair thing for a DAO to be able to do. They
+are no longer what keeps it. Anybody adding a table should not go looking for a delete
+query to write; the generated call already covers it.
+
+### A previous export was still sitting in the cache after a deletion
+
+This is the one that mattered. Every file this app hands to the share sheet is written
+into `cacheDir/shared` first: the export zip, `summary.pdf`, the page for a therapist,
+the share card. Deleting everything did not touch any of them, and nothing else in the
+app ever would. The system reclaims a cache at a moment nobody can name, and until it
+does, somebody who exported in March and deleted in June still had their entire
+history on the phone, unencrypted, in plain CSV, in a file they had been told was
+gone.
+
+`Erase.emptyOut` now empties the whole cache directory, and the external cache
+directory beside it. The whole thing rather than the one folder exports go in, for the
+same reason `destroy` deletes every file whose name starts with the database name
+rather than a list of suffixes it knows about: a list of places to look is a list
+somebody has to remember to add to, and the one it is missing is the one that matters.
+
+The share sheet's own grant needs nothing done to it. `Share.file` grants read access
+without `FLAG_GRANT_PERSISTABLE`, so the grant does not outlive the receiving task,
+and it points at a file that no longer exists either way.
+
+### The daily job kept running after everything was deleted
+
+Nothing stopped the reminder work. A phone whose owner had deleted everything went on
+waking once a day for a job that would open a freshly created empty database. It holds
+no health data. What it holds is that this phone was running this app, which is the
+kind of thing somebody deleting everything means to be rid of.
+
+`Erase` now cancels all work and prunes it, and awaits both, so the job cannot wake
+between there and the database closing.
+
+WorkManager's own database file is left in place. It is a live library holding that
+file open, and deleting a running library's database out from under it is how you get
+a crash on the next launch rather than a cleaner phone. After the prune it holds no
+rows about this person; what remains is a `last_cancel_all_time_ms` and a
+`reschedule_needed` flag in WorkManager's own preferences, both of which say only that
+the app once cancelled its work.
+
+### Nothing is kept in preferences, and a test says so
+
+There is no SharedPreferences and no DataStore anywhere in this app, which is the only
+reason the deletion does not mention one. That is a fact that could stop being true
+the first time somebody keeps something small somewhere convenient, and it would
+survive a deletion, and nobody would find out. `ErasureTest` walks the source and
+fails on the day it is added. The same test pins the two files allowed to name
+`filesDir`: `DatabaseKey`, which writes the wrapped passphrase there and deletes it
+itself, and `ModelsViewModel`, which reads free space at that path and writes nothing.
+
+### Reversal, and the cost of both changes
+
+The export now reads every scanned page into memory to write the pictures, on top of
+the backup already being built as one string. A person with many scanned pages could
+make that large. Same reversal as the backup's: stream page by page into the zip
+instead of building lists first. It is written here rather than done because the shape
+that fixes it fixes both at once and should be done once.
+
+`clearAllTables` deletes every row and then vacuums, which on a large database is
+slower than deleting the file it is about to delete anyway. If that shows up as a wait
+on the delete screen, the line comes out and `destroy` does the work alone, which is
+what it did before.
+
+### What only a device can prove, and what a device test must check
+
+None of the following can run on a laptop. They are written down as the checks a
+device test has to make rather than left as things somebody meant to try.
+
+After tapping delete everything, on a phone with a real setup:
+
+1. `getDatabasePath("steady.db").parentFile` holds no file whose name starts with
+   `steady.db`. This is the check that found `steady.db.lck`, which a list of known
+   suffixes missed, and it is why the deletion matches on the name rather than on a
+   list of endings.
+2. `DatabaseKey.exists(context)` is false: no Keystore alias and no wrapped passphrase
+   file. Run against the test alias, never the owner's key.
+3. `cacheDir` is empty, having first run an export, a summary, a therapist page and a
+   share card so that all four files exist before the deletion. This is the finding
+   above and it is the one worth asserting hardest.
+4. `externalCacheDir`, where it exists, is empty.
+5. No work is enqueued: `WorkManager.getInstance(context).getWorkInfosForUniqueWork`
+   for `steady-reminders` comes back with nothing runnable.
+6. `filesDir` holds nothing but what the next launch recreates. Glance keeps the
+   widget's own state under `filesDir/datastore`, written by the library rather than
+   by anything here, so this assertion is the one that will find a leftover nobody
+   named. It holds no health data; the widget's text is the app's own words and the
+   length of a session, read live from the database each time it draws.
+7. `shared_prefs` holds nothing but WorkManager's own file.
+8. The app relaunches into onboarding and the widget, if one is placed, draws the
+   empty state rather than yesterday's session.
+
+And for the export, on a device with scanned pages: the zip opens in an ordinary
+unzipping tool, every CSV opens in a spreadsheet, `summary.pdf` opens in a PDF reader,
+and every `photos/paper-*.jpg` opens in a picture viewer and is the page that was
+photographed. The `picture_file` column of `paperwork.csv` names a file that is in the
+zip, for every row.
+
+One more, and it is the one a laptop most obviously cannot do: every row of every CSV
+has as many columns as its heading. Eight of the twenty-four sheets build a row out of
+two pieces, a parent and a child, with a run of blanks where the child is missing, and
+a heading that has drifted by one column against the row it labels is a spreadsheet
+that is wrong in every row and looks fine. The widths were counted by hand here and
+they agree; a device test with a seeded database should count them instead.
+
+The app's own copy was one word short of the truth and now says the pages are in
+there: `data_export_why` reads "Spreadsheets, your scanned pages and a one-page
+summary". PRIVACY.md itself needs no edit. Its sentence already promises the
+photographs; this is the change that makes it true.
+
+One thing this pass did not change. The app never sets `FLAG_SECURE`, so Android keeps
+a snapshot of the last screen for the task switcher, and that snapshot is outside the
+app's storage and cannot be deleted by it. Setting the flag would also stop somebody
+screenshotting their own summary to send to their physio, and stop screen readers and
+recording tools that some people rely on. That is a product decision with a real cost
+on both sides and it is named here rather than taken quietly.
+
+## The months, and what Progress carries, September 9 2026
+
+ADDENDUM-03 Part 20 lists "the months" on Progress as its own item, beside the four
+week view and the look back card. The honest question was whether it is a third thing
+or the first two under a longer name.
+
+**Built, and here is why.** The four week view is a fixed window on the present: it
+only ever shows the last four weeks and there is no way to move it. The look back card
+is one sentence about one comparison. Between them the app could say nothing at all
+about a month that is not the current one, and after six months of use that is most of
+what somebody has. The v1 grid already designed the answer as screen 15, a picture of
+a month with a dot a day, and DESIGN.md says months is one of the screens that carries
+over from it unchanged. `MonthOfSessions` in the visit summary was already named and
+shaped for exactly that picture, days moved and minutes, so the data existed and only
+the screen did not.
+
+**What keeps it from becoming a trend.** One month on the screen at a time. No line
+across months, no total over them, no sentence comparing one to the next, and no
+arithmetic that reads two months at once. The two buttons choose which month is shown
+and carry nothing from the one before it. Months with nothing in them are not in the
+list at all, so nobody is handed a page of empty circles with their own name on it. In
+numbers-off mode the two figures go and the picture is the whole screen; a direction
+word in their place would have to be a direction against the month before, which is
+the one thing this screen may not say.
+
+**What the picture counts.** A session long enough to be one, the same threshold the
+visit summary counts by, so a dot here and a day in that document mean the same thing.
+The year is printed beside the month name only when it is not this year, because two
+Augusts a year apart are two different pictures and a screen calling both of them
+August is one somebody can be reading the wrong one of without knowing.
+
+### Weight's way in
+
+MASTER_SPEC 6.1 keeps weight off Today and out of the tabs, and TEST-ME.md recorded
+its old way in on the Sessions tab as "a holding place rather than a decision". The
+Sessions tab was rebuilt for Part 20 and the row went with it, which left the weigh-in
+screen with no way in at all while the setting that turns it on was still on You. Part
+20 says Progress carries it when it is on, so it is two rows low on Progress behind
+`weighsIn`: the page, and weighing in. They are two rows rather than one because
+writing a number down and reading the line back are different errands and a daily one
+should not be two taps inside a page.
+
+One thing this did not change: the weight page is still reachable from an ability
+page, where it is offered whether or not weighing in is switched on. That row predates
+the setting and is left alone here rather than changed in a file this pass did not own.
+
+### Every gate, run again at the end, and what running them found
+
+ADDENDUM-03 Part 21 sets two gates. Both pass. Run on the Pixel 8 on 2026-09-09
+against the build at the commit this entry sits in, with `tools/all-gates.sh`.
+
+| Gate | Result |
+| --- | --- |
+| Unit tests | 653, no failures |
+| detekt, lint, banned words | clean |
+| Release build with R8 and resource shrinking | builds, 33.3 MB |
+| Instrumented tests on the phone | 43, no failures |
+| Phase 1: install to a finished first session under 90 seconds | 48.5 seconds |
+| Phase 1: one obvious action per screen | ready, count in, live, rest and done each have exactly one |
+| Phase 1: the three exits, keeping what was done | pass |
+| Phase 1: pause survives an interruption | pass at the home button |
+| Phase 3: the plan and the app's suggestions visibly separate | pass, `PlanSeparateTest` |
+| Phase 4: thirty fixtures and every adversarial case | pass, and the corpus is fifty five |
+
+**The gates that were run for the first time found three things, and all three were
+in the harness rather than in the app.** That is worth recording as its own finding:
+a new gate is a piece of code nobody has run, and the first thing it measures is
+itself.
+
+**A gate counted what fits on a Pixel.** The four ways gate counted library rows off
+a screen read, which is the top of the list. Thirteen for somebody who can see fifty.
+It now scans to the bottom, and it counts movement names read out of `Movements.kt`
+itself, so it cannot drift from the app it is checking.
+
+**A gate believed an empty screen.** `uiautomator dump` comes back with nothing when
+the window is mid-transition, and for no reason at all. Believing it makes a gate
+report that the app has gone blank. One retry, and a real empty screen is still a
+finding.
+
+**A gate read only what was written.** The interruption gate came back INCONCLUSIVE
+saying the count was never read, and it was right: the count on the live screen is
+drawn as digits and spoken as a sentence, wrapped in `clearAndSetSemantics`, so there
+is no text to read. The driver now reads what TalkBack reads.
+
+And one thing that was not the harness: `onboard` cleared the app and launched it in
+the same breath. `pm clear` returns before the process is gone, so one run in three
+came up on the screen the old process was on. Failing one time in three is worse than
+failing every time, because it looks like a bug in the app.
+
+**And one thing the numbers-off gate found that was the app.** With the switch off,
+Today still said "One this week. 2 more makes 3." and "Day 1." Both are counts of what
+somebody did, reported back to them, which is the exact shape of figure the setting
+exists to replace. Both are words now. Four more things it flagged were the rule not
+saying what it meant, and each is now written into the gate with its reason: how long
+a session takes and how long the daily question takes are the size of the job in front
+of you rather than a measure of you; three sessions a week and two reminders left are
+a choice somebody made and a ceiling the app keeps, and hiding either makes a setting
+unusable; a date is allowed wherever it appears, including inside a sentence, which is
+how the summary names the window it was written from; and a day named by how long ago
+it was is a date said the way people say it.
+
+The gate is written against a line that is argued at length in `NumbersOff.kt`, and
+the argument is the useful part: a number the app reports back becomes a word, and a
+number that is part of doing something right now stays. The gate prints the screens it
+deliberately does not walk, with the reason for each, so that the list is a decision
+rather than an omission.
