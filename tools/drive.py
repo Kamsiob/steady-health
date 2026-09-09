@@ -31,7 +31,18 @@ PACKAGE = "com.kamsiob.steadyhealth"
 # phone, because a bare adb command with two devices attached fails rather than
 # picking one, and the one it would not pick is the one that matters.
 SERIAL = os.environ.get("STEADY_SERIAL")
-NODE = re.compile(r'text="([^"]*)"[^>]*?bounds="\[(\d+),(\d+)\]\[(\d+),(\d+)\]"')
+# A node carries a text, or a description, or both. The gates want whichever a
+# person would meet, so both are read and the text wins where there is one.
+#
+# The description half matters more than it looks. Anything wrapped in
+# clearAndSetSemantics has no text at all, only a description, and the biggest
+# thing in the app is one of them: the count on the live screen is drawn as digits
+# and spoken as a sentence. A gate reading only text saw no count there and said
+# so, which is how this was found.
+NODE = re.compile(
+    r'text="([^"]*)"[^>]*?content-desc="([^"]*)"[^>]*?'
+    r'bounds="\[(\d+),(\d+)\]\[(\d+),(\d+)\]"'
+)
 
 
 class NotOnScreen(Exception):
@@ -52,9 +63,11 @@ class Device:
         """Every piece of text on screen, with the middle of the thing it sits in."""
         raw = self._adb("exec-out", "uiautomator", "dump", "/dev/tty")
         found = {}
-        for text, x1, y1, x2, y2 in NODE.findall(raw):
-            if text:
-                found.setdefault(text, ((int(x1) + int(x2)) // 2, (int(y1) + int(y2)) // 2))
+        for text, described, x1, y1, x2, y2 in NODE.findall(raw):
+            middle = ((int(x1) + int(x2)) // 2, (int(y1) + int(y2)) // 2)
+            for word in (text, described):
+                if word:
+                    found.setdefault(word, middle)
         return found
 
     def scan(self, sweeps=6):
