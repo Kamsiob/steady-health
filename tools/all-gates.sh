@@ -1,6 +1,10 @@
 #!/usr/bin/env bash
 # Every gate, in order, on the phone. ADDENDUM-03 Part 21.
 #
+# It takes about twenty five minutes end to end, most of it on the phone: the
+# device gates drive whole sessions in real time and a session is four to eight
+# minutes by design. Do not wrap it in a timeout shorter than half an hour.
+#
 #   tools/all-gates.sh          -> the whole thing
 #   tools/all-gates.sh --quick  -> everything that needs no phone
 #
