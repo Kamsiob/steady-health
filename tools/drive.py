@@ -77,6 +77,24 @@ class Device:
                     found.setdefault(word, middle)
         return found
 
+    def switch(self, text):
+        """Whether the switch on the row carrying [text] is on, or None.
+
+        A switch says so in the view hierarchy, and a gate that toggles without
+        looking is a gate that inverts the setting whenever a previous run was cut
+        off. That happened, and it made the app look like it was ignoring the
+        setting when it was the harness turning it back on.
+        """
+        raw = self._adb("exec-out", "uiautomator", "dump", "/dev/tty")
+        for node in raw.split("<node")[1:]:
+            words = re.findall(r'(?:text|content-desc)="([^"]*)"', node)
+            if not any(text.lower() in word.lower() for word in words if word):
+                continue
+            state = re.search(r'checked="(true|false)"', node)
+            if state:
+                return state.group(1) == "true"
+        return None
+
     def scan(self, sweeps=6):
         """Every piece of text on a screen, including what is below the fold.
 
