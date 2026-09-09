@@ -42,9 +42,34 @@ object CardImage {
     private const val SUN_RADIUS = 190f
     private const val HILL_TOP = 620f
     private const val LINE_SIZE = 76f
+    private const val SMALLEST_LINE = LINE_SIZE / 2
+    private const val LINE_STEP = 4f
     private const val NAME_SIZE = 34f
     private const val FIGURE_TOP = 980f
     private const val LINE_SPACING = 1.12f
+
+    // The two hills, as a rise and a fall from the same top edge.
+    private const val FRONT_HILL_DIP = 90f
+    private const val BACK_HILL_DROP = 110f
+    private const val BACK_HILL_DIP = -70f
+
+    // Where the sentence sits under the hill top, and how much room it has.
+    private const val SENTENCE_DROP = 150f
+    private const val SENTENCE_ROOM = 380
+
+    // The figure, in strokes. A head, a spine, two arms, two legs.
+    private const val FIGURE_STROKE = 16f
+    private const val FIGURE_INSET = 130f
+    private const val HEAD_RADIUS = 42f
+    private const val NECK = 46f
+    private const val SHOULDER = 80f
+    private const val HIP = 170f
+    private const val ARM_REACH = 74f
+    private const val ARM_DOWN = 130f
+    private const val ARM_UP = 40f
+    private const val LEG_SPREAD = 60f
+    private const val FOOT = 280f
+    private const val QUALITY = 100
 
     /**
      * Draw one card into the app's own cache, and return the file.
@@ -57,7 +82,7 @@ object CardImage {
         val bitmap = draw(context, copy.line)
         val dir = File(context.cacheDir, "shared").apply { mkdirs() }
         val file = File(dir, name)
-        file.outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
+        file.outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, QUALITY, it) }
         bitmap.recycle()
         return file
     }
@@ -88,10 +113,10 @@ object CardImage {
         canvas.drawCircle(WIDTH / 2f, SUN_CENTRE_Y, SUN_RADIUS, paint)
 
         paint.color = NAVY
-        canvas.drawPath(hill(from = HILL_TOP, dip = 90f), paint)
+        canvas.drawPath(hill(from = HILL_TOP, dip = FRONT_HILL_DIP), paint)
 
         paint.color = NAVY_LIGHT
-        canvas.drawPath(hill(from = HILL_TOP + 110f, dip = -70f), paint)
+        canvas.drawPath(hill(from = HILL_TOP + BACK_HILL_DROP, dip = BACK_HILL_DIP), paint)
     }
 
     private fun hill(from: Float, dip: Float): Path = Path().apply {
@@ -113,12 +138,12 @@ object CardImage {
         val width = (WIDTH - MARGIN * 2).toInt()
         var size = LINE_SIZE
         var layout = layoutOf(line, font, size, width)
-        while (layout.height > SENTENCE_ROOM && size > LINE_SIZE / 2) {
-            size -= 4f
+        while (layout.height > SENTENCE_ROOM && size > SMALLEST_LINE) {
+            size -= LINE_STEP
             layout = layoutOf(line, font, size, width)
         }
         canvas.save()
-        canvas.translate(MARGIN, HILL_TOP + 150f)
+        canvas.translate(MARGIN, HILL_TOP + SENTENCE_DROP)
         layout.draw(canvas)
         canvas.restore()
     }
@@ -147,18 +172,18 @@ object CardImage {
         val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             color = BUTTER
             style = Paint.Style.STROKE
-            strokeWidth = 16f
+            strokeWidth = FIGURE_STROKE
             strokeCap = Paint.Cap.ROUND
         }
-        val x = WIDTH - MARGIN - 130f
+        val x = WIDTH - MARGIN - FIGURE_INSET
         val top = FIGURE_TOP
 
-        canvas.drawCircle(x, top, 42f, paint)
-        canvas.drawLine(x, top + 46f, x, top + 170f, paint)
-        canvas.drawLine(x, top + 80f, x - 74f, top + 130f, paint)
-        canvas.drawLine(x, top + 80f, x + 74f, top + 40f, paint)
-        canvas.drawLine(x, top + 170f, x - 60f, top + 280f, paint)
-        canvas.drawLine(x, top + 170f, x + 60f, top + 280f, paint)
+        canvas.drawCircle(x, top, HEAD_RADIUS, paint)
+        canvas.drawLine(x, top + NECK, x, top + HIP, paint)
+        canvas.drawLine(x, top + SHOULDER, x - ARM_REACH, top + ARM_DOWN, paint)
+        canvas.drawLine(x, top + SHOULDER, x + ARM_REACH, top + ARM_UP, paint)
+        canvas.drawLine(x, top + HIP, x - LEG_SPREAD, top + FOOT, paint)
+        canvas.drawLine(x, top + HIP, x + LEG_SPREAD, top + FOOT, paint)
     }
 
     private fun appName(canvas: Canvas, name: String, font: Typeface?) {
@@ -169,8 +194,6 @@ object CardImage {
         }
         canvas.drawText(name, MARGIN, HEIGHT - MARGIN, paint)
     }
-
-    private const val SENTENCE_ROOM = 380
 
     private const val GROUND = 0xFFFBF8F3.toInt()
     private const val ORANGE = 0xFFF5843E.toInt()

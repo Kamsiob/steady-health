@@ -64,6 +64,18 @@ class SessionsViewModel(application: Application) : AndroidViewModel(application
         )
     }
 
+    /**
+     * The app's extras, off or back on, from the card itself. ADDENDUM-03 Part 6.
+     *
+     * The Sessions tab shows the same card Today does, so it carries the same one
+     * tap. Both write the one setting, and this tab reloads what it needs when it
+     * comes back into view, so the two cards cannot end up disagreeing.
+     */
+    fun toggleExtras() = viewModelScope.launch {
+        profile.setExtras(!profile.extras())
+        refresh()
+    }
+
     private val _past = MutableStateFlow(PastSessionUiState())
     val past: StateFlow<PastSessionUiState> = _past.asStateFlow()
 
@@ -80,7 +92,21 @@ class SessionsViewModel(application: Application) : AndroidViewModel(application
         }
         // The day names are read here rather than in the sentence maker because a day
         // of the week is a locale's business.
-        _sunday.value = cards.sunday(today(), names)
+        val review = cards.sunday(today(), names)
+
+        // ADDENDUM-03 Part 11: the card is offered once, at the second Sunday
+        // review. Counted by the reviews actually opened rather than by the weeks
+        // that have passed, because somebody who has never opened one has not had a
+        // first review to have a second one after.
+        //
+        // showOnce answers and records in the same call, so the first line is false
+        // on the first review and true from the second, and the second line is true
+        // exactly once. Declining is scrolling past, and it does not come back here.
+        val now = System.currentTimeMillis()
+        val secondOrLater = !profile.showOnce(SUNDAY_SEEN, now)
+        val offer = secondOrLater && profile.showOnce(CARD_OFFERED, now)
+
+        _sunday.value = review.copy(offerCard = offer)
     }
 
     /** Open one session already done, to read it, fix it, or remove it. */
@@ -208,4 +234,12 @@ class SessionsViewModel(application: Application) : AndroidViewModel(application
 
     private fun plural(@PluralsRes id: Int, count: Int, vararg args: Any): String =
         getApplication<Application>().resources.getQuantityString(id, count, *args)
+
+    private companion object {
+        /** The first Sunday review, so the second one can be told from it. */
+        const val SUNDAY_SEEN = "sunday_review_seen"
+
+        /** The one offer of the card. Part 11 says once. */
+        const val CARD_OFFERED = "card_offered_on_sunday"
+    }
 }

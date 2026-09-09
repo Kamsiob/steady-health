@@ -17,6 +17,8 @@ import com.kamsiob.steadyhealth.plan.HowOften
 import com.kamsiob.steadyhealth.plan.PlanItem
 import com.kamsiob.steadyhealth.plan.PlanMatching
 import com.kamsiob.steadyhealth.plan.Sureness
+import com.kamsiob.steadyhealth.plan.TheirPlan
+import com.kamsiob.steadyhealth.plan.TheirPlans
 import com.kamsiob.steadyhealth.session.Adaptation
 import com.kamsiob.steadyhealth.session.Done
 import com.kamsiob.steadyhealth.session.Kit
@@ -28,6 +30,7 @@ import com.kamsiob.steadyhealth.session.SessionEngine
 import com.kamsiob.steadyhealth.session.SessionInputs
 import com.kamsiob.steadyhealth.session.SessionPlan
 import com.kamsiob.steadyhealth.session.Week
+import com.kamsiob.steadyhealth.ui.components.PlanOnCard
 import com.kamsiob.steadyhealth.ui.components.SessionCardState
 import com.kamsiob.steadyhealth.ui.screens.LibraryRow
 import com.kamsiob.steadyhealth.ui.screens.SundayUiState
@@ -84,8 +87,8 @@ class TodayCards(private val application: Application, private val db: SteadyDat
         // card shows theirs, Start runs theirs, and the app's own suggestions become a
         // separate list underneath. The two are never merged, so this replaces the
         // movements rather than adding to them.
-        val theirs = planItems()
-        if (theirs.isNotEmpty()) {
+        val theirs = theirPlans()
+        if (theirs.any { it.items.isNotEmpty() }) {
             return fromTheirPlan(theirs, plan, history, today, exclusions, way)
         }
         return SessionCardState(
@@ -114,68 +117,82 @@ class TodayCards(private val application: Application, private val db: SteadyDat
      * Everything shown is theirs. The app's own suggestions are listed separately and
      * are only what is left after the plan's own movements are taken out, so nothing
      * appears twice and nothing of the app's is ever counted as part of the plan.
+     *
+     * Two plans stay two. Part 6 says a physio plan and an OT plan coexist, each
+     * labelled, each separate, so the eyebrow stops naming one of them the moment
+     * there is a second and each plan carries its own name above its own lines. The
+     * card used to read every live line into one list and put the oldest plan's label
+     * on top of all of it, which told somebody their OT's movements came from their
+     * physio.
      */
     @Suppress("LongParameterList") // Everything one card needs, and nothing more.
     private suspend fun fromTheirPlan(
-        theirs: List<PlanItem>,
+        theirs: List<TheirPlan>,
         ours: SessionPlan,
         history: List<Done>,
         today: Long,
         exclusions: Set<Exclusion>,
         way: GettingAround,
     ): SessionCardState {
-        val label = plans.live().firstOrNull()?.label.orEmpty()
-            .ifBlank { string(R.string.plan_them) }
-        val both = PlanMatching.onBoth(theirs, ours)
+        val word = string(R.string.plan_them)
+        val lines = TheirPlans.lines(theirs)
+        val both = PlanMatching.onBoth(lines, ours)
+        val extras = profile.extras()
         return SessionCardState(
-            // The label is the eyebrow above the card; the big line says what the plan
-            // actually is. A plan has no length the app can work out, because it does
-            // not know how long a therapist expects any of it to take and guessing
-            // would be the app adding something to somebody else's plan.
-            length = plural(R.plurals.plan_how_many, theirs.size, theirs.size),
-            movements = theirs.map { it.movement?.name ?: it.line },
+            // The eyebrow above the card; the big line says what the plan actually is.
+            // A plan has no length the app can work out, because it does not know how
+            // long a therapist expects any of it to take and guessing would be the app
+            // adding something to somebody else's plan.
+            length = plural(R.plurals.plan_how_many, lines.size, lines.size),
             doneToday = history.any { it.epochDay == today },
-            theirs = string(R.string.plan_from, label),
-            alsoMovements = if (profile.extras()) {
-                PlanMatching.alsoIfYouWantMore(theirs, ours).map { it.movement.name }
+            theirs = if (theirs.size == 1) {
+                string(R.string.plan_from, theirs.first().labelOr(word))
+            } else {
+                string(R.string.plan_yours)
+            },
+            theirPlans = theirs.map { plan ->
+                PlanOnCard(
+                    label = string(R.string.plan_from, plan.labelOr(word)),
+                    movements = plan.items.map { it.movement?.name ?: it.line },
+                )
+            },
+            alsoMovements = if (extras) {
+                PlanMatching.alsoIfYouWantMore(lines, ours).map { it.movement.name }
             } else {
                 emptyList()
             },
-            onBothLists = both.firstOrNull()?.let { string(R.string.plan_on_theirs_too, label) },
-            toAskAbout = conflicts(theirs, exclusions, way),
+            extrasOn = extras,
+            onBothLists = both.firstOrNull()?.let { movement ->
+                string(
+                    R.string.plan_on_theirs_too,
+                    TheirPlans.whose(theirs, movement, word) ?: word,
+                )
+            },
+            toAskAbout = PlanConflicts.of(application, lines, exclusions, way),
         )
     }
 
     /**
-     * Plan movements that clash with something the person avoids.
+     * Every live plan, each with its own label and its own confirmed lines.
      *
-     * Part 6: flagged rather than silently dropped, and left in. The app is a record
-     * keeper here, so the answer is to ask the person to raise it with whoever wrote
-     * the plan, never to overrule them.
+     * The numbers are deliberately left unsaid here. This is the card, and the card
+     * names what was asked for; what a line asks for in reps and how often is the
+     * session's business and the appointment page's, and reading it twice from two
+     * places is how the two would come to disagree.
      */
-    private fun conflicts(
-        theirs: List<PlanItem>,
-        exclusions: Set<Exclusion>,
-        way: GettingAround,
-    ): List<String> = PlanMatching.toAskAbout(theirs, exclusions, way).mapNotNull { item ->
-        val movement = item.movement ?: return@mapNotNull null
-        val avoided = movement.excludedBy.firstOrNull { it in exclusions } ?: return@mapNotNull null
-        string(
-            R.string.plan_conflict,
-            movement.name.lowercase(),
-            string(Labels.forExclusion(avoided)).lowercase(),
-        )
-    }
-
-    /** Every confirmed line of every live plan, as the matcher's own type. */
-    private suspend fun planItems(): List<PlanItem> = plans.liveItems().map { row ->
-        PlanItem(
-            line = row.line,
-            movement = row.movementId?.let(Movements::byId),
-            howMany = HowMany.Unsaid,
-            howOften = HowOften.Unsaid,
-            sureness = Sureness.Named,
-            eachSide = row.eachSide,
+    private suspend fun theirPlans(): List<TheirPlan> = plans.liveWithItems().map { (plan, rows) ->
+        TheirPlan(
+            label = plan.label,
+            items = rows.map { row ->
+                PlanItem(
+                    line = row.line,
+                    movement = row.movementId?.let(Movements::byId),
+                    howMany = HowMany.Unsaid,
+                    howOften = HowOften.Unsaid,
+                    sureness = Sureness.Named,
+                    eachSide = row.eachSide,
+                )
+            },
         )
     }
 
@@ -276,15 +293,26 @@ class TodayCards(private val application: Application, private val db: SteadyDat
      * Suppressed areas are shown rather than hidden, marked as left out for now, so
      * nobody has to wonder where a movement they know went. Movements for another way
      * of getting around are not here at all, because they are not theirs.
+     *
+     * [pieces] is the main movements everywhere the app is offering its own session,
+     * and everything the library holds when somebody is picking their therapist's
+     * plan off it. A sheet can ask for shoulder rolls or calf stretches, and a list
+     * that could not offer them would send that person back to typing.
      */
-    suspend fun library(way: GettingAround, exclusions: Set<Exclusion>, today: Long): List<LibraryRow> {
+    suspend fun library(
+        way: GettingAround,
+        exclusions: Set<Exclusion>,
+        today: Long,
+        pieces: Set<Piece> = setOf(Piece.Main),
+    ): List<LibraryRow> {
         val sore = runs.soreAreas(today)
         val kit = profile.kit()
-        val mine = Movements.all.filter { way in it.ways && it.piece == Piece.Main }
+        val mine = Movements.all.filter { way in it.ways && it.piece in pieces }
         return mine.map { movement ->
             LibraryRow(
                 id = movement.id,
                 name = movement.name,
+                domain = movement.domain,
                 feeds = string(R.string.library_for, string(Labels.forAbility(movement.domain))),
                 needs = string(needs(movement.kit)),
                 leftOut = movement.area in sore ||
@@ -367,8 +395,23 @@ class TodayCards(private val application: Application, private val db: SteadyDat
             moved = lookBackLine(),
             noticed = Noticed.of(history, today)?.let { say(it) },
             ahead = ahead(week, dayNames),
+            cardLine = weekCardLine(week),
         )
     }
+
+    /**
+     * The line a week card starts from, or nothing. ADDENDUM-03 Part 11.
+     *
+     * Only on a week with something in it. A card offered after a week with no
+     * sessions in it is the app asking somebody to announce a quiet week, and Part 11
+     * is clear that this is a thing people send because they want to.
+     *
+     * Whether it is offered at all is the screen's decision, because Part 11 says the
+     * offer is made once, at the second Sunday review, and afterwards it lives in
+     * Progress. This only supplies the words.
+     */
+    private fun weekCardLine(week: Week): String =
+        if (week.done <= 0) "" else plural(R.plurals.card_week, week.done, week.done)
 
     /**
      * One day that would meet the week, named.

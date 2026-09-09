@@ -6,6 +6,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.kamsiob.steadyhealth.R
+import com.kamsiob.steadyhealth.ui.components.ListItem
 import com.kamsiob.steadyhealth.ui.components.NoteBlock
 import com.kamsiob.steadyhealth.ui.components.Paragraph
 import com.kamsiob.steadyhealth.ui.components.SectionTitle
@@ -17,6 +18,16 @@ data class SundayUiState(
     val moved: String? = null,
     val noticed: String? = null,
     val ahead: String = "",
+    /** The line a week card would start from, blank on a week with nothing in it. */
+    val cardLine: String = "",
+    /**
+     * Whether to offer the card here at all. ADDENDUM-03 Part 11.
+     *
+     * "Offered once at the second Sunday review. Declining hides it until Progress."
+     * Declining is not a button: it is scrolling past, which is what most people will
+     * do, and the offer does not come back here either way.
+     */
+    val offerCard: Boolean = false,
 )
 
 /**
@@ -32,6 +43,7 @@ data class SundayUiState(
 @Composable
 fun SundayScreen(
     state: SundayUiState,
+    onCard: (String) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -53,5 +65,13 @@ fun SundayScreen(
 
         SectionTitle(stringResource(R.string.sunday_ahead))
         NoteBlock(state.ahead)
+
+        if (state.offerCard && state.cardLine.isNotBlank()) {
+            ListItem(
+                heading = stringResource(R.string.card_offer),
+                subtitle = stringResource(R.string.card_offer_sub),
+                onClick = { onCard(state.cardLine) },
+            )
+        }
     }
 }

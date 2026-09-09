@@ -203,7 +203,16 @@ private fun Tabs(
 
                     dailyRoutes(viewModel, navController, back)
 
-                    sessionsRoutes(sessionsViewModel, sessionViewModel, navController, back)
+                    sessionsRoutes(
+                        viewModel = sessionsViewModel,
+                        sessionViewModel = sessionViewModel,
+                        navController = navController,
+                        back = back,
+                        onCard = { line ->
+                            cardViewModel.open(CardKind.Week, line)
+                            navController.navigate(Route.SEND_CARD)
+                        },
+                    )
                     scanRoutes(scanViewModel, modelsViewModel, navController, back)
 
                     asideRoutes(cardViewModel, placesViewModel, back)
@@ -399,7 +408,7 @@ private fun NavGraphBuilder.dailyRoutes(
  * longer than any screen in it.
  */
 @Composable
-@Suppress("LongParameterList") // Four tabs, one view model each, one place.
+@Suppress("LongParameterList", "LongMethod") // Four tabs, one when, one place.
 private fun TabBody(
     tab: Tab,
     viewModel: SteadyViewModel,
@@ -873,6 +882,7 @@ private fun NavGraphBuilder.scanRoutes(
             onLabel = viewModel::setPlanLabel,
             onDrop = viewModel::dropItem,
             onReviewDay = viewModel::setPlanReviewDay,
+            onTheirsRead = viewModel::theirsRead,
             onSave = { viewModel.savePlan { navController.popBackStack(Route.TABS, false) } },
             onBack = back,
         )
@@ -966,10 +976,11 @@ private fun NavGraphBuilder.sessionsRoutes(
     sessionViewModel: SessionViewModel,
     navController: NavHostController,
     back: () -> Unit,
+    onCard: (String) -> Unit,
 ) {
     composable(Route.SUNDAY) {
         val state by viewModel.sundayReview.collectAsStateWithLifecycle()
-        SundayScreen(state = state, onBack = back)
+        SundayScreen(state = state, onCard = onCard, onBack = back)
     }
 
     composable(Route.PAST_SESSION) {
