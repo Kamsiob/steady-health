@@ -6,6 +6,8 @@ import androidx.room3.Database
 import androidx.room3.Room
 import androidx.room3.RoomDatabase
 import com.kamsiob.steadyhealth.data.dao.AbilityDao
+import com.kamsiob.steadyhealth.data.dao.BackupHistoryDao
+import com.kamsiob.steadyhealth.data.dao.BackupStateDao
 import com.kamsiob.steadyhealth.data.dao.BodyDao
 import com.kamsiob.steadyhealth.data.dao.CheckDao
 import com.kamsiob.steadyhealth.data.dao.CheckInDao
@@ -103,7 +105,7 @@ import net.zetetic.database.sqlcipher.driver.SQLCipherDriver
     ],
     // Version 2 adds the three tables ADDENDUM-03's session needs. Purely additive,
     // so the migration is generated rather than written, and nobody's rows move.
-    version = 6,
+    version = 7,
     exportSchema = true,
     autoMigrations = [
         AutoMigration(from = 1, to = 2),
@@ -111,6 +113,7 @@ import net.zetetic.database.sqlcipher.driver.SQLCipherDriver
         AutoMigration(from = 3, to = 4),
         AutoMigration(from = 4, to = 5),
         AutoMigration(from = 5, to = 6),
+        AutoMigration(from = 6, to = 7),
     ],
 )
 abstract class SteadyDatabase : RoomDatabase() {
@@ -132,6 +135,11 @@ abstract class SteadyDatabase : RoomDatabase() {
     abstract fun documents(): DocumentDao
     abstract fun plans(): PlanDao
     abstract fun profile(): ProfileDao
+
+    // The backup reads every table through its own queries rather than through the
+    // ones above, which are shaped by what a screen wanted. See BackupDaos.kt.
+    abstract fun backupHistory(): BackupHistoryDao
+    abstract fun backupState(): BackupStateDao
 
     companion object {
         private const val NAME = "steady.db"

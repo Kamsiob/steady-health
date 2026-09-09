@@ -2,6 +2,8 @@
 
 package com.kamsiob.steadyhealth.ui.session
 
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -18,8 +20,11 @@ import com.kamsiob.steadyhealth.ui.components.SecondaryButton
 import com.kamsiob.steadyhealth.ui.components.SectionTitle
 import com.kamsiob.steadyhealth.ui.components.SteadyScreen
 import com.kamsiob.steadyhealth.ui.components.Stepper
+import com.kamsiob.steadyhealth.ui.components.TagPill
 import com.kamsiob.steadyhealth.ui.components.ThreeUpChoice
+import com.kamsiob.steadyhealth.ui.screens.TagSection
 import com.kamsiob.steadyhealth.ui.theme.SteadyPalette
+import com.kamsiob.steadyhealth.ui.theme.SteadySpacing
 import com.kamsiob.steadyhealth.ui.theme.SteadyText
 import com.kamsiob.steadyhealth.ui.theme.SteadyType
 
@@ -43,6 +48,15 @@ data class DoneUiState(
     val first: Boolean = false,
     /** True when an hour went by mid session and it was saved where it stood. */
     val awayTooLong: Boolean = false,
+    /**
+     * The optional line at the end. AI.md job 7, without the model.
+     *
+     * Empty until the person opens it, because it is optional and most people will
+     * skip it, and a grid of chips sitting open under the one question that matters
+     * would make the screen look like it is asking for two things.
+     */
+    val note: List<TagSection> = emptyList(),
+    val noteOpen: Boolean = false,
 )
 
 /**
@@ -61,6 +75,8 @@ fun SessionDoneScreen(
     state: DoneUiState,
     onFelt: (Felt) -> Unit,
     onCorrect: (String, Int) -> Unit,
+    onNote: () -> Unit,
+    onTag: (String) -> Unit,
     onSave: () -> Unit,
     onChangeNext: () -> Unit,
     modifier: Modifier = Modifier,
@@ -130,6 +146,41 @@ fun SessionDoneScreen(
             selectedFill = SteadyPalette.GreenL,
             selectedOutline = SteadyPalette.Green,
         )
+
+        // Under the one question, closed, and never in the way. AI.md says most
+        // people will skip it entirely, which is fine, so the shut version is one
+        // row and the open version has no Done of its own: Save is already there.
+        if (state.felt != null) {
+            if (state.noteOpen) {
+                SectionTitle(stringResource(R.string.done_note))
+                Paragraph(stringResource(R.string.done_note_sub))
+                state.note.forEach { section ->
+                    SteadyText(
+                        text = section.heading,
+                        style = SteadyType.Caption,
+                        color = SteadyPalette.Ink3Text,
+                    )
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(SteadySpacing.ListGap),
+                        verticalArrangement = Arrangement.spacedBy(SteadySpacing.ListGap),
+                    ) {
+                        section.chips.forEach { chip ->
+                            TagPill(
+                                label = chip.label,
+                                selected = chip.chosen,
+                                onClick = { onTag(chip.id) },
+                            )
+                        }
+                    }
+                }
+            } else {
+                ListItem(
+                    heading = stringResource(R.string.done_note),
+                    subtitle = stringResource(R.string.done_note_sub),
+                    onClick = onNote,
+                )
+            }
+        }
 
         if (state.nextTime.isNotBlank()) {
             SectionTitle(stringResource(R.string.done_next_time))

@@ -58,6 +58,16 @@
     <!-- The done screen. -->
     <string name="done_title">Done. That counts.</string>
     <string name="done_first">That\'s the first one.</string>
+    <!--
+      The optional line at the end of a session. AI.md job 7.
+
+      "Anything worth a word" and not "how do you feel", because the question is
+      about the four minutes just finished and not about the person. Nothing here
+      asks for a sentence: without the reader there are chips and no free text at
+      all, which is what keeps it from becoming a diary.
+    -->
+    <string name="done_note">Anything worth a word?</string>
+    <string name="done_note_sub">Optional. Up to three.</string>
     <string name="done_how">How did that feel?</string>
     <string name="felt_easy">Easy</string>
     <string name="felt_about_right">About right</string>

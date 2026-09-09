@@ -2,6 +2,7 @@ package com.kamsiob.steadyhealth.ui
 
 import android.content.Context
 import com.kamsiob.steadyhealth.R
+import com.kamsiob.steadyhealth.ai.AfterASession
 import com.kamsiob.steadyhealth.ai.TagGroup
 import com.kamsiob.steadyhealth.ai.Tags
 import com.kamsiob.steadyhealth.ui.screens.TagChip
@@ -33,6 +34,30 @@ object TagLabels {
             },
         )
     }
+
+    /**
+     * The smaller grid offered at the end of a session. AI.md job 7.
+     *
+     * The same words and the same ids as the daily grid, so that a tag chosen here and
+     * a tag chosen there are the same tag and feed the same noticing. Only the three
+     * groups that answer "how was that" appear, which AfterASession decides and
+     * explains.
+     */
+    fun afterASession(context: Context, chosen: Set<String>): List<TagSection> =
+        AfterASession.offered
+            .groupBy { it.group }
+            .map { (group, tags) ->
+                TagSection(
+                    heading = context.getString(headingFor(group)),
+                    chips = tags.map { tag ->
+                        TagChip(
+                            id = tag.id,
+                            label = context.getString(labelFor(tag.id)),
+                            chosen = tag.id in chosen,
+                        )
+                    },
+                )
+            }
 
     fun headingFor(group: TagGroup) = when (group) {
         TagGroup.Food -> R.string.tag_group_food

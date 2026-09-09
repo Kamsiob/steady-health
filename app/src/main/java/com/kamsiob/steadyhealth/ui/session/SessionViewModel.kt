@@ -7,6 +7,7 @@ import androidx.annotation.StringRes
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.kamsiob.steadyhealth.R
+import com.kamsiob.steadyhealth.ai.AfterASession
 import com.kamsiob.steadyhealth.data.ContextRepository
 import com.kamsiob.steadyhealth.data.ProfileRepository
 import com.kamsiob.steadyhealth.data.RunRepository
@@ -32,6 +33,7 @@ import com.kamsiob.steadyhealth.session.SessionRunner
 import com.kamsiob.steadyhealth.session.Speech
 import com.kamsiob.steadyhealth.session.Stage
 import com.kamsiob.steadyhealth.session.TheChair
+import com.kamsiob.steadyhealth.ui.TagLabels
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -501,6 +503,41 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
         _done.value = _done.value.copy(nextTime = nextTimeLine(felt))
     }
 
+    /**
+     * Open the optional line at the end. AI.md job 7.
+     *
+     * It only opens; there is no closing it again, because a thing somebody opened
+     * and then shut would leave them wondering whether what they tapped was kept.
+     * Save is the only way off this screen either way.
+     */
+    fun openNote() {
+        _done.value = _done.value.copy(
+            noteOpen = true,
+            note = TagLabels.afterASession(getApplication(), chosenTags),
+        )
+    }
+
+    /**
+     * One tag on or off, up to three.
+     *
+     * The grid stops rather than warns: past three, tapping an unchosen one does
+     * nothing, and there is no sentence telling somebody they have reached a limit
+     * they were never told about.
+     */
+    fun tapTag(id: String) = viewModelScope.launch {
+        chosenTags = when {
+            id in chosenTags -> chosenTags - id
+            AfterASession.roomForMore(chosenTags) -> chosenTags + id
+            else -> chosenTags
+        }
+        runs.saveNote(AfterASession.chosen(chosenTags).map { it.id })
+        _done.value = _done.value.copy(
+            note = TagLabels.afterASession(getApplication(), chosenTags),
+        )
+    }
+
+    private var chosenTags: Set<String> = emptySet()
+
     private suspend fun nextTimeLine(felt: Felt): String {
         val next = SessionEngine.plan(
             // The answer that was just given is the last one, and the one before it is
@@ -560,6 +597,7 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
             today = today,
             lastSessionDay = runs.lastSessionDay(),
             strengthRunLength = runs.strengthRunLength(),
+            pacingMinutes = if (profile.pacing()) profile.envelope().minutes else null,
         )
     }
 

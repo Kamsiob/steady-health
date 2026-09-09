@@ -907,20 +907,33 @@ class VisitRepository(private val db: SteadyDatabase) {
     private suspend fun mentions(from: Long, to: Long): List<Mention> {
         val checkIns = db.checkIns().allOnce().filter { it.epochDay in from..to }
         val byId = checkIns.associateBy { it.id }
-        return db.checkIns().allTagsOnce()
+        val said = db.checkIns().allTagsOnce()
             .filter { it.checkInId in byId.keys }
-            .groupBy { it.tag }
-            .map { (tag, rows) ->
-                val days = rows.mapNotNull { byId[it.checkInId] }
-                Mention(
-                    tag = tag,
-                    days = days.map { it.epochDay }.distinct().size,
-                    recent = days.sortedByDescending { it.epochDay }
-                        .map { it.sentence }
-                        .filter { it.isNotBlank() }
-                        .take(THREE),
-                )
-            }
+            .mapNotNull { row -> byId[row.checkInId]?.let { row.tag to it } }
+
+        // AI.md job 7: the end of session note's "only extra purpose is to feed
+        // what the app noticed", so it arrives here beside the day's own tags and
+        // is counted the same. It carries no sentence, because there is no free
+        // text in it: it is three taps from a fixed list and nothing more.
+        val tapped = db.runs().allOnce()
+            .filter { it.epochDay in from..to && it.note.isNotBlank() }
+            .flatMap { run -> run.note.split(" ").map { it to run.epochDay } }
+
+        val days = (said.map { it.first to it.second.epochDay } + tapped)
+            .groupBy({ it.first }, { it.second })
+        val sentences = said.groupBy({ it.first }, { it.second })
+
+        return days.map { (tag, onDays) ->
+            Mention(
+                tag = tag,
+                days = onDays.distinct().size,
+                recent = sentences[tag].orEmpty()
+                    .sortedByDescending { it.epochDay }
+                    .map { it.sentence }
+                    .filter { it.isNotBlank() }
+                    .take(THREE),
+            )
+        }
     }
 
     private suspend fun months(from: Long, to: Long): List<MonthOfSessions> =
@@ -1328,9 +1341,17 @@ class PlanRepository(private val db: SteadyDatabase) {
 
     suspend fun itemsOf(planId: Long): List<PlanItemEntity> = db.plans().itemsOf(planId)
 
-    /** Every item of every live plan, which is what a session is built from. */
-    suspend fun liveItems(): List<PlanItemEntity> =
-        db.plans().live().flatMap { db.plans().itemsOf(it.id) }
+    /**
+     * Every live plan with its own lines, each still attached to the plan it came from.
+     *
+     * ADDENDUM-03 Part 6: a physio plan and an OT plan coexist, each labelled, each
+     * separate. This used to be a flat list of every live line, and whoever read it
+     * had to guess whose each one was, which in practice meant reading the label off
+     * the oldest plan and putting the OT's movements under the physio's name. The
+     * plan and its lines come back together so that cannot happen again.
+     */
+    suspend fun liveWithItems(): List<Pair<PlanEntity, List<PlanItemEntity>>> =
+        db.plans().live().map { it to db.plans().itemsOf(it.id) }
 
     suspend fun setReviewDay(planId: Long, day: Long?) {
         val plan = db.plans().all().firstOrNull { it.id == planId } ?: return
@@ -1586,6 +1607,18 @@ class RunRepository(private val db: SteadyDatabase) {
         val latest = db.runs().latest() ?: return
         db.runs().upsertRun(latest.copy(felt = felt.id))
     }
+
+    /** The optional line at the end of a session. AI.md job 7. */
+    suspend fun saveNote(tags: List<String>) {
+        val latest = db.runs().latest() ?: return
+        db.runs().upsertRun(latest.copy(note = tags.joinToString(" ")))
+    }
+
+    /** Every tag chosen after a session, with the day, for the noticing engine. */
+    suspend fun noteDays(): List<Pair<Long, String>> =
+        db.runs().allOnce()
+            .filter { it.note.isNotBlank() }
+            .flatMap { run -> run.note.split(" ").map { run.epochDay to it } }
 
     /** How many times one movement has been done, for the pacing cue. */
     suspend fun timesDone(movementId: String): Int =
