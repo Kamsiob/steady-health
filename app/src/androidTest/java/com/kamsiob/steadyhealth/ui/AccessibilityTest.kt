@@ -8,6 +8,7 @@ import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.junit4.v2.createComposeRule
 import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.unit.Density
 import com.kamsiob.steadyhealth.domain.AbilityDomain
 import com.kamsiob.steadyhealth.ui.components.SessionCardState
@@ -99,7 +100,13 @@ class AccessibilityTest {
 
         // A noticed line is the app describing, never the app asking. Making it
         // tappable would turn an observation into a task.
-        compose.onNodeWithText("Heel raises: 14, from 10 when you started.")
+        // Below the session card, which is the whole screen on a phone. Scrolled to
+        // rather than asserted where it happens to land, because "is it on the screen
+        // without scrolling" is a question about the phone and not about the app.
+        // The week line and the noticed lines are one block, so this is a substring of
+        // one node rather than a node of its own.
+        compose.onNodeWithText("Heel raises: 14, from 10 when you started.", substring = true)
+            .performScrollTo()
             .assertIsDisplayed()
     }
 
@@ -151,7 +158,7 @@ class AccessibilityTest {
                 ) }
             }
         }
-        compose.onNodeWithText("Get up").assertIsDisplayed()
+        compose.onNodeWithText("Get up").performScrollTo().assertIsDisplayed()
     }
 
     @Test

@@ -17,6 +17,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.text.style.TextAlign
@@ -65,9 +66,22 @@ fun BigCount(
         },
         label = "count",
     )
+    // The count is already the largest type in the app, sized to be read from two feet
+    // away. Doubling it at 200% font scale does not make it more readable: it
+    // overflows the ring and gets clipped, which is the opposite of accessible. So it
+    // grows with the setting up to a quarter again and then stops.
+    val scale = LocalDensity.current.fontScale
+    val style = SteadyType.SessionCount.let { count ->
+        if (scale <= COUNT_MAX_SCALE) {
+            count
+        } else {
+            count.copy(fontSize = count.fontSize * COUNT_MAX_SCALE / scale)
+        }
+    }
+
     SteadyText(
         text = "$shown",
-        style = SteadyType.SessionCount,
+        style = style,
         color = SteadyPalette.Navy,
         modifier = modifier
             .fillMaxWidth()
@@ -145,6 +159,9 @@ fun ShrinkingArc(
         content = content,
     )
 }
+
+/** How much bigger than its designed size the session count is ever drawn. */
+private const val COUNT_MAX_SCALE = 1.25f
 
 private const val FILL_MILLIS = 600
 private const val RING_THICKNESS = 0.06f

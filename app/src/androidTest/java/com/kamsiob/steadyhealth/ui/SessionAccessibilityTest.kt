@@ -7,6 +7,7 @@ import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.junit4.v2.createComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.unit.Density
 import com.kamsiob.steadyhealth.session.Counted
@@ -40,17 +41,35 @@ class SessionAccessibilityTest {
     val compose = createComposeRule()
 
     @Test
-    fun everySessionScreenHasOneObviousNextAction() {
-        listOf(
-            "I'm ready" to @Composable { ReadyScreen(state, actions) },
-            "Skip the count in" to @Composable { CountInScreen(state.copy(countInLeft = 3), actions) },
-            "Done with this one" to @Composable { LiveScreen(state, actions) },
-            "Skip the rest" to @Composable { RestScreen(state.copy(restLeft = 12, restTotal = 30), actions) },
-        ).forEach { (primary, screen) ->
-            compose.setContent { SteadyTheme { screen() } }
-            compose.onNodeWithText(primary).assertIsDisplayed().assertHasClickAction()
-            compose.onNodeWithText(EXITS.first()).assertIsDisplayed()
-        }
+    fun theReadyScreenHasOneObviousNextAction() = oneObviousAction("I\'m ready") {
+        ReadyScreen(state, actions)
+    }
+
+    @Test
+    fun theCountInHasOneObviousNextAction() = oneObviousAction("Skip the count in") {
+        CountInScreen(state.copy(countInLeft = 3), actions)
+    }
+
+    @Test
+    fun theLiveScreenHasOneObviousNextAction() = oneObviousAction("Done with this one") {
+        LiveScreen(state, actions)
+    }
+
+    @Test
+    fun theRestScreenHasOneObviousNextAction() = oneObviousAction("Skip the rest") {
+        RestScreen(state.copy(restLeft = 12, restTotal = 30), actions)
+    }
+
+    /**
+     * One screen, one primary action, and the exits still there beside it.
+     *
+     * One test each rather than a loop, because an activity may only have its content
+     * set once and a loop that sets it four times throws on the second.
+     */
+    private fun oneObviousAction(primary: String, screen: @Composable () -> Unit) {
+        compose.setContent { SteadyTheme { screen() } }
+        compose.onNodeWithText(primary).assertIsDisplayed().assertHasClickAction()
+        compose.onNodeWithText(EXITS.first()).assertIsDisplayed()
     }
 
     @Test
@@ -78,7 +97,10 @@ class SessionAccessibilityTest {
             }
         }
 
-        compose.onNodeWithText("12").assertIsDisplayed()
+        // The count clears its own semantics and speaks one sentence instead, so that
+        // TalkBack says "twelve of eight" rather than reading a bare numeral out of
+        // the middle of a screen. The number is found by that sentence.
+        compose.onNodeWithContentDescription("12", substring = true).assertIsDisplayed()
         compose.onNodeWithText("Done with this one").assertIsDisplayed().assertHasClickAction()
         EXITS.forEach { compose.onNodeWithText(it).assertIsDisplayed() }
     }
