@@ -222,6 +222,21 @@ because that licence is only worth having if the quotation is real, a quoted spa
 the page does not actually carry is itself a fault, so nothing can be laundered by
 putting marks around it.
 
+**Everything else, run on the phone at the end:** 697 unit tests, 43 instrumented
+tests, detekt, Android lint, the banned word check, and a release build through R8 and
+resource shrinking at 33.3 MB.
+
+Two of those instrumented tests matter more than the rest. `RestoreDeviceTest` proves
+the one thing about restore a laptop cannot: that emptying and refilling all
+thirty-one tables inside a single write transaction finishes rather than waiting
+forever, and that every join by id still points at the right row afterwards. And it
+was not running: the instrumented source set had stopped compiling when Part 20 added
+rows to the settings screen, so the phone was holding a test APK from before any of
+this. Unit tests, detekt and lint were all green throughout, because not one of them
+compiles androidTest. A source set nothing in the ordinary loop compiles is a source
+set that has quietly stopped being checked, which is the argument for running
+`tools/all-gates.sh` rather than the fast half of it.
+
 The phases after Phase 4 have no gate of their own in Part 21. Two device scripts were
 written for them anyway, because they answer questions a laptop cannot.
 
