@@ -29,8 +29,23 @@ source ./gradle-env.sh
 "${ADB[@]}" install -r -t "app/build/outputs/apk/debug/app-debug.apk" >/dev/null
 "${ADB[@]}" install -r -t "app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk" >/dev/null
 
+# One class, found wherever it lives. The old version glued the root package on
+# the front, so a test in a sub-package came back ClassNotFound and looked like a
+# test that failed rather than one that was never named properly.
 if [ $# -gt 0 ]; then
-  "${ADB[@]}" shell am instrument -w -e class "$PACKAGE.$1" "$RUNNER"
+  CLASS="$1"
+  case "$CLASS" in
+    *.*) ;;
+    *)
+      FOUND=$(find app/src/androidTest -name "$CLASS.kt" | head -1)
+      if [ -n "$FOUND" ]; then
+        CLASS=$(grep -m1 '^package ' "$FOUND" | cut -d' ' -f2).$CLASS
+      else
+        CLASS="$PACKAGE.$CLASS"
+      fi
+      ;;
+  esac
+  "${ADB[@]}" shell am instrument -w -e class "$CLASS" "$RUNNER"
 else
   "${ADB[@]}" shell am instrument -w "$RUNNER"
 fi
