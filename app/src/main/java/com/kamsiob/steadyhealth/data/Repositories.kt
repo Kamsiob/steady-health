@@ -1487,16 +1487,16 @@ class ContextRepository(private val db: SteadyDatabase) {
      */
     suspend fun places(): Map<String, Said> = Places.all
         .mapNotNull { question ->
-            get("place_${'$'}{question.id}")
+            get("place_${question.id}")
                 ?.let(Said::fromId)
                 ?.let { question.id to it }
         }
         .toMap()
 
-    suspend fun setPlace(id: String, said: Said) = put("place_${'$'}id", said.id)
+    suspend fun setPlace(id: String, said: Said) = put("place_$id", said.id)
 
     /** Going through it again starts from nothing, which is what again means. */
-    suspend fun forgetPlaces() = Places.all.forEach { put("place_${'$'}{it.id}", "") }
+    suspend fun forgetPlaces() = Places.all.forEach { put("place_${it.id}", "") }
 
     /**
      * The phone's step counter, as it stood on one day. ADDENDUM-03 Part 8 item 1.
@@ -1507,13 +1507,13 @@ class ContextRepository(private val db: SteadyDatabase) {
      */
     suspend fun stepReadings(): List<StepReading> = (0..A_FORTNIGHT).mapNotNull { back ->
         val day = LocalDate.now(ZoneId.systemDefault()).toEpochDay() - back
-        get("steps_${'$'}day")?.toLongOrNull()?.let { StepReading(day, it) }
+        get("steps_$day")?.toLongOrNull()?.let { StepReading(day, it) }
     }
 
     suspend fun setStepReading(day: Long, sinceBoot: Long) {
-        put("steps_${'$'}day", sinceBoot.toString())
+        put("steps_$day", sinceBoot.toString())
         // The day that has just fallen out of the fortnight, so this cannot grow.
-        put("steps_${'$'}{day - A_FORTNIGHT - 1}", "")
+        put("steps_${day - A_FORTNIGHT - 1}", "")
     }
 
     /** The days the up and about line has already been said, so it is not said twice. */

@@ -385,7 +385,7 @@ class CheckViewModel(application: Application) : AndroidViewModel(application) {
                 values = values,
                 saidAlready = emptySet(),
             ) ?: return@firstNotNullOfOrNull null
-            val fresh = profile.showOnce("crossed_${'$'}{said.sentenceId}", System.currentTimeMillis())
+            val fresh = profile.showOnce("crossed_${said.sentenceId}", System.currentTimeMillis())
             if (!fresh) return@firstNotNullOfOrNull null
             crossedThisTime = true
             string(R.string.just_did_it, said.itemText)
