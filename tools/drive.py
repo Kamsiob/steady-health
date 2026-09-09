@@ -79,16 +79,23 @@ class Device:
         and scrolls back so the screen is where it was found.
         """
         found = {}
+        down = 0
         for _ in range(sweeps):
             before = len(found)
             found.update(self.screen())
             if len(found) == before:
                 break
             self._adb("shell", "input", "swipe", "540", "1700", "540", "800", "300")
+            down += 1
             time.sleep(0.4)
-        for _ in range(sweeps):
+        # Back up by exactly as many as went down, rather than a fixed number of
+        # swipes against the top of a list. On a short screen that was six swipes
+        # into nothing, twelve times a gate, which is most of why one took a quarter
+        # of an hour.
+        for _ in range(down):
             self._adb("shell", "input", "swipe", "540", "800", "540", "1700", "300")
-        time.sleep(0.4)
+        if down:
+            time.sleep(0.4)
         return found
 
     def one_of(self, *texts, timeout=None):
