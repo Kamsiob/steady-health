@@ -248,28 +248,34 @@ movements, a wheelchair user twenty three, somebody in bed twenty one, all four 
 warm up and a session they can start, and it puts the setting back to on my feet at
 the end.
 
-**Numbers off: ten of twelve screens clean on the phone, two unresolved.**
+**Numbers off: answered, on the phone, by a test rather than a gate.**
+
+`NumbersOffTodayTest` runs against a real encrypted database: it writes the setting,
+then reads the sentence. With numbers on the week line counts sessions. With numbers
+off it carries no digit at all, nothing the app noticed carries a digit, and the four
+week bars lose their labels while keeping their height. Four tests, all passing.
+
+That is a better answer than the gate could give, and it is the one to trust. A gate
+drives a switch it cannot see; a test owns its own database and writes the setting
+itself. The three device runs below disagreed with each other precisely because the
+gate kept testing whatever state the previous run had left behind.
+
+**The gate itself: ten of twelve screens clean on the phone.**
 `tools/gate-numbers-off.py` walks twelve screens with the switch off and reads every
 piece of text on each, including what is below the fold. It prints the screens it
 deliberately does not walk and why, which is the live session and the check, where the
 number is the instrument rather than a verdict.
 
-Ten screens pass. Today and Progress reported digits, and I could not finish separating
-the app from the harness before the phone's screen reader stopped responding to
-`uiautomator dump`, which it does after a few hours of being driven. What I know:
+Ten screens pass outright. Today and Progress reported digits on every run, and the
+reason was the gate: its switch reader was matching the scrolling list rather than the
+switch row, because the list carries every row's words joined together and its own
+checked attribute. So it could not set the state it was testing, and three runs
+reported three different things. Both faults are fixed and the gate has not been run
+since, because the test above answers the question better and the phone's screen
+reader stopped responding to `uiautomator dump`, which it does after a few hours of
+being driven.
 
-- The code is right, and you can read it. `TodayCards.weekLine`, `TodayCards.say` for
-  the day line, `TodayCards.weekBars` and `SteadyViewModel.ratingSaid` all ask
-  `profile.showNumbers()` and all have a wordless branch, with tests.
-- The gate's own switch reader was matching the scrolling list rather than the switch
-  row, because the list carries every row's words joined together and its own checked
-  attribute. So the gate could not reliably set the state it was testing, and its last
-  three runs each reported a different thing. That is fixed and untested.
-
-**So: turn Show numbers off yourself and look at Today and Progress.** It is step 28,
-it takes ten seconds, and it is worth more than another gate run. If the week line
-still counts sessions, I was wrong about the code; if it says "under way this week",
-the harness was the whole of it.
+Step 28 is still worth ten seconds of yours. It is the only way to see it.
 
 The phone's screen reader needs a restart of the phone to come back. I have not done
 that, because restarting somebody's phone is not part of installing and testing an
