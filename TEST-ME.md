@@ -24,6 +24,11 @@ To start from nothing, which the walkthrough below assumes:
 adb shell pm clear com.kamsiob.steadyhealth
 ```
 
+Do run that before step 1. What is in the app now is whatever the gates left there:
+a handful of sessions, a plan, and a **Show numbers** setting that may be off, because
+the gate that tests it toggles it and its last run was cut short. Clearing puts all of
+it back to a fresh install, and nothing in there is yours.
+
 And to run every check, off the phone and on it:
 
 ```
