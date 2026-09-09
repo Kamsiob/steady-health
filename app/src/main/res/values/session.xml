@@ -251,6 +251,17 @@
     <string name="weeks_none">Four quiet weeks. The next one starts whenever you like.</string>
     <string name="weeks_bar">Week %1$d: %2$d of %3$d</string>
     <string name="look_back_title">Then and now</string>
+
+    <!--
+      The first month. ADDENDUM-03 Part 16, the second of the four places this app
+      is warm. It names what the person said and what they said about it, then and
+      now, and evaluates neither. There is no exclamation mark, because Part 16 has
+      one in its own example and DESIGN.md section 6 bans them everywhere.
+    -->
+    <string name="first_month_heading">Your first month</string>
+    <string name="first_month_forward">A month ago you put %1$s at %2$d out of ten. Today you put it at %3$d.</string>
+    <string name="first_month_back">A month ago you put %1$s at %2$d out of ten. Today you put it at %3$d. Months go both ways.</string>
+    <string name="first_month_same">A month ago you put %1$s at %2$d out of ten, and today you put it at %2$d. That is a month of holding it there.</string>
     <!--
       "Heel raises: 8 in June, 15 now." Two counts of the same thing, and the words
       between them agree with neither.

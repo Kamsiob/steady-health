@@ -66,7 +66,18 @@ data class AbilitiesUiState(
 
     /** The same thing then and now, in their own history. Part 9. */
     val lookBack: String? = null,
+
+    /**
+     * The first month, then and now, for one thing they named. Part 16.
+     *
+     * One of the four places this app is warm, and it is here for a fortnight after
+     * the first month and never again.
+     */
+    val firstMonth: FirstMonthCard? = null,
 )
+
+/** The first month card, already worded. Part 16, the second warm place. */
+data class FirstMonthCard(val heading: String, val line: String)
 
 /** One week, as a bar. Nothing here joins it to the week beside it. */
 data class WeekBar(val done: Int, val wanted: Int, val spoken: String)
@@ -108,6 +119,12 @@ fun AbilitiesScreen(
                 state.weeks.forEach { week -> WeekColumn(week, Modifier.weight(1f)) }
             }
             Paragraph(state.weeksSaid)
+        }
+
+        // Above the abilities and above the look back, because for the fortnight
+        // it exists it is the thing worth reading first, and after that it is gone.
+        state.firstMonth?.let { card ->
+            NoteBlock(heading = card.heading, text = card.line)
         }
 
         state.lookBack?.let {

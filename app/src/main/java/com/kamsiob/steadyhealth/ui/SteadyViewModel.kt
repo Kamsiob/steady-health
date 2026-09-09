@@ -38,6 +38,7 @@ import com.kamsiob.steadyhealth.engine.Returning
 import com.kamsiob.steadyhealth.engine.ReturningEngine
 import com.kamsiob.steadyhealth.engine.Step
 import com.kamsiob.steadyhealth.engine.StepMeasure
+import com.kamsiob.steadyhealth.engine.Warmth
 import com.kamsiob.steadyhealth.engine.WayOfGettingAround
 import com.kamsiob.steadyhealth.engine.WaysOfGettingAround
 import com.kamsiob.steadyhealth.engine.WeightEngine
@@ -51,6 +52,7 @@ import com.kamsiob.steadyhealth.ui.screens.AbilitiesUiState
 import com.kamsiob.steadyhealth.ui.screens.AbilityRowState
 import com.kamsiob.steadyhealth.ui.screens.AbilityTileState
 import com.kamsiob.steadyhealth.ui.screens.BringBack
+import com.kamsiob.steadyhealth.ui.screens.FirstMonthCard
 import com.kamsiob.steadyhealth.ui.screens.MoveItem
 import com.kamsiob.steadyhealth.ui.screens.MoveUiState
 import com.kamsiob.steadyhealth.ui.screens.OfferUiState
@@ -909,7 +911,32 @@ class SteadyViewModel(application: Application) : AndroidViewModel(application) 
             weeks = cards.weekBars(),
             weeksSaid = cards.weeksSaid(),
             lookBack = cards.lookBackLine(),
+            firstMonth = firstMonthCard(),
         )
+    }
+
+    /**
+     * The first month card, or nothing. ADDENDUM-03 Part 16.
+     *
+     * The first thing the person named, because the card is about their own words and
+     * the first one is what they gave before the app had asked them for anything else.
+     * Every rule about when it appears is in Warmth, which is a pure function; this
+     * only fetches the two dates and turns the answer into a sentence.
+     */
+    private suspend fun firstMonthCard(): FirstMonthCard? {
+        val item = abilities.items().minByOrNull { it.createdAt } ?: return null
+        val card = Warmth.firstMonth(
+            itemText = item.text,
+            firstDay = item.createdAt / MILLIS_PER_DAY,
+            today = today(),
+            months = abilities.months(item.id),
+        ) ?: return null
+        val words = when {
+            !card.moved -> string(R.string.first_month_same, card.itemText, card.then)
+            card.forward -> string(R.string.first_month_forward, card.itemText, card.then, card.now)
+            else -> string(R.string.first_month_back, card.itemText, card.then, card.now)
+        }
+        return FirstMonthCard(heading = string(R.string.first_month_heading), line = words)
     }
 
     /**
