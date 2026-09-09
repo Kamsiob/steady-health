@@ -1208,3 +1208,61 @@ eyebrow and as the card's big line. The big line now says how many movements the
 has. A plan has no length the app can work out, because it does not know how long a
 therapist expects any of it to take, and guessing would be the app adding something to
 somebody else's plan.
+
+### Phase 3, finished, and what was decided in it
+
+**The camera is CameraX rather than the camera intent.** An intent hands the job to
+whatever camera app is installed, and the photograph passes through that app's storage
+on the way back. On device and out of anybody else's hands is the whole promise of
+Part 5, and an intent breaks it before the app ever sees the picture.
+
+**ML Kit's bundled model, not the one Play Services downloads.** The APK goes from 47
+MB to 79.5 MB, which is a real cost for an audience on older phones. The alternative
+downloads the model on first use, which breaks the promise that the app works offline
+and adds a dependency on Play Services. Carrying it is the better trade for these
+people, and the number is recorded because somebody will ask.
+
+**Document pages live in the database, not in files beside it.** "Documents live in
+the encrypted store" is then a property of where they are rather than of remembering
+to encrypt them, and export and delete reach them without either having to know about
+a second place. The cost is a larger database; a page of typed text at JPEG 80 is
+small enough that this is not close.
+
+**MedGemma is not offered at all, and the type enforces it.** `ModelRoom.OFFERED_NOW`
+holds only the words model, and it is the default, so a caller that forgets to pass
+anything cannot turn document reading on by omission. Part 7 puts the feature behind a
+flag until an attorney reviews the HAI-DEF boundary, and a flag that defaults to on is
+not a flag.
+
+**A plan has no length on its card.** The app does not know how long a therapist
+expects any of their plan to take, and putting a number there would be the app adding
+something to somebody else's plan. The card says how many movements instead.
+
+**"Report" is exempt from the banned list in four strings.** It is banned as the app's
+noun for its own output, and this app never produces one. It is not banned as the name
+of the document in somebody's hand, which has the word printed at the top of it, and
+Part 5 writes those sentences itself.
+
+**SteadyViewModel keeps its LargeClass suppression, with a date on it.** Four subjects
+have moved out of it. What is left is Today and the walk, which share four pieces of
+mutable state, and ADDENDUM-03 Part 21 rebuilds the walk in Phase 5. Splitting it now
+means untangling that state twice. The suppression carries the reasoning in the file.
+
+### Where the phases stand
+
+Phases 1, 2 and 3 are done, each with its gate run on the phone. 27 instrumented tests
+and about 380 unit tests pass.
+
+**Phase 4 is started but not finished.** Part 7 says the validator is built before the
+model is wired in, and that was the right place to begin. `ai/Reading.kt` holds the
+job 9 output type, closed on purpose so a fifth field cannot turn a reading into an
+opinion. `ai/ReadingValidator.kt` and its fixtures were being written when the run
+ended. Nothing downloads, nothing reads a document, and "Explain it" keeps the page
+and returns to Today, which is an honest outcome rather than a stub.
+
+**Phase 5 is partly done.** Part 15's interruptions and chair height are built, tested
+and wired. Exclusions, readiness and pacing already existed from the earlier plan.
+Ceilings and variants are in the session engine. The other ways of getting around
+work, but have only been walked on the on-feet path.
+
+**Phases 6, 7 and 8 have not started.**

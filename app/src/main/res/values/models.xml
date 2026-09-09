@@ -42,7 +42,7 @@
     <string name="models_not_yet">You can\'t add this one yet. It isn\'t built into this version, and everything it would do is being done another way in the meantime.</string>
     <string name="models_room_for_it">There\'s room for it, and %1$s the app could still use afterwards.</string>
     <string name="models_needs_a_tap">You\'re on mobile data. This one is %1$s of it, so it starts only when you tap below.</string>
-    <string name="models_not_connected">There\'s nothing to download over just now. This will still be here later.</string>
+    <string name="models_not_connected">There\'s no connection just now. This will still be here later.</string>
     <string name="models_short_by">There isn\'t room for this one yet. Freeing up %1$s would do it.</string>
 
     <string name="models_add">Add it</string>

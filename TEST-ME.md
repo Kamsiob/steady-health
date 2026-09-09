@@ -93,21 +93,27 @@ driven on the phone except where it says otherwise.
 17. Try it again with a letter, and again with something the app should refuse, like a
     prescription or a blood test. It should say it is not something the app reads and
     offer to keep it, and it should not say what kind of document it thought it was.
-18. Go to **Sessions**. Today's session at the top, what you have done under it, a way
+18. Go to **You** and open **Your documents**. Everything you photographed is there,
+    at full size, with a way to remove one. Nothing tidies it up and nothing expires.
+19. In **You**, open **What the app can read**. Four choices, the free space on your
+    phone, and "Nothing extra" first, which is the default and is meant to feel like a
+    choice rather than a shortfall. Nothing downloads yet and the screen says so.
+20. Go to **Sessions**. Today's session at the top, what you have done under it, a way
     to add a session you already did, and the library of everything you can do.
-19. Tap a session in the history. The numbers are editable and there is a
+21. Tap a session in the history. The numbers are editable and there is a
     **Remove this session**. Nothing asks why.
-20. From Today's card, tap **Do it without the phone**. It writes the whole session
+22. From Today's card, tap **Do it without the phone**. It writes the whole session
     out and will read it aloud. Then **I have done it** and log what you managed.
-21. Go to **Progress**. Four bars, one per week, each against the number of sessions a
+23. Go to **Progress**. Four bars, one per week, each against the number of sessions a
     week you chose. Nothing joins them. Under them, one sentence saying a quiet week
     is what most months look like.
-22. Go to **You**. The daily prompt switch, how many sessions a week, and everything
+24. Go to **You**. The daily prompt switch, how many sessions a week, and everything
     else. Turn the week number to five and go back to Today: the line under the card
     should change.
 
-That is twenty two steps rather than twenty, because scanning a document is where
-ADDENDUM-03 Part 22 asks the walkthrough to end and it now exists.
+That is twenty four steps rather than twenty. Scanning a document is where
+ADDENDUM-03 Part 22 asks the walkthrough to end, and it now exists, so the two screens
+that came with it are worth a look while you are there.
 
 **What a scan does not do yet: explain a letter.** Tapping "Explain it" keeps the page
 and returns you to Today. Part 7's reader is Phase 4 and stays behind a flag until an
@@ -115,6 +121,12 @@ attorney has reviewed the boundary, which is on the list above. The validator th
 guards it is being built first, which is the order Part 7 asks for.
 
 ---
+
+## The gates
+
+**Phase 1**, run on the phone, in full below. **Phase 3**: "the therapist plan and the
+app's suggestions are visibly separate, and a movement in both is counted once" passes
+as `PlanSeparateTest` on the phone, four tests. All 27 instrumented tests pass.
 
 ## The Phase 1 acceptance gate
 
@@ -129,7 +141,7 @@ scripts are in `tools/` and every one can be run again.
 | The three exits from every point, keeping what was done | **Pass.** Every exit from every stage in `SessionRunnerTest`; each one once on the phone in `tools/gate-exits.py`. |
 | The pain button in one press | **Pass.** One press reached "Where does it hurt?", and naming the knee changed the next session on its own. |
 | Pause survives an interruption | **Pass for the home button**, which is the same stopped activity a call produces. The screen lock is step 15 above, for you. |
-| 200% font scale and TalkBack | **Written, not run.** `SessionAccessibilityTest` asserts both without changing anything on any device. It has not run because the phone is locked. |
+| 200% font scale and TalkBack | **Pass**, run on the phone. `SessionAccessibilityTest` asserts both without changing a setting on any device. |
 | The next session differs after "hard" | **Pass.** "About 8 minutes, starting with stands from a high seat" becomes "About a minute, starting with marching on the spot. A bit lighter than today, because that one was hard." |
 | No banned word on any screen | **Pass.** `tools/banned-words.py` reads the text of every string resource and every literal in the movement library. It found eight on its first run, all fixed. |
 
@@ -180,14 +192,21 @@ Thursday does not remember how many. What is recorded is that it happened.
 
 ## Where the work stands
 
-Phases 1a, 1b and 2 of ADDENDUM-03 Part 21 are built. Phases 3 to 8 have not started:
-the camera and the therapist's plan, report reading behind its flag, the other ways of
-getting around in full, passive measures and Progress in full, beyond exercise and the
-card, and then languages, export, import and release.
+Phases 1, 2 and 3 are built and each gate has been run on the phone. Phase 5 is partly
+built: the gap question and the chair are done, and exclusions, readiness and pacing
+were already there.
 
-Most of the app from the earlier plan is still here and still works. Some of it, the
-Move screen's walk-first shape and the Abilities grid, is superseded by the addendum
-and gets rebuilt in a later phase.
+Phase 4 is started at the right end. Part 7 says the reading validator is built before
+the model is wired in, and that is where the run stopped: the job 9 output type is
+written and closed so that a fifth field cannot turn a reading into an opinion, and
+the validator itself was mid-flight. Nothing downloads, nothing reads a document, and
+"Explain it" keeps the page and returns you to Today.
+
+Phases 6, 7 and 8 have not started: passive measures and Progress in full, beyond
+exercise and the card, then languages, import, backup and release.
+
+Most of the app from the earlier plan is still here and still works. The Move screen's
+walk-first shape is superseded and its rebuild is Phase 5.
 
 HANDOFF.md is current. DECISIONS.md has every judgment call with its reasoning, the
 gate results in full, and the BLOCKED list.
