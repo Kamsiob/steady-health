@@ -1,3 +1,5 @@
+import java.io.FileInputStream
+import java.util.Properties
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -29,6 +31,32 @@ android {
         ndk { abiFilters += setOf("arm64-v8a", "x86_64") }
     }
 
+    signingConfigs {
+        // The real key, if it is on this machine, and nothing at all if it is not.
+        //
+        // Everything comes from a properties file OUTSIDE the repository, named by
+        // the STEADY_KEYSTORE_PROPERTIES environment variable and defaulting to
+        // ~/.steady/keystore.properties. The repository is public. No path, no
+        // password and no alias is written down here, and there is nothing to
+        // accidentally commit because there is no file in the tree to edit.
+        //
+        // A machine without that file still builds, tests and installs; it just
+        // cannot produce a bundle Play will take, which is the correct outcome.
+        val properties = Properties()
+        val describedBy = providers.environmentVariable("STEADY_KEYSTORE_PROPERTIES").orNull
+            ?: (System.getProperty("user.home") + "/.steady/keystore.properties")
+        val file = File(describedBy)
+        if (file.exists()) {
+            FileInputStream(file).use { properties.load(it) }
+            create("steady") {
+                storeFile = File(properties.getProperty("storeFile"))
+                storePassword = properties.getProperty("storePassword")
+                keyAlias = properties.getProperty("keyAlias")
+                keyPassword = properties.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         debug {
             applicationIdSuffix = ""
@@ -39,12 +67,14 @@ android {
             isShrinkResources = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
 
-            // Until there is a real signing key, release builds are signed with
-            // the debug one so they can be installed and tested. This is a
-            // testing convenience and not a shipping configuration: a debug-signed
-            // build cannot go to Play, and the real keystore is an owner task on
-            // the BLOCKED list. Swapping this for the real config is one line.
-            signingConfig = signingConfigs.getByName("debug")
+            // The real key when this machine has it, and the debug key otherwise so
+            // that a release build can still be installed and tested. A debug signed
+            // build cannot go to Play, which is the point: the only way to produce
+            // something uploadable is to have the keystore, and the keystore lives
+            // outside the repository. Creating it is an owner task on the BLOCKED
+            // list, and LAUNCH.md says how.
+            signingConfig = signingConfigs.findByName("steady")
+                ?: signingConfigs.getByName("debug")
         }
     }
 
