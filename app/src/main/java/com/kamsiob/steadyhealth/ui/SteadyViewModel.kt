@@ -13,6 +13,7 @@ import com.kamsiob.steadyhealth.data.CheckRepository
 import com.kamsiob.steadyhealth.data.DayEntry
 import com.kamsiob.steadyhealth.data.DayRepository
 import com.kamsiob.steadyhealth.data.MovementRepository
+import com.kamsiob.steadyhealth.data.PlanRepository
 import com.kamsiob.steadyhealth.data.ProfileRepository
 import com.kamsiob.steadyhealth.data.RunRepository
 import com.kamsiob.steadyhealth.data.SteadyDatabase
@@ -40,8 +41,12 @@ import com.kamsiob.steadyhealth.engine.StepMeasure
 import com.kamsiob.steadyhealth.engine.WayOfGettingAround
 import com.kamsiob.steadyhealth.engine.WaysOfGettingAround
 import com.kamsiob.steadyhealth.engine.WeightEngine
+import com.kamsiob.steadyhealth.plan.ReviewDate
+import com.kamsiob.steadyhealth.plan.ReviewPrompt
 import com.kamsiob.steadyhealth.remind.ReminderWorker
 import com.kamsiob.steadyhealth.session.Area
+import com.kamsiob.steadyhealth.session.ComingBack
+import com.kamsiob.steadyhealth.session.WhyAway
 import com.kamsiob.steadyhealth.ui.screens.AbilitiesUiState
 import com.kamsiob.steadyhealth.ui.screens.AbilityRowState
 import com.kamsiob.steadyhealth.ui.screens.AbilityTileState
@@ -67,6 +72,7 @@ import java.time.LocalDate
 import java.time.LocalTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.time.format.TextStyle
 import java.util.Locale
 
 /**
@@ -77,6 +83,19 @@ import java.util.Locale
  * here is assembly: reading rows, handing values to pure functions, and turning
  * the answers into something a screen can draw.
  */
+/*
+ * detekt is right that this class is too large, and it has been told so five times.
+ * Four subjects have already moved out: the Sessions tab, the therapist page, coming
+ * back after a gap, and the sentences about somebody's own history.
+ *
+ * What is left is two halves that do not belong together: Today, and the walk. The
+ * walk half is the old plan's, it shares four pieces of mutable state with the rest of
+ * this class, and ADDENDUM-03 Part 21 rebuilds it in Phase 5. Splitting it now means
+ * untangling that state twice, once here and once when the walk is replaced, so the
+ * suppression is a note about a job with a date on it rather than a decision to leave
+ * it alone. HANDOFF.md carries the same note.
+ */
+@Suppress("LargeClass")
 class SteadyViewModel(application: Application) : AndroidViewModel(application) {
 
     /**
@@ -100,6 +119,7 @@ class SteadyViewModel(application: Application) : AndroidViewModel(application) 
     internal val weeks get() = WeekRepository(db)
     internal val checks get() = CheckRepository(db)
     internal val runs get() = RunRepository(db)
+    private val away get() = ComingBackFrom(getApplication(), db)
     private val cards get() = TodayCards(getApplication(), db)
 
     private val _onboardingComplete = MutableStateFlow<Boolean?>(null)
@@ -196,6 +216,12 @@ class SteadyViewModel(application: Application) : AndroidViewModel(application) 
         refresh()
     }
 
+    /** The one answer to "what has been happening?". ADDENDUM-03 Part 15. */
+    fun answerWhyAway(why: WhyAway) = viewModelScope.launch {
+        away.answer(why)
+        refresh()
+    }
+
     fun refresh() = viewModelScope.launch {
         loadProfile()
         applyTimeAway()
@@ -288,6 +314,7 @@ class SteadyViewModel(application: Application) : AndroidViewModel(application) 
         val walkName = if (way.way == GettingAround.InBed) "" else nextThingName(walkStep)
         val weighsIn = way.weighsIn && profile.weighsIn()
         val nextThing = cards.theNextThing()
+        val comingBack = away.now()
 
         _today.value = TodayUiState(
             date = date.format(DateTimeFormatter.ofPattern("EEEE, MMMM d", Locale.getDefault())),
@@ -323,8 +350,30 @@ class SteadyViewModel(application: Application) : AndroidViewModel(application) 
             towards = nextThing?.second,
             worthAWord = worthAWord(today),
             sunday = date.dayOfWeek == DayOfWeek.SUNDAY,
+            askWhyAway = comingBack is ComingBack.Ask,
+            afterAway = away.said(comingBack),
+            appointmentSoon = appointmentSoon(),
             bringBack = bringBackQuestion(today),
         )
+    }
+
+    /**
+     * "You see your physio on Thursday. Your page is ready." ADDENDUM-03 Part 6.
+     *
+     * Two days before, and only then. It is a line on Today rather than a
+     * notification, because a notification about an appointment somebody already
+     * knows about is the app telling them something they told it.
+     */
+    private suspend fun appointmentSoon(): String? {
+        val plans = PlanRepository(db)
+        val soon = ReviewDate.due(plans.live().mapNotNull { it.reviewDay }, today())
+        if (soon !is ReviewPrompt.Send) return null
+        val label = plans.live().firstOrNull()?.label.orEmpty()
+            .ifBlank { string(R.string.plan_them) }
+        val day = LocalDate.ofEpochDay(soon.onDay)
+            .dayOfWeek
+            .getDisplayName(TextStyle.FULL, Locale.getDefault())
+        return string(R.string.plan_review_soon, label, day)
     }
 
     /**
@@ -968,5 +1017,8 @@ class SteadyViewModel(application: Application) : AndroidViewModel(application) 
         /** Keyed by ladder and by the day they left, so it fires once per gap. */
         const val WELCOME_BACK_NOTICE = "welcome_back"
         const val WORTH_A_WORD = "worth_a_word"
+
+        /** Milliseconds in a day, for turning a saved timestamp into a day. */
+        const val MILLIS_PER_DAY = 86_400_000L
     }
 }

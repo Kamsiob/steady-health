@@ -18,13 +18,16 @@ import androidx.compose.ui.semantics.semantics
 import com.kamsiob.steadyhealth.R
 import com.kamsiob.steadyhealth.domain.AbilityDomain
 import com.kamsiob.steadyhealth.session.Area
+import com.kamsiob.steadyhealth.session.WhyAway
 import com.kamsiob.steadyhealth.ui.components.AbilityTile
 import com.kamsiob.steadyhealth.ui.components.CarryGlyph
 import com.kamsiob.steadyhealth.ui.components.DailyCard
 import com.kamsiob.steadyhealth.ui.components.ListItem
 import com.kamsiob.steadyhealth.ui.components.NoteBlock
+import com.kamsiob.steadyhealth.ui.components.Paragraph
 import com.kamsiob.steadyhealth.ui.components.RiseGlyph
 import com.kamsiob.steadyhealth.ui.components.SecondaryButton
+import com.kamsiob.steadyhealth.ui.components.SectionTitle
 import com.kamsiob.steadyhealth.ui.components.SessionCard
 import com.kamsiob.steadyhealth.ui.components.SessionCardState
 import com.kamsiob.steadyhealth.ui.components.SteadyGlyph
@@ -113,6 +116,15 @@ data class TodayUiState(
     /** True on a Sunday, when there is a week to read back. Part 10. */
     val sunday: Boolean = false,
 
+    /** Asked once after a gap of a week or more. ADDENDUM-03 Part 15. */
+    val askWhyAway: Boolean = false,
+
+    /** Said after the answer, and then not again. */
+    val afterAway: List<String> = emptyList(),
+
+    /** "You see your physio on Thursday. Your page is ready." Part 6. */
+    val appointmentSoon: String? = null,
+
     /** An area whose week is up, asked about once. */
     val bringBack: BringBack? = null,
 ) {
@@ -147,6 +159,8 @@ fun TodayScreen(
     onWithoutThePhone: () -> Unit,
     onBringBack: (Boolean) -> Unit,
     onSunday: () -> Unit,
+    onWhyAway: (WhyAway) -> Unit,
+    onTherapistPage: () -> Unit,
     onNotice: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -164,6 +178,15 @@ fun TodayScreen(
                     modifier = Modifier.semantics { heading() },
                 )
             }
+        }
+
+        if (state.askWhyAway) WhyAwayAsked(onWhyAway)
+
+        state.afterAway.forEach { NoteBlock(it) }
+
+        state.appointmentSoon?.let {
+            NoteBlock(it)
+            ListItem(heading = stringResource(R.string.plan_export), onClick = onTherapistPage)
         }
 
         // Their own sentence first. It is the reason any of this is happening and the
@@ -236,6 +259,27 @@ fun TodayScreen(
             onClick = onSayHow,
             glyph = { TalkGlyph() },
         )
+    }
+}
+
+/**
+ * The one question after a gap. ADDENDUM-03 Part 15.
+ *
+ * Four answers, no free text, and nothing anywhere about a day nobody did anything.
+ * It sits above everything else on Today because the answer changes what today's
+ * session is, and answering it is the only thing on the screen worth doing first.
+ */
+@Composable
+private fun WhyAwayAsked(onWhyAway: (WhyAway) -> Unit) {
+    SectionTitle(stringResource(R.string.back_title))
+    Paragraph(stringResource(R.string.back_ask))
+    listOf(
+        WhyAway.Busy to R.string.back_busy,
+        WhyAway.Unwell to R.string.back_unwell,
+        WhyAway.Away to R.string.back_away,
+        WhyAway.RatherNotSay to R.string.back_rather_not,
+    ).forEach { (why, label) ->
+        ListItem(heading = stringResource(label), onClick = { onWhyAway(why) })
     }
 }
 

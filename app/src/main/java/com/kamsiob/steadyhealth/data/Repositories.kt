@@ -77,12 +77,14 @@ import com.kamsiob.steadyhealth.engine.WeekOfDays
 import com.kamsiob.steadyhealth.engine.WeightEngine
 import com.kamsiob.steadyhealth.export.Sheet
 import com.kamsiob.steadyhealth.session.Area
+import com.kamsiob.steadyhealth.session.ChairHeight
 import com.kamsiob.steadyhealth.session.Done
 import com.kamsiob.steadyhealth.session.Felt
 import com.kamsiob.steadyhealth.session.Kit
 import com.kamsiob.steadyhealth.session.Movements
 import com.kamsiob.steadyhealth.session.Piece
 import com.kamsiob.steadyhealth.session.Result
+import com.kamsiob.steadyhealth.session.TheChair
 import com.kamsiob.steadyhealth.session.Week
 import java.time.LocalDate
 
@@ -501,6 +503,30 @@ class ProfileRepository(private val db: SteadyDatabase) {
 
     suspend fun setExtras(value: Boolean) = put(EXTRAS, value.toString())
 
+    /**
+     * The one answer given about the last gap, and which gap it was about.
+     *
+     * Stored against the session day it followed, so a new gap gets a new question and
+     * an old answer cannot silence it. ADDENDUM-03 Part 15 asks once per gap.
+     */
+    suspend fun whyAway(): Triple<String, Long, Long>? {
+        val why = get(WHY_AWAY)?.takeIf { it.isNotBlank() } ?: return null
+        val after = get(WHY_AWAY_AFTER)?.toLongOrNull() ?: return null
+        val on = get(WHY_AWAY_ON)?.toLongOrNull() ?: return null
+        return Triple(why, after, on)
+    }
+
+    suspend fun setWhyAway(why: String, afterLastSessionDay: Long, onDay: Long) {
+        put(WHY_AWAY, why)
+        put(WHY_AWAY_AFTER, afterLastSessionDay.toString())
+        put(WHY_AWAY_ON, onDay.toString())
+    }
+
+    /** The hospital or fall sentence, said once ever and then never again. */
+    suspend fun saidWorthAWord(): Boolean = get(SAID_WORTH_A_WORD).toBoolean()
+
+    suspend fun setSaidWorthAWord(value: Boolean) = put(SAID_WORTH_A_WORD, value.toString())
+
     /** True when the daily prompt turned itself off, so Settings can say why. */
     suspend fun dailyGaveUp(): Boolean = get(DAILY_GAVE_UP).toBoolean()
 
@@ -575,6 +601,10 @@ class ProfileRepository(private val db: SteadyDatabase) {
         const val WEEK_TARGET = "week_target"
         const val DAILY_GAVE_UP = "daily_gave_up"
         const val EXTRAS = "plan_extras"
+        const val WHY_AWAY = "why_away"
+        const val WHY_AWAY_AFTER = "why_away_after"
+        const val WHY_AWAY_ON = "why_away_on"
+        const val SAID_WORTH_A_WORD = "said_worth_a_word"
         const val WITH_THERAPIST = "with_therapist"
         const val UNITS = "units"
         const val HEIGHT = "height_cm"
@@ -1289,6 +1319,76 @@ class DailyPromptRepository(private val db: SteadyDatabase) {
     suspend fun forget() = db.dailyPrompts().clear()
 }
 
+/**
+ * The chair somebody stands up from, and which optional models are on the phone.
+ *
+ * Their own class because ProfileRepository reached seventy functions and detekt was
+ * right to say so: it had stopped being the person's profile and become the place
+ * anything with a key goes. These two are their own subjects, they arrived together in
+ * Phase 3, and neither is anything to do with who somebody is.
+ *
+ * The same key-value table underneath. Nothing moved on disk, so nothing has to be
+ * migrated and an older build reads exactly the same rows.
+ */
+class ContextRepository(private val db: SteadyDatabase) {
+
+    private suspend fun put(key: String, value: String) =
+        db.profile().put(SettingEntity(key, value))
+
+    private suspend fun get(key: String): String? = db.profile().get(key)
+
+    /**
+     * The chair, as Part 15 asks for it: a rough height, asked once and kept.
+     *
+     * Stored as its three parts rather than as a serialised object, so a build that
+     * changes the type cannot read back a chair that no longer exists.
+     */
+    suspend fun theChair(): TheChair = TheChair(
+        height = ChairHeight.entries.firstOrNull { it.id == get(CHAIR_HEIGHT) },
+        change = get(CHAIR_FROM)?.let { from ->
+            ChairHeight.entries.firstOrNull { it.id == from }?.let { was ->
+                TheChair.Change(
+                    from = was,
+                    on = get(CHAIR_CHANGED_ON)?.toLongOrNull() ?: 0L,
+                    said = get(CHAIR_SAID).toBoolean(),
+                )
+            }
+        },
+    )
+
+    suspend fun setTheChair(chair: TheChair) {
+        put(CHAIR_HEIGHT, chair.height?.id.orEmpty())
+        put(CHAIR_FROM, chair.change?.from?.id.orEmpty())
+        put(CHAIR_CHANGED_ON, (chair.change?.on ?: 0L).toString())
+        put(CHAIR_SAID, (chair.change?.said ?: false).toString())
+    }
+
+    /**
+     * Whether an optional model is on this phone, and whether its terms were agreed.
+     *
+     * Two separate answers on purpose. ADDENDUM-03 Part 7 puts acceptance before the
+     * download rather than beside it, so somebody can have agreed to a licence and
+     * still not have the model, and a build that gains downloading later must not
+     * treat an old agreement as a model that is present.
+     */
+    suspend fun modelHere(id: String): Boolean = get("model_here_$id").toBoolean()
+
+    suspend fun setModelHere(id: String, value: Boolean) =
+        put("model_here_$id", value.toString())
+
+    suspend fun agreedToTerms(id: String): Boolean = get("model_terms_$id").toBoolean()
+
+    suspend fun setAgreedToTerms(id: String, value: Boolean) =
+        put("model_terms_$id", value.toString())
+
+    private companion object {
+        const val CHAIR_HEIGHT = "chair_height"
+        const val CHAIR_FROM = "chair_from"
+        const val CHAIR_CHANGED_ON = "chair_changed_on"
+        const val CHAIR_SAID = "chair_said"
+    }
+}
+
 class RunRepository(private val db: SteadyDatabase) {
 
     /** Save one session, however it ended. Nothing here can lose what was done. */
@@ -1445,6 +1545,17 @@ class RunRepository(private val db: SteadyDatabase) {
     suspend fun soreAreaToAskAbout(today: Long): Area? = db.runs().soreOnce()
         .firstOrNull { today - it.reportedOnDay >= SORE_DAYS }
         ?.let { row -> Area.entries.firstOrNull { it.id == row.area } }
+
+    /**
+     * Every area ever reported, with the day it was reported on.
+     *
+     * For the page that goes to the appointment. Part 6 says what hurt and when is on
+     * it, and it is the single most useful thing a therapist gets from this, because
+     * nobody writes it down at the time.
+     */
+    suspend fun everSore(): List<Pair<Area, Long>> = db.runs().allSoreOnce().mapNotNull { row ->
+        Area.entries.firstOrNull { it.id == row.area }?.let { it to row.reportedOnDay }
+    }
 
     suspend fun reportSore(area: Area, today: Long) {
         db.runs().upsertSore(SoreAreaEntity(area = area.id, reportedOnDay = today))

@@ -33,6 +33,9 @@ import com.kamsiob.steadyhealth.domain.Exclusion
 import com.kamsiob.steadyhealth.engine.ReminderKind
 import com.kamsiob.steadyhealth.remind.Reminding
 import com.kamsiob.steadyhealth.ui.components.SteadyTabBar
+import com.kamsiob.steadyhealth.ui.model.ModelsActions
+import com.kamsiob.steadyhealth.ui.model.ModelsScreen
+import com.kamsiob.steadyhealth.ui.model.ModelsViewModel
 import com.kamsiob.steadyhealth.ui.nav.Route
 import com.kamsiob.steadyhealth.ui.nav.Tab
 import com.kamsiob.steadyhealth.ui.onboarding.OnboardingFlow
@@ -99,6 +102,8 @@ fun SteadyApp(openSession: Boolean = false) {
     val sessionViewModel: SessionViewModel = viewModel()
     val sessionsViewModel: SessionsViewModel = viewModel()
     val scanViewModel: ScanViewModel = viewModel()
+    val modelsViewModel: ModelsViewModel = viewModel()
+    val therapistPageViewModel: TherapistPageViewModel = viewModel()
     val onboarded by viewModel.onboardingComplete.collectAsStateWithLifecycle()
 
     when (onboarded) {
@@ -116,6 +121,8 @@ fun SteadyApp(openSession: Boolean = false) {
             sessionViewModel,
             sessionsViewModel,
             scanViewModel,
+            modelsViewModel,
+            therapistPageViewModel,
         )
     }
 }
@@ -134,6 +141,8 @@ private fun Tabs(
     sessionViewModel: SessionViewModel,
     sessionsViewModel: SessionsViewModel,
     scanViewModel: ScanViewModel,
+    modelsViewModel: ModelsViewModel,
+    therapistPageViewModel: TherapistPageViewModel,
 ) {
     val navController = rememberNavController()
     var tab by rememberSaveable { mutableStateOf(Tab.Today) }
@@ -168,6 +177,8 @@ private fun Tabs(
                             sessionViewModel = sessionViewModel,
                             sessionsViewModel = sessionsViewModel,
                             scanViewModel = scanViewModel,
+                            modelsViewModel = modelsViewModel,
+                            therapistPageViewModel = therapistPageViewModel,
                             navController = navController,
                         )
                     }
@@ -175,7 +186,7 @@ private fun Tabs(
                     dailyRoutes(viewModel, navController, back)
 
                     sessionsRoutes(sessionsViewModel, sessionViewModel, navController, back)
-                    scanRoutes(scanViewModel, navController, back)
+                    scanRoutes(scanViewModel, modelsViewModel, navController, back)
 
                     askRoutes(askViewModel, navController, back)
                     checkRoutes(checkViewModel, navController, back) {
@@ -191,6 +202,7 @@ private fun Tabs(
                         viewModel = settingsViewModel,
                         askViewModel = askViewModel,
                         scanViewModel = scanViewModel,
+                        modelsViewModel = modelsViewModel,
                         navController = navController,
                         back = back,
                         onSummary = {
@@ -373,6 +385,8 @@ private fun TabBody(
     sessionViewModel: SessionViewModel,
     sessionsViewModel: SessionsViewModel,
     scanViewModel: ScanViewModel,
+    modelsViewModel: ModelsViewModel,
+    therapistPageViewModel: TherapistPageViewModel,
     navController: NavHostController,
 ) {
     when (tab) {
@@ -414,6 +428,8 @@ private fun TabBody(
                     sessionsViewModel.openSunday()
                     navController.navigate(Route.SUNDAY)
                 },
+                onWhyAway = viewModel::answerWhyAway,
+                onTherapistPage = therapistPageViewModel::share,
                 onNotice = viewModel::dismissNotice,
             )
         }
@@ -465,7 +481,13 @@ private fun TabBody(
             }
             SettingsScreen(
                 state = state,
-                actions = settingsActions(settingsViewModel, askViewModel, scanViewModel, navController),
+                actions = settingsActions(
+                    settingsViewModel,
+                    askViewModel,
+                    scanViewModel,
+                    modelsViewModel,
+                    navController,
+                ),
                 onBack = null,
             )
         }
@@ -705,6 +727,7 @@ private fun NavGraphBuilder.askRoutes(
  */
 private fun NavGraphBuilder.scanRoutes(
     viewModel: ScanViewModel,
+    modelsViewModel: ModelsViewModel,
     navController: NavHostController,
     back: () -> Unit,
 ) {
@@ -748,6 +771,22 @@ private fun NavGraphBuilder.scanRoutes(
             // something the app cannot do yet.
             onExplain = { viewModel.keep { navController.popBackStack(Route.TABS, false) } },
             onKeep = { viewModel.keep { navController.popBackStack(Route.TABS, false) } },
+            onBack = back,
+        )
+    }
+
+    composable(Route.MODELS) {
+        val state by modelsViewModel.state.collectAsStateWithLifecycle()
+        ModelsScreen(
+            state = state,
+            actions = ModelsActions(
+                onAdd = modelsViewModel::showTerms,
+                onRemove = modelsViewModel::remove,
+                onTerms = modelsViewModel::showTerms,
+                onAgree = modelsViewModel::agree,
+                onCloseTerms = modelsViewModel::closeTerms,
+                onByHandSeen = modelsViewModel::byHandSeen,
+            ),
             onBack = back,
         )
     }
@@ -841,6 +880,7 @@ private fun settingsActions(
     viewModel: SettingsViewModel,
     askViewModel: AskViewModel,
     scanViewModel: ScanViewModel,
+    modelsViewModel: ModelsViewModel,
     navController: NavHostController,
 ) = SettingsActions(
     onGettingAround = { navController.navigate(Route.GETTING_AROUND) },
@@ -867,6 +907,10 @@ private fun settingsActions(
         scanViewModel.openDocuments()
         navController.navigate(Route.DOCUMENTS)
     },
+    onModels = {
+        modelsViewModel.open()
+        navController.navigate(Route.MODELS)
+    },
     onExtras = viewModel::setExtras,
 )
 
@@ -874,6 +918,7 @@ private fun NavGraphBuilder.settingsRoutes(
     viewModel: SettingsViewModel,
     askViewModel: AskViewModel,
     scanViewModel: ScanViewModel,
+    modelsViewModel: ModelsViewModel,
     navController: NavHostController,
     back: () -> Unit,
     onSummary: () -> Unit,
@@ -883,7 +928,7 @@ private fun NavGraphBuilder.settingsRoutes(
         val state by viewModel.settings.collectAsStateWithLifecycle()
         SettingsScreen(
             state = state,
-            actions = settingsActions(viewModel, askViewModel, scanViewModel, navController),
+            actions = settingsActions(viewModel, askViewModel, scanViewModel, modelsViewModel, navController),
             onBack = back,
         )
     }

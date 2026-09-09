@@ -74,6 +74,7 @@ fun SessionHost(
             current.at + 1,
             current.plan.steps.size,
         ),
+        chair = viewModel.chairFor(current.movement),
     )
     val actions = SessionActions(
         onReady = viewModel::ready,

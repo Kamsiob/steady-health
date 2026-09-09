@@ -52,6 +52,8 @@ class AccessibilityTest {
                     onWithoutThePhone = {},
                     onBringBack = {},
                     onSunday = {},
+                    onWhyAway = {},
+                    onTherapistPage = {},
                     onNotice = {},
                 ) } }
 
@@ -76,6 +78,8 @@ class AccessibilityTest {
                     onWithoutThePhone = {},
                     onBringBack = {},
                     onSunday = {},
+                    onWhyAway = {},
+                    onTherapistPage = {},
                     onNotice = {},
                 ) } }
 
@@ -95,6 +99,8 @@ class AccessibilityTest {
                     onWithoutThePhone = {},
                     onBringBack = {},
                     onSunday = {},
+                    onWhyAway = {},
+                    onTherapistPage = {},
                     onNotice = {},
                 ) } }
 
@@ -121,6 +127,8 @@ class AccessibilityTest {
                     onWithoutThePhone = {},
                     onBringBack = {},
                     onSunday = {},
+                    onWhyAway = {},
+                    onTherapistPage = {},
                     onNotice = {},
                 ) } }
         val tappable = compose.onAllNodes(hasClickAction()).fetchSemanticsNodes()
@@ -154,6 +162,8 @@ class AccessibilityTest {
                     onWithoutThePhone = {},
                     onBringBack = {},
                     onSunday = {},
+                    onWhyAway = {},
+                    onTherapistPage = {},
                     onNotice = {},
                 ) }
             }
@@ -188,6 +198,7 @@ class AccessibilityTest {
                         onScan = {},
                         onExtras = {},
                         onDocuments = {},
+                        onModels = {},
                     ),
                     onBack = {},
                 )

@@ -7,6 +7,7 @@ import androidx.annotation.StringRes
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.kamsiob.steadyhealth.R
+import com.kamsiob.steadyhealth.data.ContextRepository
 import com.kamsiob.steadyhealth.data.ProfileRepository
 import com.kamsiob.steadyhealth.data.RunRepository
 import com.kamsiob.steadyhealth.data.SteadyDatabase
@@ -15,9 +16,12 @@ import com.kamsiob.steadyhealth.sensing.RepCounter
 import com.kamsiob.steadyhealth.session.Adaptation
 import com.kamsiob.steadyhealth.session.Area
 import com.kamsiob.steadyhealth.session.Buzz
+import com.kamsiob.steadyhealth.session.ChairHeight
+import com.kamsiob.steadyhealth.session.ChairLine
 import com.kamsiob.steadyhealth.session.Counted
 import com.kamsiob.steadyhealth.session.Ending
 import com.kamsiob.steadyhealth.session.Felt
+import com.kamsiob.steadyhealth.session.Movement
 import com.kamsiob.steadyhealth.session.Movements
 import com.kamsiob.steadyhealth.session.Result
 import com.kamsiob.steadyhealth.session.Sensed
@@ -27,6 +31,7 @@ import com.kamsiob.steadyhealth.session.SessionPlan
 import com.kamsiob.steadyhealth.session.SessionRunner
 import com.kamsiob.steadyhealth.session.Speech
 import com.kamsiob.steadyhealth.session.Stage
+import com.kamsiob.steadyhealth.session.TheChair
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -134,6 +139,33 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
      * The one entry point, so nothing anywhere else has to know how a session is put
      * together.
      */
+    /**
+     * Which chair, appended to a chair stand's own setup line.
+     *
+     * ADDENDUM-03 Part 15: shown every time, because the point is not to inform
+     * somebody once, it is to put the same chair in the room at the moment they are
+     * choosing one.
+     */
+    private var chairLine: String? = null
+
+    /** The line for the movement on screen, or nothing when the chair does not decide. */
+    fun chairFor(movement: Movement?): String? =
+        chairLine?.takeIf { movement != null && TheChair.standsFromTheChair(movement) }
+
+    private suspend fun readTheChair(movement: Movement?): String? {
+        val chair = ContextRepository(db).theChair()
+        return when (val line = movement?.let { chair.lineFor(it) }) {
+            is ChairLine.SameAgain -> string(R.string.chair_in_setup, string(chairName(line.height)))
+            ChairLine.AskOnce, null -> null
+        }
+    }
+
+    private fun chairName(height: ChairHeight) = when (height) {
+        ChairHeight.Low -> R.string.chair_low
+        ChairHeight.Level -> R.string.chair_usual
+        ChairHeight.High -> R.string.chair_high
+    }
+
     fun startTodays() = viewModelScope.launch {
         val inputs = inputsFor(profile, runs)
         start(SessionEngine.plan(inputs), first = runs.history().isEmpty())
@@ -286,6 +318,7 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
         spokenCount = 0
         speech.start { }
         speech.on = speaking
+        viewModelScope.launch { chairLine = readTheChair(_runner.value?.movement) }
         sayReady()
         runClock()
     }
@@ -568,7 +601,8 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
     private fun sayReady() {
         val runner = _runner.value ?: return
         val movement = runner.movement ?: return
-        speech.say("${movement.name}. ${movement.setup} ${movement.stopRule}")
+        val chair = chairLine?.takeIf { TheChair.standsFromTheChair(movement) }.orEmpty()
+        speech.say("${movement.name}. ${movement.setup} $chair ${movement.stopRule}")
         // Once, on the first movement. Saying it before every set would be nagging,
         // and by the second one the person already knows.
         if (runner.at == 0) speech.queue(string(R.string.say_starts_itself))
@@ -718,11 +752,18 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
 }
 
 /** The one place that turns a runner into what the screens draw. */
-fun SessionRunner.toUiState(speaking: Boolean, unit: String, stepOf: String): SessionUiState {
+@Suppress("LongParameterList") // Everything one screen needs, and nothing more.
+fun SessionRunner.toUiState(
+    speaking: Boolean,
+    unit: String,
+    stepOf: String,
+    chair: String? = null,
+): SessionUiState {
     val movement = movement
     return SessionUiState(
         movementName = movement?.name.orEmpty(),
         setup = movement?.setup.orEmpty(),
+        chair = chair,
         stopRule = movement?.stopRule.orEmpty(),
         target = step?.target ?: 0,
         lastResult = step?.lastResult,

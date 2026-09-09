@@ -86,18 +86,27 @@ object TherapistPdf {
     private const val SMALL = 9f
 
     /** Tight, because the page is a document and not a screen, and it has to fit. */
-    private const val LEADING = 1.35f
+    private const val LEADING = 1.3f
 
     private const val GAP_STAMP = 3f
     private const val GAP_TIGHT = 2f
-    private const val GAP_ROW = 9f
+    private const val GAP_DAYS = 4f
+    private const val GAP_ROW = 8f
     private const val GAP_RULE = 11f
     private const val RULE_AFTER = 7f
-    private const val GAP_FOOTER = 16f
+
+    /**
+     * The air between the last thing on the page and the foot of it.
+     *
+     * Wider than any gap above it, because it is the one gap that tells a reader the
+     * page has ended rather than run out, and it is what keeps the line saying the
+     * rest is on the phone clear of the line saying nothing was sent anywhere.
+     */
+    private const val GAP_FOOTER = 22f
 
     /** One square per day, sitting on a hairline, with a tick at each week. */
     private const val MARK = 5f
-    private const val TICK = 2.5f
+    private const val TICK = 3.5f
     private const val DAY_GAP = 1.5f
     private const val STRIP = MARK + TICK
     private const val DAYS_IN_WEEK = 7
@@ -149,14 +158,20 @@ object TherapistPdf {
     /**
      * Lay the page out from the top, and keep the foot of it whatever happens.
      *
-     * The footer is measured first and its room is taken off the bottom before
-     * anything else is drawn, because the sentence saying nothing was transmitted and
-     * nothing was interpreted is the one line that may not fall off the page.
+     * The footer is measured first and its room taken off the bottom before anything
+     * else is drawn, because the line saying nothing was sent anywhere and nothing
+     * here is the app's reading of it belongs to the page rather than to the record,
+     * and a page missing it says something untrue by omission.
      *
-     * Content is drawn a group at a time and a group is never split, so a plan line
-     * cannot end up on one side of the fold from the days it was done. If a group
-     * will not fit, the page says so in one line and stops rather than crowding the
-     * rest in at a size nobody can read.
+     * Everything else is drawn top down in Part 6's order, and that order is also the
+     * order of importance, so when the page runs out the thing that goes is the last
+     * thing on it. One line says so. The alternative, holding room at the bottom for
+     * the closing block, would mean dropping something the person said hurt in order
+     * to keep a count of how their sessions felt, and choosing between those two on a
+     * clinician's behalf is not the app's to do.
+     *
+     * Groups are drawn whole or not at all, so a plan line never ends up on one side
+     * of the fold from the days it was done.
      */
     private fun draw(canvas: Canvas, context: Context, brief: TherapistBrief) {
         val paint = Paint().apply {
@@ -368,14 +383,15 @@ object TherapistPdf {
         add(Mark.Words(context.getString(Labels.forArea(entry.area)), LINE, true, GAP_ROW))
         val days = listOf(
             quantity(context, R.plurals.therapist_hurt_days, entry.days),
-            context.getString(R.string.therapist_hurt_last, day(entry.lastDay)),
+            context.getString(R.string.therapist_hurt_last, short(entry.lastDay)),
         )
         add(body(days.joinToString(COMMA)))
         if (entry.during.isNotEmpty()) {
-            add(body(context.getString(R.string.therapist_hurt_during, entry.during.joinToString(COMMA))))
+            val during = entry.during.joinToString(DOT)
+            add(body(context.getString(R.string.therapist_hurt_during, during)))
         }
         entry.said.forEach { said ->
-            add(body(context.getString(R.string.therapist_said, day(said.onDay), said.words)))
+            add(body(context.getString(R.string.therapist_said, short(said.onDay), said.words)))
         }
     }
 
@@ -430,7 +446,7 @@ object TherapistPdf {
 
     private fun tall(paint: Paint, mark: Mark): Float = when (mark) {
         is Mark.Words -> mark.gap + fold(paint, mark).size * mark.size * LEADING
-        is Mark.Days -> GAP_ROW + STRIP
+        is Mark.Days -> GAP_DAYS + STRIP
         Mark.Rule -> GAP_RULE
     }
 
@@ -439,7 +455,7 @@ object TherapistPdf {
 
     private fun put(canvas: Canvas, paint: Paint, mark: Mark, startY: Float): Float = when (mark) {
         is Mark.Words -> words(canvas, paint, mark, startY)
-        is Mark.Days -> days(canvas, paint, mark.done, startY + GAP_ROW)
+        is Mark.Days -> days(canvas, paint, mark.done, startY + GAP_DAYS)
         Mark.Rule -> rule(canvas, paint, startY)
     }
 

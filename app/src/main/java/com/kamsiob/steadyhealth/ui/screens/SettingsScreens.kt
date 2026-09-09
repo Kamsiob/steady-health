@@ -78,6 +78,7 @@ data class SettingsActions(
     val onScan: () -> Unit,
     val onExtras: (Boolean) -> Unit,
     val onDocuments: () -> Unit,
+    val onModels: () -> Unit,
 )
 
 /**
@@ -120,6 +121,12 @@ fun SettingsScreen(
             heading = stringResource(R.string.documents_title),
             subtitle = stringResource(R.string.documents_sub),
             onClick = actions.onDocuments,
+        )
+
+        ListItem(
+            heading = stringResource(R.string.models_title),
+            subtitle = stringResource(R.string.models_sub),
+            onClick = actions.onModels,
         )
 
         // Asking a question moved here when the help dot took the top right corner of

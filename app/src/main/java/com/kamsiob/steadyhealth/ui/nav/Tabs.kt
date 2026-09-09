@@ -68,4 +68,5 @@ object Route {
     const val PAGE_FOUND = "page-found"
     const val PLAN_CONFIRM = "plan-confirm"
     const val DOCUMENTS = "documents"
+    const val MODELS = "models"
 }

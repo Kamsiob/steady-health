@@ -16,7 +16,7 @@ class TheChairTest {
     fun nobodyIsToldAnythingBeforeAnybodyHasBeenAsked() {
         val chair = TheChair()
         assertThat(chair.known).isFalse()
-        assertThat(chair.lineFor(chairStand)).isEqualTo(ChairLine.AskOnce)
+        assertThat(chair.lineFor(movement("sit_to_stand"))).isEqualTo(ChairLine.AskOnce)
         assertThat(chair.noteToSay(DAY_ZERO)).isNull()
         assertThat(chair.differentChair(DAY_ZERO)).isNull()
     }
@@ -93,7 +93,7 @@ class TheChairTest {
     }
 
     @Test
-    fun thefactOutlivesTheNoteThatWasSaidAboutIt() {
+    fun theFactOutlivesTheNoteThatWasSaidAboutIt() {
         val chair = TheChair()
             .changedTo(ChairHeight.Level, TODAY)
             .changedTo(ChairHeight.Low, TODAY + A_FORTNIGHT)

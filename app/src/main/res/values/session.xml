@@ -276,4 +276,31 @@
     <string name="sunday_concrete">%1$s would make %2$d.</string>
     <string name="sunday_ahead_met">You have already met this week. Anything more is extra.</string>
 
+
+    <!--
+      Coming back after a gap. ADDENDUM-03 Part 15. One question, four answers, no free
+      text, and the word for a day nobody did anything does not appear here or anywhere.
+    -->
+    <string name="back_title">Good to see you.</string>
+    <string name="back_ask">What has been happening?</string>
+    <string name="back_busy">Life got busy</string>
+    <string name="back_unwell">I was unwell</string>
+    <string name="back_away">I was away</string>
+    <string name="back_rather_not">I\'d rather not say</string>
+    <string name="back_unwell_said">We\'ll take it slowly for a couple of weeks. That\'s what bodies need after being unwell.</string>
+    <string name="back_worth_a_word">If you were in hospital or had a fall, it\'s worth a word with your doctor before the harder movements.</string>
+    <string name="back_everything_here">Everything\'s still here.</string>
+
+    <!--
+      The chair. Part 15: the chair stand is meaningless if the chair changes, so the
+      height is asked once, shown in the setup line, and a change is noted once.
+    -->
+    <string name="chair_title">About your chair</string>
+    <string name="chair_ask">Roughly how high is the seat?</string>
+    <string name="chair_low">Low, knees above hips</string>
+    <string name="chair_usual">A usual dining chair</string>
+    <string name="chair_high">High, hips above knees</string>
+    <string name="chair_in_setup">Use the %1$s you told the app about.</string>
+    <string name="chair_changed">These are from a different chair, so the numbers are not directly comparable.</string>
+
 </resources>

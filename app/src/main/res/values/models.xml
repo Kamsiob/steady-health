@@ -12,6 +12,7 @@
     -->
 
     <string name="models_title">What the app can read</string>
+    <string name="models_sub">Nothing extra is needed. Two optional downloads if you want them.</string>
     <string name="models_intro">Two downloads can be added to the app, and neither is needed for anything. Whatever you pick, all of it happens on this phone and nothing is sent anywhere.</string>
 
     <!-- The phone's own number, and what the app does with it. -->

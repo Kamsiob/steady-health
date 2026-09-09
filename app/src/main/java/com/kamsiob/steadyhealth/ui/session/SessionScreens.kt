@@ -57,6 +57,8 @@ data class SessionUiState(
     val eased: Boolean = false,
     /** True when the phone counts this one itself, so the line under the ring says so. */
     val sensed: Boolean = false,
+    /** Which chair, on the movements where the chair decides what the number means. */
+    val chair: String? = null,
 )
 
 /** What every session screen can do. Grouped, because there are seven of them. */
@@ -107,6 +109,7 @@ fun ReadyScreen(
             modifier = Modifier.semantics { heading() },
         )
         Paragraph(state.setup)
+        state.chair?.let { Paragraph(it) }
 
         SectionTitle(stringResource(R.string.session_target, state.target))
         state.lastResult?.let {
