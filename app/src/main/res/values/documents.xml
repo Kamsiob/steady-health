@@ -82,6 +82,7 @@
 
     <!-- Everything photographed, kept forever. -->
     <string name="documents_title">Your documents</string>
+    <string name="documents_sub">Everything you have photographed, kept here</string>
     <string name="documents_none">Nothing scanned yet.</string>
     <string name="documents_from">From %1$s</string>
     <string name="documents_open">Open</string>

@@ -3,9 +3,11 @@ package com.kamsiob.steadyhealth.ui.scan
 import android.app.Application
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.kamsiob.steadyhealth.R
 import com.kamsiob.steadyhealth.data.DocumentRepository
 import com.kamsiob.steadyhealth.data.PlanRepository
 import com.kamsiob.steadyhealth.data.SteadyDatabase
@@ -43,10 +45,10 @@ data class PlanDraftUiState(
  * covering letter with a sheet of exercises stapled behind it is one document and Part
  * 5's answer to it is "both offers, in that order".
  */
-class ScanViewModel(application: Application) : AndroidViewModel(application) {
+class ScanViewModel(private val application: Application) : AndroidViewModel(application) {
 
     private val db get() = SteadyDatabase.get(getApplication())
-    private val documents get() = DocumentRepository(db)
+    private val documentsRepo get() = DocumentRepository(db)
     private val plans get() = PlanRepository(db)
 
     private val _state = MutableStateFlow(ScanUiState())
@@ -57,6 +59,9 @@ class ScanViewModel(application: Application) : AndroidViewModel(application) {
 
     /** Set once the document is written, so the reading can find it again. */
     private var savedDocumentId: Long? = null
+
+    private val _documents = MutableStateFlow(DocumentsUiState())
+    val documents: StateFlow<DocumentsUiState> = _documents.asStateFlow()
 
     fun open() {
         _state.value = ScanUiState(
@@ -94,6 +99,45 @@ class ScanViewModel(application: Application) : AndroidViewModel(application) {
 
     fun setWho(who: String) = _state.update { it.copy(fromWho = who) }
 
+    /** Everything photographed, newest first. Part 5: viewable forever. */
+    fun openDocuments() = viewModelScope.launch {
+        val today = LocalDate.now(ZoneId.systemDefault()).toEpochDay()
+        _documents.value = DocumentsUiState(
+            rows = documentsRepo.all().map { row ->
+                DocumentRow(
+                    id = row.id,
+                    whenIt = whenSaid(today - row.epochDay),
+                    fromWho = row.fromWho.ifBlank { null },
+                )
+            },
+        )
+    }
+
+    /** Open one, which loads its pages. They are only decoded when somebody looks. */
+    fun openDocument(id: Long) = viewModelScope.launch {
+        if (_documents.value.openId == id) {
+            _documents.update { it.copy(openId = null, pages = emptyList()) }
+            return@launch
+        }
+        val pages = documentsRepo.pagesOf(id).mapNotNull {
+            BitmapFactory.decodeByteArray(it.image, 0, it.image.size)
+        }
+        _documents.update { it.copy(openId = id, pages = pages) }
+    }
+
+    fun removeDocument(id: Long) = viewModelScope.launch {
+        documentsRepo.remove(id)
+        _documents.update { it.copy(openId = null, pages = emptyList()) }
+        openDocuments()
+    }
+
+    /** "Today", "Yesterday", then a count of days. The same words the history uses. */
+    private fun whenSaid(daysAgo: Long): String = when (daysAgo) {
+        0L -> application.getString(R.string.history_today)
+        1L -> application.getString(R.string.history_yesterday)
+        else -> application.getString(R.string.history_days_ago, daysAgo.toInt())
+    }
+
     /** Classify what was taken. Nothing is saved yet: the next screen offers that. */
     fun finished() {
         val text = _state.value.pages.joinToString("\n") { it.text }
@@ -113,7 +157,7 @@ class ScanViewModel(application: Application) : AndroidViewModel(application) {
 
     private suspend fun write(): Long {
         val state = _state.value
-        return documents.save(
+        return documentsRepo.save(
             epochDay = LocalDate.now(ZoneId.systemDefault()).toEpochDay(),
             kind = state.kind?.let { it::class.simpleName }.orEmpty(),
             fromWho = state.fromWho,

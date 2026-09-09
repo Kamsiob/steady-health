@@ -187,6 +187,7 @@ class AccessibilityTest {
                         onDaily = {},
                         onScan = {},
                         onExtras = {},
+                        onDocuments = {},
                     ),
                     onBack = {},
                 )

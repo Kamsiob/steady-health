@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <!--
+      "What the app can read", from ADDENDUM-03 Part 7, TWO MODELS, ONE CHOICE.
+
+      Four choices, and the first one is nothing extra. Every sentence here was
+      written so that somebody who picks nothing extra has picked something: the app
+      is whole without either download, so the copy names what that person gets
+      rather than what they are going without. Nothing on this screen is worded as a
+      shortage, a limit or a step somebody has not taken yet.
+    -->
+
+    <string name="models_title">What the app can read</string>
+    <string name="models_intro">Two downloads can be added to the app, and neither is needed for anything. Whatever you pick, all of it happens on this phone and nothing is sent anywhere.</string>
+
+    <!-- The phone's own number, and what the app does with it. -->
+    <string name="models_free_label">Free on this phone</string>
+    <string name="models_free_explained">That\'s what the phone says is free right now. The app always leaves a gigabyte of it alone so the phone keeps working normally, which is why a download needs its own size and that gigabyte on top.</string>
+    <string name="models_only_on_data">Nothing downloads over mobile data unless you tap to say so.</string>
+
+    <!-- The default, first and never lesser. -->
+    <string name="models_nothing_title">Nothing extra</string>
+    <string name="models_nothing_sub">The whole app, with nothing to download</string>
+    <string name="models_nothing_here">What you have</string>
+    <string name="models_nothing_body">Nothing to download, nothing to wait for, and no room taken on your phone. Everything in the app works.</string>
+    <string name="models_nothing_kept">Both are on the phone at the moment. Take either one off and this comes back, with everything it already wrote still here.</string>
+
+    <!-- What each one does, in the words Part 7 uses for it. -->
+    <string name="models_words_title">Your own words</string>
+    <string name="models_words_sub">Turns what you say into what the app keeps track of, tags your notes, and writes the weekly note</string>
+    <string name="models_docs_title">Documents from your therapist</string>
+    <string name="models_docs_sub">Reads a letter or a page from a clinic and explains the words in it</string>
+    <string name="models_both_title">Both</string>
+    <string name="models_both_sub">Both of them, if the phone has room</string>
+    <string name="models_both_fits">There\'s room for both. You\'d add them one at a time.</string>
+    <string name="models_both_tight">There isn\'t room for both on this phone at the moment.</string>
+
+    <!-- One line per answer the room engine can give, and no answer is a failure. -->
+    <string name="models_on_phone">On your phone.</string>
+    <string name="models_not_yet">You can\'t add this one yet. It isn\'t built into this version, and everything it would do is being done another way in the meantime.</string>
+    <string name="models_room_for_it">There\'s room for it, and %1$s the app could still use afterwards.</string>
+    <string name="models_needs_a_tap">You\'re on mobile data. This one is %1$s of it, so it starts only when you tap below.</string>
+    <string name="models_not_connected">There\'s nothing to download over just now. This will still be here later.</string>
+    <string name="models_short_by">There isn\'t room for this one yet. Freeing up %1$s would do it.</string>
+
+    <string name="models_add">Add it</string>
+    <string name="models_add_on_data">Add it using mobile data</string>
+    <string name="models_remove">Take it off the phone</string>
+
+    <!-- Said once, after a removal. Part 7: everything already produced stays. -->
+    <string name="models_by_hand_title">Back to doing this yourself</string>
+    <string name="models_by_hand_kept">Everything it already wrote stays where it is.</string>
+    <string name="models_by_hand_got_it">Got it</string>
+    <string name="by_hand_type_it">You type in what you want the app to keep track of.</string>
+    <string name="by_hand_pick_tags">You pick the tags on your own notes.</string>
+    <string name="by_hand_the_week">The week is there to look at, whether or not anything writes about it.</string>
+    <string name="by_hand_the_photo">Your documents are kept as photos you can open any time.</string>
+
+    <!-- The licence, shown before the download and accepted there. -->
+    <string name="models_terms_title">Before you add this</string>
+    <string name="models_terms_haidef">These weights are Google\'s, under the Health AI Developer Foundations terms, and you agree to them here before anything is downloaded. The terms say they aren\'t for diagnosing or treating anyone, and this app does neither: it explains the words in a document you already hold, and says nothing about what they mean for you. That\'s a question for whoever wrote it.</string>
+    <!--
+      "2.0 licence" is a version number in a name, not a count of anything, so it can
+      never become a plural. Same for the licence named in models_credit below.
+    -->
+    <string name="models_terms_apache" tools:ignore="PluralsCandidate">These weights are Google\'s, under the Apache 2.0 licence. There\'s nothing here to agree to.</string>
+    <string name="models_terms_stays">Whatever you agree to here, the download comes to this phone and stays on it. Nothing you write or photograph ever leaves.</string>
+    <string name="models_terms_agree">Agree and add it</string>
+    <string name="models_terms_not_now">Not now</string>
+
+    <!-- Made with credits Google and names the licence. Part 7, LICENSING. -->
+    <string name="models_credit" tools:ignore="PluralsCandidate">Made with Google. Your own words is built on Gemma, under the Apache 2.0 licence. Documents from your therapist is built on MedGemma, from Google\'s Health AI Developer Foundations.</string>
+
+</resources>

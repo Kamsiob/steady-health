@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:tools="http://schemas.android.com/tools">
+
+    <!--
+      The one page somebody takes to their next appointment. ADDENDUM-03 Part 6,
+      LOGIC.md 17, MASTER_SPEC 6.19.
+
+      Written to the person, in the app's own voice, because it is their page and
+      they are the one handing it over. A clinician reads it standing up, so every
+      line here is short enough to be taken in at a glance and says either what
+      happened or the day it happened on.
+
+      Nothing here weighs any of it up. There is no share of the plan done, no
+      grade, no run of days and no colour, and the words for those things are
+      absent rather than avoided: COMPLIANCE.md makes the app a record keeper in
+      this room, and the person qualified to read the record is holding the page.
+    -->
+
+    <!-- The top of the page, which has to identify itself lying on a desk. -->
+    <string name="therapist_title">What your %1$s asked for, and what you did</string>
+    <string name="therapist_stamp">%1$s · %2$s to %3$s</string>
+    <string name="therapist_given">Plan given %1$s</string>
+    <string name="therapist_review">Next appointment %1$s</string>
+    <plurals name="therapist_plan_days">
+        <item quantity="one">One day with a session from this plan</item>
+        <item quantity="other">%1$d days with a session from this plan</item>
+    </plurals>
+    <plurals name="therapist_other_days">
+        <item quantity="one">One other day with a session</item>
+        <item quantity="other">%1$d other days with a session</item>
+    </plurals>
+
+    <!--
+      Said once, above the first line, because a mark on a page nobody explained is
+      a mark a clinician has to stop and work out. The squares are days and nothing
+      else: they carry no size, no weight and no shading.
+    -->
+    <string name="therapist_legend">On each line below, one square is one day you did it. The line runs %1$s to %2$s, with a tick each week.</string>
+
+    <!-- Each line of the plan: their words first, then what happened under it. -->
+    <plurals name="therapist_days">
+        <item quantity="one">Done on one day</item>
+        <item quantity="other">Done on %1$d days</item>
+    </plurals>
+    <plurals name="therapist_times">
+        <item quantity="one">once</item>
+        <item quantity="other">%1$d times</item>
+    </plurals>
+    <string name="therapist_between">%1$s to %2$s</string>
+    <string name="therapist_not_done">Not done between these dates.</string>
+    <string name="therapist_asked">Asked for %1$s</string>
+    <!--
+      Not a plural: the number is a count of repetitions and the words beside it
+      agree with the times it was done instead, so one item would read the same as
+      the other in every language. The same reasoning as plan_reps in documents.xml.
+    -->
+    <string name="therapist_same" tools:ignore="PluralsCandidate">Managed %1$d every time</string>
+    <!--
+      Three labelled numbers on one line. None of them governs the words around it,
+      which name the numbers rather than count anything, so there is nothing here
+      for a plural to agree with.
+    -->
+    <string name="therapist_counts" tools:ignore="PluralsCandidate">Managed: fewest %1$d, usual %2$d, most %3$d</string>
+    <plurals name="therapist_easier">
+        <item quantity="one">once the easier version</item>
+        <item quantity="other">%1$d times the easier version</item>
+    </plurals>
+    <plurals name="therapist_counted">
+        <item quantity="one">once counted by hand</item>
+        <item quantity="other">%1$d times counted by hand</item>
+    </plurals>
+
+    <!--
+      A line that no longer reads the way it was given says so, and says which of
+      the two of you changed it. A therapist reading numbers they did not set and
+      taking them for their own is the thing this exists to prevent.
+    -->
+    <string name="therapist_changed_you">Changed %1$s by you. It read: %2$s</string>
+    <string name="therapist_changed_them">Changed %1$s by your %2$s. It read: %3$s</string>
+    <string name="therapist_avoid">You said you avoid %1$s. Left in, as they set it.</string>
+
+    <!-- What hurt, grouped by the part of the body, in the person's own sentences. -->
+    <string name="therapist_hurt">What hurt, and when</string>
+    <plurals name="therapist_hurt_days">
+        <item quantity="one">One day</item>
+        <item quantity="other">%1$d days</item>
+    </plurals>
+    <string name="therapist_hurt_last">last on %1$s</string>
+    <string name="therapist_hurt_during">While doing %1$s</string>
+    <string name="therapist_said">%1$s: \"%2$s\"</string>
+    <plurals name="therapist_more_said">
+        <item quantity="one">One more thing you wrote about this is on your phone.</item>
+        <item quantity="other">%1$d more things you wrote about this are on your phone.</item>
+    </plurals>
+
+    <!-- The person's own rating of their own sessions, counted and left alone. -->
+    <string name="therapist_felt">How the sessions felt</string>
+    <!--
+      A word and the number of sessions it was given to. The number counts sessions
+      and the word beside it is the rating, which it does not govern, so a plural
+      would give the same item twice.
+    -->
+    <string name="therapist_felt_count" tools:ignore="PluralsCandidate">%1$s %2$d</string>
+    <string name="therapist_hard">Rated hard on %1$s</string>
+
+    <!-- The foot of the page. -->
+    <string name="therapist_usual">Usual is the middle day, not an average.</string>
+    <string name="therapist_footer">Written on your phone from what you logged. Nothing was sent anywhere, and nothing on this page is the app\'s reading of it.</string>
+    <string name="therapist_more">The rest is on your phone.</string>
+
+</resources>

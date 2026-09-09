@@ -77,6 +77,7 @@ data class SettingsActions(
     val onDaily: (Boolean) -> Unit,
     val onScan: () -> Unit,
     val onExtras: (Boolean) -> Unit,
+    val onDocuments: () -> Unit,
 )
 
 /**
@@ -113,6 +114,12 @@ fun SettingsScreen(
             heading = stringResource(R.string.scan_something),
             subtitle = stringResource(R.string.scan_sub),
             onClick = actions.onScan,
+        )
+
+        ListItem(
+            heading = stringResource(R.string.documents_title),
+            subtitle = stringResource(R.string.documents_sub),
+            onClick = actions.onDocuments,
         )
 
         // Asking a question moved here when the help dot took the top right corner of

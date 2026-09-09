@@ -38,6 +38,7 @@ import com.kamsiob.steadyhealth.ui.nav.Tab
 import com.kamsiob.steadyhealth.ui.onboarding.OnboardingFlow
 import com.kamsiob.steadyhealth.ui.scan.Camera
 import com.kamsiob.steadyhealth.ui.scan.CameraPreview
+import com.kamsiob.steadyhealth.ui.scan.DocumentsScreen
 import com.kamsiob.steadyhealth.ui.scan.PageFoundScreen
 import com.kamsiob.steadyhealth.ui.scan.PlanConfirmScreen
 import com.kamsiob.steadyhealth.ui.scan.ScanScreen
@@ -751,6 +752,16 @@ private fun NavGraphBuilder.scanRoutes(
         )
     }
 
+    composable(Route.DOCUMENTS) {
+        val state by viewModel.documents.collectAsStateWithLifecycle()
+        DocumentsScreen(
+            state = state,
+            onOpen = viewModel::openDocument,
+            onRemove = viewModel::removeDocument,
+            onBack = back,
+        )
+    }
+
     composable(Route.PLAN_CONFIRM) {
         val draft by viewModel.draft.collectAsStateWithLifecycle()
         PlanConfirmScreen(
@@ -851,6 +862,10 @@ private fun settingsActions(
     onScan = {
         scanViewModel.open()
         navController.navigate(Route.SCAN)
+    },
+    onDocuments = {
+        scanViewModel.openDocuments()
+        navController.navigate(Route.DOCUMENTS)
     },
     onExtras = viewModel::setExtras,
 )

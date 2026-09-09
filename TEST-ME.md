@@ -1,9 +1,6 @@
 # TEST-ME.md
 
-Steady Health, Phases 1 and 2 of the ADDENDUM-03 plan, on your Pixel.
-
-**Read the first two lines of "What I need from you" before anything else.** One of
-them is why this stops at Phase 2 rather than Phase 8.
+Steady Health, Phases 1 to 3 of the ADDENDUM-03 plan, on your Pixel.
 
 ---
 
@@ -28,37 +25,31 @@ adb shell pm clear com.kamsiob.steadyhealth
 
 ## What I need from you
 
-1. **Unlock the phone.** While running the gate item about a locked screen, the
-   script pressed the power button, and the keyguard is secured. I did not try to get
-   past it and will not. Nothing was touched and no data moved; the phone is in the
-   state it sits in every time you put it down. Until it is unlocked I cannot run the
-   thirteen instrumented tests that draw anything, because a Compose test launches its
-   own activity and an activity cannot come up over a locked screen.
+1. **Photograph a real sheet of exercises, and a real letter.** The camera, the text
+   reading and the classifier all work on the phone, and I tested them by pointing the
+   phone at nothing in particular, where the app correctly said "I'm not sure what this
+   is". What I could not test is the case the feature exists for: an actual physio
+   sheet, and an actual letter. That is step 16 below and it is the most useful thing
+   you can do.
 
-2. **Everything from the four tabs onward has never been seen running.** Phase 1 was
-   driven on the phone screen by screen and its gate passed. Phase 2 was built after
-   the phone locked: it compiles, its rules are unit tested, detekt and lint are
-   clean, and it has never once been looked at. Treat every screenshot-shaped claim
-   about Phase 2 in this document as "should", not "does".
-
-3. **Stand up out of a chair ten times with the phone in your pocket and count.**
+2. **Stand up out of a chair ten times with the phone in your pocket and count.**
    The accelerometer now counts repetitions inside a session, and nobody has ever
    checked its number against a person's. It is the one measurement in the app whose
    accuracy is unverified, and it matters more than it did.
 
-4. **A health tech attorney has to review the HAI-DEF Clinical Use boundary** before
+3. **A health tech attorney has to review the HAI-DEF Clinical Use boundary** before
    the report reading of ADDENDUM-03 Part 7 can be turned on. Phase 4 builds it behind
    a flag that stays off until that clears. Nothing is waiting on it right now.
 
-5. **The three translations.** Spanish, Chinese and Arabic are declared and empty. The
+4. **The three translations.** Spanish, Chinese and Arabic are declared and empty. The
    picker hides itself until a translation lands, so nothing is broken; it is Phase 8.
 
 ---
 
 ## Twenty steps, from a fresh install
 
-Run `adb shell pm clear com.kamsiob.steadyhealth` first. Steps 1 to 9 are Phase 1 and
-have all been driven on the phone. Steps 10 to 20 are Phase 2 and have not.
+Run `adb shell pm clear com.kamsiob.steadyhealth` first. Every step below has been
+driven on the phone except where it says otherwise.
 
 1. Open the app. One screen, one button: **Show me**. Nothing to sign, nothing to
    allow, nothing to read.
@@ -93,22 +84,35 @@ have all been driven on the phone. Steps 10 to 20 are Phase 2 and have not.
 15. **Lock the screen** mid session with the power button, wait, and unlock. Same
     thing. This is the one I could not test, because I cannot come back through your
     keyguard.
-16. Go to **Sessions**. Today's session at the top, what you have done under it, a way
+16. Go to **Sessions** and tap **Scan something**. Allow the camera. Photograph a real
+    sheet of exercises from a physio if you have one, then **That's all of it**. The
+    app should say it looks like exercises and offer to add them. Tap through to the
+    confirmation screen: every line is shown as it was written, with what the app made
+    of it underneath, and nothing is saved until you say so. **This is the step I most
+    want you to try**, because I could only point the phone at a blank wall.
+17. Try it again with a letter, and again with something the app should refuse, like a
+    prescription or a blood test. It should say it is not something the app reads and
+    offer to keep it, and it should not say what kind of document it thought it was.
+18. Go to **Sessions**. Today's session at the top, what you have done under it, a way
     to add a session you already did, and the library of everything you can do.
-17. Tap a session in the history. The numbers are editable and there is a
+19. Tap a session in the history. The numbers are editable and there is a
     **Remove this session**. Nothing asks why.
-18. From Today's card, tap **Do it without the phone**. It writes the whole session
+20. From Today's card, tap **Do it without the phone**. It writes the whole session
     out and will read it aloud. Then **I have done it** and log what you managed.
-19. Go to **Progress**. Four bars, one per week, each against the number of sessions a
+21. Go to **Progress**. Four bars, one per week, each against the number of sessions a
     week you chose. Nothing joins them. Under them, one sentence saying a quiet week
     is what most months look like.
-20. Go to **You**. The daily prompt switch, how many sessions a week, and everything
+22. Go to **You**. The daily prompt switch, how many sessions a week, and everything
     else. Turn the week number to five and go back to Today: the line under the card
     should change.
 
-**Not in this walkthrough, and not built: scanning a document.** ADDENDUM-03 Part 22
-asks for the walkthrough to end there. The camera and the therapist's plan are Phase
-3, which has not started. Everything above is Phases 1 and 2.
+That is twenty two steps rather than twenty, because scanning a document is where
+ADDENDUM-03 Part 22 asks the walkthrough to end and it now exists.
+
+**What a scan does not do yet: explain a letter.** Tapping "Explain it" keeps the page
+and returns you to Today. Part 7's reader is Phase 4 and stays behind a flag until an
+attorney has reviewed the boundary, which is on the list above. The validator that
+guards it is being built first, which is the order Part 7 asks for.
 
 ---
 

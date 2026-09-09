@@ -67,4 +67,5 @@ object Route {
     const val SCAN = "scan"
     const val PAGE_FOUND = "page-found"
     const val PLAN_CONFIRM = "plan-confirm"
+    const val DOCUMENTS = "documents"
 }
