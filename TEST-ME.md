@@ -168,6 +168,32 @@ DECISIONS.md.
 | **Phase 3**: the therapist plan and the app's suggestions are visibly separate on Today and in history, by screenshot, and a movement in both is counted once | **Pass** on the phone, as `PlanSeparateTest`. |
 | **Phase 4**: all thirty fixtures pass and every adversarial case is caught | **Pass**, and the corpus is larger than asked. Fifty five job 9 cases, forty five of them deliberately bad and ten honest, covering every fault the validator can report and every adversarial case Part 7 names. Forty two documents for the page classifier, including the progress note, the plan of care, the discharge summary, the insurance letter, the referral, the handwritten programme, the badly photographed one, the Spanish one, the out of scope one and the blank one. The feature still ships off, because the gate is not the thing that turns it on. |
 
+**The most important thing that happened in this run is in that row, and it is worth
+reading twice.** The validator was built first, as Part 7 requires, and it passed its
+own tests and its first corpus. Then an adversarial pass wrote forty sentences that
+ADDENDUM-03 Part 7 forbids and ran them through it. **Thirty one of the forty went
+straight through.** Not near misses: progress characterised by euphemism ("your
+shoulder is heading in the right direction"), reassurance with no banned word in it
+("nothing in this report is out of the ordinary"), a number read against a population
+without the word normal ("your flexion of 120 degrees is in the usual range for
+someone your age"), advice with no should or recommend in it ("keep doing the
+exercises twice weekly until October"), and hedged second-guessing of the clinician
+("though that seems low for this stage").
+
+Every one of those is now caught, by five new kinds of fault the first version did not
+have, each with a permanent fixture. The reason it matters beyond this feature: the
+first validator was checking for forbidden WORDS, and Part 7 forbids a kind of
+SENTENCE. A banned list is easy to write and easy to pass. If the feature had shipped
+on the first version, the gate would have said pass.
+
+The line the fix draws comes from AI.md itself: "if a report says a range of motion
+decreased, the app says the report says it, and nothing more." So the rule is not the
+word, it is whose sentence the word is in. Inside quotation marks the words are the
+document's and nothing fires; outside them they are the app's and everything does. And
+because that licence is only worth having if the quotation is real, a quoted span that
+the page does not actually carry is itself a fault, so nothing can be laundered by
+putting marks around it.
+
 The phases after Phase 4 have no gate of their own in Part 21. Two device scripts were
 written for them anyway, because they answer questions a laptop cannot:
 `tools/gate-phase5.py` walks all four ways of getting around and checks that neither
