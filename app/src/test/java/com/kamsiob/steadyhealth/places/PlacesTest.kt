@@ -1,6 +1,8 @@
 package com.kamsiob.steadyhealth.places
 
 import com.google.common.truth.Truth.assertThat
+import com.google.common.truth.Truth.assertWithMessage
+import com.kamsiob.steadyhealth.domain.GettingAround
 import org.junit.Test
 
 /**
@@ -84,6 +86,45 @@ class PlacesTest {
         val all = Places.all.associate { it.id to Said.Sorted }
 
         assertThat(Places.worthALook(all)).isEmpty()
+    }
+
+    @Test
+    fun everyWayIsAskedSixQuestionsAndTheSameSix() {
+        // Not five, and not the same six with two of them left to somebody else. The
+        // ids are the storage, so they hold across the four; the words are what
+        // change, because a flight of stairs and a pair of indoor shoes are not
+        // places somebody in a wheelchair moves through.
+        GettingAround.entries.forEach { way ->
+            val six = Places.forWay(way)
+            assertWithMessage(way.id).that(six).hasSize(SIX)
+            assertWithMessage(way.id).that(six.map { it.id })
+                .containsExactlyElementsIn(Places.all.map { it.id })
+            six.forEach {
+                assertWithMessage("${way.id} ${it.id}").that(it.where).isNotEqualTo(0)
+                assertWithMessage("${way.id} ${it.id}").that(it.question).isNotEqualTo(0)
+                assertWithMessage("${way.id} ${it.id}").that(it.fix).isNotEqualTo(0)
+            }
+        }
+    }
+
+    @Test
+    fun nobodyIsAskedAboutStairsOrIndoorShoesFromASeat() {
+        val onFeet = Places.forWay(GettingAround.OnFeet)
+
+        listOf(GettingAround.Wheelchair, GettingAround.InBed).forEach { way ->
+            val theirs = Places.forWay(way).associateBy { it.id }
+            listOf("stairs_light", "indoor_shoes").forEach { id ->
+                assertWithMessage("$id is still the on-feet question for ${way.id}")
+                    .that(theirs.getValue(id).question)
+                    .isNotEqualTo(onFeet.first { it.id == id }.question)
+            }
+        }
+    }
+
+    @Test
+    fun aWalkerIsWalking() {
+        assertThat(Places.forWay(GettingAround.Walker))
+            .isEqualTo(Places.forWay(GettingAround.OnFeet))
     }
 
     @Test

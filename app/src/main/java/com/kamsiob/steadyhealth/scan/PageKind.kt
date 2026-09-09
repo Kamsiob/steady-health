@@ -59,7 +59,7 @@ enum class Signal(val points: Pointing) {
     /** "Date of service", "Initial evaluation", "Discharge date". */
     DateOfService(Pointing.ReportOrLetter),
 
-    /** Two or more long sentences. This is what actually makes a page a report. */
+    /** Two or more long sentences. One of the two ways a page shows somebody wrote it. */
     ProseParagraphs(Pointing.ReportOrLetter),
 
     /** The name of something measured in blood or urine. */
@@ -223,17 +223,26 @@ sealed interface PageKind {
         /**
          * What the page looks like, before out of scope gets a say.
          *
-         * Prose is required rather than counted. A clinic name and a date at the top
-         * of an exercise sheet is a letterhead, and a letterhead is not a letter;
-         * what makes a page a report is that somebody wrote sentences.
+         * A report is a page somebody wrote, and one of two things has to show that
+         * rather than any two clues adding up to it. Sentences are the first. A clinic
+         * name and a date at the top of an exercise sheet is a letterhead, and a
+         * letterhead is not a letter.
+         *
+         * The shorthand is the second, because a great many notes are not written in
+         * sentences at all. A form with AROM, MMT, gait and transfers down the left of
+         * it and not one full stop anywhere is among the commonest pages in anybody's
+         * therapy file, and requiring prose sent every one of them to the unclear
+         * screen. Two distinct pieces of shorthand is already what that signal costs
+         * and it is a bar no exercise sheet in the fixtures comes near, so the
+         * letterhead rule is left standing.
          */
         private fun looksLike(page: Page, fired: List<Signal>): PageKind {
             if (page.words < ENOUGH_WORDS) return Unclear(fired)
             val exercises = fired.count { it.points == Pointing.Exercises }
             val report = fired.filter { it.points == Pointing.ReportOrLetter }
             val looksLikeExercises = exercises >= ENOUGH_TO_SAY
-            val looksLikeReport =
-                report.size >= ENOUGH_TO_SAY && Signal.ProseParagraphs in report
+            val looksLikeReport = report.size >= ENOUGH_TO_SAY &&
+                (Signal.ProseParagraphs in report || Signal.ClinicalShorthand in report)
             return when {
                 looksLikeExercises && looksLikeReport -> Both(fired)
                 looksLikeExercises -> Exercises(fired)

@@ -17,6 +17,7 @@ import com.kamsiob.steadyhealth.ui.components.ListItem
 import com.kamsiob.steadyhealth.ui.components.NoteBlock
 import com.kamsiob.steadyhealth.ui.components.Paragraph
 import com.kamsiob.steadyhealth.ui.components.PrimaryButton
+import com.kamsiob.steadyhealth.ui.components.SaysOnce
 import com.kamsiob.steadyhealth.ui.components.SectionTitle
 import com.kamsiob.steadyhealth.ui.components.SteadyScreen
 import com.kamsiob.steadyhealth.ui.components.TextEntry
@@ -35,6 +36,17 @@ import java.time.format.FormatStyle
  * A guess is labelled as a guess. That is not a warning: Part 6 expects the app to
  * propose and the person to confirm, and a screen that hid its uncertainty would be
  * asking them to confirm something they cannot see.
+ *
+ * A clash is said here as well as on the card afterwards. Part 6 flags a plan movement
+ * that goes against something the person said they avoid, and this is the last moment
+ * anything can be done about it while the sheet is still in their hand. It is a
+ * sentence and not a block: the line stays, the save button stays, and the app has no
+ * standing to argue with whoever wrote the plan.
+ *
+ * "This is your therapist's, not ours" is said once, ever, and then not again. Part 6
+ * asks for it once and this screen was saying it on every plan anybody confirmed. It
+ * is the sand block the rest of the app uses for a sentence it owes somebody one time,
+ * with the same small dismiss, and confirming a plan counts as having read it.
  */
 @Composable
 @Suppress("LongParameterList") // One screen, one callback for each thing on it.
@@ -43,6 +55,7 @@ fun PlanConfirmScreen(
     onLabel: (String) -> Unit,
     onDrop: (Int) -> Unit,
     onReviewDay: (Long?) -> Unit,
+    onTheirsRead: () -> Unit,
     onSave: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
@@ -58,7 +71,9 @@ fun PlanConfirmScreen(
         },
     ) {
         Paragraph(stringResource(R.string.plan_intro))
-        NoteBlock(stringResource(R.string.plan_theirs))
+        if (state.sayTheirs) {
+            SaysOnce(text = stringResource(R.string.plan_theirs), onDismiss = onTheirsRead)
+        }
 
         SectionTitle(stringResource(R.string.plan_label))
         TextEntry(
@@ -79,6 +94,11 @@ fun PlanConfirmScreen(
                 onClick = { onDrop(at) },
             )
         }
+
+        // Under the lines rather than above them, because the sentence names a
+        // movement and reading it before the list has been seen is being warned about
+        // something that is not on the screen yet.
+        state.toAskAbout.forEach { NoteBlock(it) }
 
         SectionTitle(stringResource(R.string.plan_review))
         Appointment(day = state.reviewDay, onDay = onReviewDay)

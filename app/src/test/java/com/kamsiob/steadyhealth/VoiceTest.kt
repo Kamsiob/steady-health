@@ -181,6 +181,13 @@ class VoiceTest {
             "ERAS" to setOf("card_after_operation_source"),
             "PROT-AGE" to setOf("card_protein_source"),
             "PURE" to setOf("card_grip_source"),
+            // Three licence names, on the About screen. COMPLIANCE.md and
+            // PRIVACY.md name each of these exactly, and a licence written in any
+            // other case is a different thing to look up. For the AGPL it would
+            // also be a claim about a licence that does not exist.
+            "AGPL-3.0" to setOf("about_licence"),
+            "SIL" to setOf("about_made_with_body"),
+            "MIT" to setOf("about_made_with_body"),
         )
 
         /**

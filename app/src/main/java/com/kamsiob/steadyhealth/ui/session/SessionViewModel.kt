@@ -33,6 +33,7 @@ import com.kamsiob.steadyhealth.session.SessionRunner
 import com.kamsiob.steadyhealth.session.Speech
 import com.kamsiob.steadyhealth.session.Stage
 import com.kamsiob.steadyhealth.session.TheChair
+import com.kamsiob.steadyhealth.ui.Audio
 import com.kamsiob.steadyhealth.ui.TagLabels
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -97,8 +98,21 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
     /** The row this session was written to, so a correction can find it again. */
     private var savedRunId: Long? = null
 
+    /**
+     * Whether this session speaks. ADDENDUM-03 Part 1: on by default.
+     *
+     * The default is here and the answer is in [Audio], read once when this view
+     * model is made, which is when the app starts rather than when a session does.
+     * One setting sits behind two switches, this one and the row in You, so turning
+     * the voice off in the top bar is still off tomorrow and the row in You is not
+     * describing something that already changed under it.
+     */
     var speaking: Boolean = true
         private set
+
+    init {
+        viewModelScope.launch { speaking = Audio.on(db) }
+    }
 
     /**
      * The accelerometer, on only while a set it can count is actually running.
@@ -627,6 +641,7 @@ class SessionViewModel(application: Application) : AndroidViewModel(application)
         speaking = !speaking
         speech.on = speaking
         if (!speaking) speech.stop()
+        viewModelScope.launch { Audio.set(db, speaking) }
     }
 
     /** Turn the pacing cue on or off. It is on for the first three of a movement. */

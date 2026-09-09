@@ -8,6 +8,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import com.kamsiob.steadyhealth.R
+import com.kamsiob.steadyhealth.domain.GettingAround
 import com.kamsiob.steadyhealth.places.PlaceQuestion
 import com.kamsiob.steadyhealth.places.Places
 import com.kamsiob.steadyhealth.places.Said
@@ -24,6 +25,8 @@ data class PlacesUiState(
     val answers: Map<String, Said> = emptyMap(),
     /** True once every question has an answer and the last one has been passed. */
     val finished: Boolean = false,
+    /** Which six to ask. Two of them are not the same question in all four. */
+    val way: GettingAround = GettingAround.OnFeet,
 )
 
 /**
@@ -64,7 +67,7 @@ fun PlacesScreen(
     ) {
         Paragraph(stringResource(R.string.places_intro))
 
-        Places.all.forEach { question ->
+        Places.forWay(state.way).forEach { question ->
             Question(
                 question = question,
                 said = state.answers[question.id],

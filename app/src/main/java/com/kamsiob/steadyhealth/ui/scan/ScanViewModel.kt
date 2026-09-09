@@ -10,6 +10,7 @@ import androidx.lifecycle.viewModelScope
 import com.kamsiob.steadyhealth.R
 import com.kamsiob.steadyhealth.data.DocumentRepository
 import com.kamsiob.steadyhealth.data.PlanRepository
+import com.kamsiob.steadyhealth.data.ProfileRepository
 import com.kamsiob.steadyhealth.data.SteadyDatabase
 import com.kamsiob.steadyhealth.data.entity.PlanItemEntity
 import com.kamsiob.steadyhealth.plan.HowMany
@@ -18,6 +19,7 @@ import com.kamsiob.steadyhealth.plan.PlanItem
 import com.kamsiob.steadyhealth.plan.PlanMatching
 import com.kamsiob.steadyhealth.scan.PageKind
 import com.kamsiob.steadyhealth.scan.PageText
+import com.kamsiob.steadyhealth.ui.PlanConflicts
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -33,6 +35,20 @@ data class PlanDraftUiState(
     val label: String = "",
     /** The next appointment, as an epoch day. Optional, and stays optional. */
     val reviewDay: Long? = null,
+    /**
+     * Lines to raise at the appointment rather than to drop. ADDENDUM-03 Part 6.
+     *
+     * One sentence per plan movement that clashes with something the person said
+     * they avoid. Nothing is removed and nothing is blocked by them.
+     */
+    val toAskAbout: List<String> = emptyList(),
+    /**
+     * Whether "This is your therapist's, not ours" still has to be said.
+     *
+     * Part 6 says that line once. False after the first plan is kept, so a second
+     * plan does not repeat it.
+     */
+    val sayTheirs: Boolean = false,
 )
 
 /**
@@ -52,6 +68,7 @@ class ScanViewModel(private val application: Application) : AndroidViewModel(app
     private val db get() = SteadyDatabase.get(getApplication())
     private val documentsRepo get() = DocumentRepository(db)
     private val plans get() = PlanRepository(db)
+    private val profile get() = ProfileRepository(db)
 
     private val _state = MutableStateFlow(ScanUiState())
     val state: StateFlow<ScanUiState> = _state.asStateFlow()
@@ -181,6 +198,65 @@ class ScanViewModel(private val application: Application) : AndroidViewModel(app
             items = PlanMatching.readAll(text),
             label = _state.value.fromWho,
         )
+        readTheDraftAgain()
+    }
+
+    /**
+     * A plan proposed from one of the three ways in that have no page behind them.
+     *
+     * ADDENDUM-03 Part 6: saying it out loud, picking from the library and typing it
+     * all end on the same confirmation screen as the photographed sheet, so they end
+     * on the same draft rather than on a second one. Nothing is written here. The
+     * items sit in memory until the person taps save on that screen, which is what
+     * "nothing is saved unconfirmed" means for all four.
+     *
+     * No document is written either, because there is no photograph to keep: the
+     * camera path saves the page first so that abandoning the plan still leaves the
+     * picture, and there is nothing to leave here.
+     */
+    fun propose(items: List<PlanItem>) {
+        _draft.value = PlanDraftUiState(items = items)
+        viewModelScope.launch { readTheDraftAgain() }
+    }
+
+    /**
+     * What the confirmation screen has to say about the draft as it now stands.
+     *
+     * Two things, and both are read from the person's own answers rather than from
+     * the plan: which lines clash with something they said they avoid, and whether the
+     * app still owes them the sentence about whose plan this is. Run again after a
+     * line is taken out, because a clash the person has just removed is not a clash
+     * any more and a sentence about it left on the screen would be about nothing.
+     */
+    private suspend fun readTheDraftAgain() {
+        val lines = PlanConflicts.of(
+            context = application,
+            items = _draft.value.items,
+            exclusions = profile.exclusions(),
+            way = profile.gettingAround(),
+        )
+        val owed = !profile.seen(THEIRS_NOT_OURS)
+        _draft.update { it.copy(toAskAbout = lines, sayTheirs = owed) }
+    }
+
+    /**
+     * The person has read "This is your therapist's, not ours". ADDENDUM-03 Part 6.
+     *
+     * Part 6 asks for that line once, and the app was showing it on every plan
+     * anybody ever confirmed. Once means once: the third sheet somebody photographs
+     * does not need telling again who wrote it, and a sentence that keeps coming back
+     * stops being a promise and becomes furniture.
+     *
+     * It is also marked read when a plan is saved, not only when the small dismiss is
+     * tapped, because getting to a saved plan means passing it. Marking it only on the
+     * dismiss would leave it there for everybody who read it and moved on, which is
+     * most people, and that is the repetition this was meant to end.
+     */
+    fun theirsRead() = viewModelScope.launch { markTheirsRead() }
+
+    private suspend fun markTheirsRead() {
+        profile.markSeen(THEIRS_NOT_OURS)
+        _draft.update { it.copy(sayTheirs = false) }
     }
 
     fun setPlanLabel(label: String) = _draft.update { it.copy(label = label) }
@@ -188,8 +264,11 @@ class ScanViewModel(private val application: Application) : AndroidViewModel(app
     fun setPlanReviewDay(day: Long?) = _draft.update { it.copy(reviewDay = day) }
 
     /** Drop one proposed line. The person confirming is the point of the screen. */
-    fun dropItem(at: Int) = _draft.update { state ->
-        state.copy(items = state.items.filterIndexed { index, _ -> index != at })
+    fun dropItem(at: Int) = viewModelScope.launch {
+        _draft.update { state ->
+            state.copy(items = state.items.filterIndexed { index, _ -> index != at })
+        }
+        readTheDraftAgain()
     }
 
     /**
@@ -204,11 +283,16 @@ class ScanViewModel(private val application: Application) : AndroidViewModel(app
         if (draft.items.isEmpty()) return@launch
         val at = System.currentTimeMillis()
         val planId = plans.save(
-            label = draft.label.ifBlank { "" },
+            // Trimmed, because "physio " and "physio" are the same therapist and the
+            // card would print the first of them with a gap before the full stop. A
+            // label of nothing but spaces is a label nobody filled in, and the card
+            // falls back to the plain word for it.
+            label = draft.label.trim(),
             at = at,
             reviewDay = draft.reviewDay,
         )
         draft.items.forEach { plans.addItem(planId, row(planId, it, at)) }
+        markTheirsRead()
         _draft.value = PlanDraftUiState()
         onDone()
     }
@@ -272,5 +356,8 @@ class ScanViewModel(private val application: Application) : AndroidViewModel(app
 
     private companion object {
         const val JPEG_QUALITY = 80
+
+        /** The key Part 6's one line is remembered under, so it is said once ever. */
+        const val THEIRS_NOT_OURS = "says_plan_theirs"
     }
 }

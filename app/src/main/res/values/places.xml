@@ -28,17 +28,32 @@
     <string name="place_stairs_light_question">Can you see every step from the top and from the bottom, with the light on?</string>
     <string name="place_stairs_light_fix">A switch at both ends is the usual fix. Where there is only one, a plug-in light partway down does the same job for a few pounds.</string>
     <string name="place_night_route_where">The way to the bathroom at night</string>
-    <string name="place_night_route_question">If you get up in the night, is there light the whole way without hunting for a switch?</string>
+    <string name="place_night_route_question">If you need the bathroom in the night, is there light the whole way without hunting for a switch?</string>
     <string name="place_night_route_fix">A small light that comes on by itself in the hall or by the skirting board, so the route is lit before you are properly awake.</string>
     <string name="place_rugs_cables_where">The floor you cross most</string>
-    <string name="place_rugs_cables_question">Are the rugs flat and the cables out of the way along the route you walk most often?</string>
+    <string name="place_rugs_cables_question">Are the rugs flat and the cables out of the way along the route you use most often?</string>
     <string name="place_rugs_cables_fix">Double sided tape holds a rug corner down. A cable can usually go behind the furniture rather than across the floor.</string>
     <string name="place_something_to_hold_where">Where you would reach out</string>
-    <string name="place_something_to_hold_question">Is there something solid to hold at the places you already put a hand out, on the stairs or getting up?</string>
+    <string name="place_something_to_hold_question">Is there something solid to hold at the places you already put a hand out, getting up or crossing a room?</string>
     <string name="place_something_to_hold_fix">Notice where your hand goes on its own. That is where a rail belongs, and a joiner will fit one in under an hour.</string>
     <string name="place_near_the_bed_where">Beside the bed</string>
     <string name="place_near_the_bed_question">Is the floor beside your bed clear, with the light and anything you need within reach of sitting up?</string>
     <string name="place_near_the_bed_fix">The lamp, your glasses and the phone on the side you get out of, and nothing on the floor between the bed and the door.</string>
+    <!--
+      Three of the six only make sense on two feet, so they have a second and a
+      third version rather than being asked of everybody. The topic is the same in
+      each: the way in and out, the light you can reach, and what you move between.
+      Nothing here is a shorter list; every version is six questions.
+    -->
+    <string name="place_in_and_out_where">The way in and out</string>
+    <string name="place_in_and_out_question">Can you get out of the front door and back in on your own, at any time of day?</string>
+    <string name="place_in_and_out_fix">A threshold ramp is a rubber or metal strip that sits over the step and needs no fixing down. Where the step is deeper, a joiner can build a longer one in a morning.</string>
+    <string name="place_bedside_light_where">The light where you are</string>
+    <string name="place_bedside_light_question">Can you turn the light on and off from where you lie, without getting up?</string>
+    <string name="place_bedside_light_fix">A lamp on the side you get out of, or a plug-in switch you can keep on the bed. Both cost a few pounds and neither needs an electrician.</string>
+    <string name="place_seat_heights_where">The seats you move between</string>
+    <string name="place_seat_heights_question">Are the seats you move between, the bed, the chair, the car, near enough the same height?</string>
+    <string name="place_seat_heights_fix">A firm cushion raises the lower seat and takes the climb out of the move. Arms to push down on do more than a soft seat does.</string>
     <string name="place_indoor_shoes_where">What you wear indoors</string>
     <string name="place_indoor_shoes_question">Do you have something on your feet indoors that fastens and holds your heel?</string>
     <string name="place_indoor_shoes_fix">A pair of indoor shoes that fasten, kept by the bed. Backless slippers come off at the moment you would rather they did not.</string>

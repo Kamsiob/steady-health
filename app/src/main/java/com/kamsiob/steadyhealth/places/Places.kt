@@ -2,6 +2,7 @@ package com.kamsiob.steadyhealth.places
 
 import androidx.annotation.StringRes
 import com.kamsiob.steadyhealth.R
+import com.kamsiob.steadyhealth.domain.GettingAround
 
 /**
  * What somebody said about one of the six places.
@@ -108,6 +109,56 @@ object Places {
             fix = R.string.place_indoor_shoes_fix,
         ),
     )
+
+    /**
+     * The way in and out, for somebody in a wheelchair, in place of the stairs.
+     *
+     * Same id, because the answer is stored against it and the topic is the same
+     * one: whether the route out of the house is a route.
+     */
+    private val inAndOut = PlaceQuestion(
+        id = "stairs_light",
+        where = R.string.place_in_and_out_where,
+        question = R.string.place_in_and_out_question,
+        fix = R.string.place_in_and_out_fix,
+    )
+
+    /** The same slot for somebody mostly in bed: the light they can reach. */
+    private val bedsideLight = PlaceQuestion(
+        id = "stairs_light",
+        where = R.string.place_bedside_light_where,
+        question = R.string.place_bedside_light_question,
+        fix = R.string.place_bedside_light_fix,
+    )
+
+    /** In place of indoor shoes, for both of the ways that are done sitting. */
+    private val seatHeights = PlaceQuestion(
+        id = "indoor_shoes",
+        where = R.string.place_seat_heights_where,
+        question = R.string.place_seat_heights_question,
+        fix = R.string.place_seat_heights_fix,
+    )
+
+    /**
+     * The six, in the words of one way of getting around.
+     *
+     * Four of them are written once and are true for all four ways. Two are not:
+     * a flight of stairs and a pair of indoor shoes are not the places somebody in
+     * a wheelchair moves through, and asking about them is the app describing a
+     * house that is not theirs. Those two are swapped for the nearest true question
+     * about the same thing, keeping the id, so the answer is stored where it was
+     * and the walkthrough is six questions in every version.
+     */
+    fun forWay(way: GettingAround): List<PlaceQuestion> = all.map { question ->
+        when {
+            question.id == "stairs_light" && way == GettingAround.Wheelchair -> inAndOut
+            question.id == "stairs_light" && way == GettingAround.InBed -> bedsideLight
+            question.id == "indoor_shoes" && way in sitting -> seatHeights
+            else -> question
+        }
+    }
+
+    private val sitting = setOf(GettingAround.Wheelchair, GettingAround.InBed)
 
     fun byId(id: String): PlaceQuestion? = all.firstOrNull { it.id == id }
 

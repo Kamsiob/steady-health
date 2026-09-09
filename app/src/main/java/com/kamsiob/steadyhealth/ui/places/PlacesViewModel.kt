@@ -4,12 +4,14 @@ import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.kamsiob.steadyhealth.data.ContextRepository
+import com.kamsiob.steadyhealth.data.ProfileRepository
 import com.kamsiob.steadyhealth.data.SteadyDatabase
 import com.kamsiob.steadyhealth.places.Said
 import com.kamsiob.steadyhealth.ui.screens.PlacesUiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 /**
@@ -22,22 +24,25 @@ import kotlinx.coroutines.launch
  */
 class PlacesViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val context get() = ContextRepository(SteadyDatabase.get(getApplication()))
+    private val db get() = SteadyDatabase.get(getApplication())
+    private val context get() = ContextRepository(db)
+    private val profile get() = ProfileRepository(db)
 
     private val _state = MutableStateFlow(PlacesUiState())
     val state: StateFlow<PlacesUiState> = _state.asStateFlow()
 
     fun open() = viewModelScope.launch {
-        _state.value = PlacesUiState(answers = context.places())
+        _state.value = PlacesUiState(answers = context.places(), way = profile.gettingAround())
     }
 
     fun said(id: String, said: Said) = viewModelScope.launch {
         context.setPlace(id, said)
-        _state.value = PlacesUiState(answers = context.places())
+        val answers = context.places()
+        _state.update { it.copy(answers = answers) }
     }
 
     fun startAgain() = viewModelScope.launch {
         context.forgetPlaces()
-        _state.value = PlacesUiState()
+        _state.update { it.copy(answers = emptyMap()) }
     }
 }

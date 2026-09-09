@@ -77,4 +77,23 @@ object Route {
     /** The card somebody sends. ADDENDUM-03 Part 11. CARD above is a help card. */
     const val SEND_CARD = "send-card"
     const val PLACES = "places"
+
+    /**
+     * The rest of ADDENDUM-03 Part 20, which names what each tab carries.
+     *
+     * [ADD_ITEM] is Part 18's reusable job 1 and is reached from both tabs that show
+     * the list. [MONTHS] draws one month at a time. [YOUR_LIST] and [YOUR_ITEM] are
+     * that list with a way to change it. [KIT] is the equipment and the chair, both
+     * of which were asked once in passing and never again. [PLANS] is every plan and
+     * its date. [ABOUT] and [PRIVACY] are what this is and what it does with what it
+     * holds.
+     */
+    const val ADD_ITEM = "add-item"
+    const val MONTHS = "months"
+    const val YOUR_LIST = "your-list"
+    const val YOUR_ITEM = "your-item"
+    const val KIT = "kit"
+    const val PLANS = "plans"
+    const val ABOUT = "about"
+    const val PRIVACY = "privacy"
 }

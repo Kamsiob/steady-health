@@ -1,0 +1,258 @@
+{
+  "note": "AI.md, fixtures for jobs 8 and 9: 'At least thirty documents, including a progress note, a plan of care, a discharge summary, an insurance letter, a referral, a handwritten programme, a badly photographed one, one in Spanish, one out of scope, and one blank.' Each document is a page somebody could be holding in a hallway, written the way on-device extraction hands it over, with the line breaks and the run-on capitalisation left in. 'kind' is what PageKind.of has to come back with. The out of scope ones are why the file exists: a blood test, an imaging page and a prescription must never reach the reader in Part 7, and a badly photographed one of each must not either.",
+
+  "documents": [
+    {
+      "name": "numbered-home-programme",
+      "why": "the commonest page in the app: a numbered sheet with reps and sets under a clinic letterhead",
+      "text": "Ashfield Physiotherapy Department\nHome programme for Patrick Nolan\nPrepared 18 February 2026 by R Amara\n\n1. Sit to stands from the armchair with the cushion taken out. 3 sets of 8, twice a day.\n2. Heel raises at the kitchen worktop. 2 sets of 15, both legs.\n3. Step ups onto the bottom stair, holding the rail. 10 reps each side, once a day.\n4. Standing balance with one foot in front of the other, hold for 20 seconds. 3 times per day.\n5. Walk to the postbox and back once a day if the pavement is dry.",
+      "kind": "Exercises"
+    },
+    {
+      "name": "table-home-programme",
+      "why": "the same sheet as a table, where the counts sit in columns and never read as 3 sets of 10",
+      "text": "Ridgeway Physical Therapy\nMargaret Doyle          14 March 2026\n\nExercise                          Sets   Reps    How often\nSit to stand from a dining chair   3      10     Twice a day\nHeel raises at the counter         2      12     Twice a day\nWall push ups at arm's length      2      10     Once a day\nStanding balance, hold             3      30 sec Three times a day",
+      "kind": "Exercises"
+    },
+    {
+      "name": "prose-home-programme",
+      "why": "a sheet written as paragraphs instead of a list, with the counts spelled out in words",
+      "text": "YOUR EXERCISES FOR THE NEXT FOUR WEEKS\n\nStart with the sit to stands. Sit at the front of a firm dining chair with your feet\nflat and a little way back, and stand up without pushing through your hands. Do ten of\nthese, rest for a minute, and do ten more. Twice a day is plenty.\n\nThe heel raises are easier and you can do them while the kettle boils. Hold the worktop\nlightly, come up onto your toes, and lower slowly to a count of three. Fifteen of them,\neach side, once a day.\n\nFinish with the standing balance. Stand close to the sink with one foot in front of the\nother and hold for thirty seconds, three times a day.",
+      "kind": "Exercises"
+    },
+    {
+      "name": "bulleted-band-programme",
+      "why": "a bulleted sheet, which is the other half of what a numbered list looks like",
+      "text": "Resistance band programme, red band\n\n- Seated row with the band round the door handle, 3 sets of 10\n- Shoulder flexion, 2 sets of 12, each arm\n- Knee extension sitting in a firm chair, 3 sets of 10, both legs\n- Hip abduction standing at the worktop, 2 sets of 15, each leg\n\nEvery other day, and stop the one that feels sharp rather than working through it",
+      "kind": "Exercises"
+    },
+    {
+      "name": "handwritten-programme",
+      "why": "handwriting, transcribed the way ML Kit transcribes handwriting: no punctuation, wrong letters",
+      "text": "Home exs Mrs D\nsit to stands x lO   2 x day\nheel raises x 15   hold rail\nwoll push ups x 8   slowly\nbridges 2 sets of 10\nwalk to postbox + back once a day",
+      "kind": "Exercises"
+    },
+    {
+      "name": "ocr-mangled-programme",
+      "why": "0 for O and l for 1 through the whole page, which is what a phone does with a faint printout",
+      "text": "RIVERSIDE PHYSICAL THERAPY\nH0me pr0gramme, Margaret D0yle\n\nl. Sit t0 stands fr0m a dining chair. 3 sets 0f l0, twice a day.\n2. Heel raises h0lding the c0unter. 2 sets 0f l2, each side.\n3. Wall push ups at arm's length. l0 reps, 0nce a day.\n4. Standing balance by the sink, h0ld f0r 30 sec0nds. 3 times per day.",
+      "kind": "Exercises"
+    },
+    {
+      "name": "glare-damaged-programme",
+      "why": "photographed badly, with a strip of glare through it, and still enough of a sheet to be one",
+      "text": "Ridgeway Physi                 py\nHome programme                 March 2026\n\n1. Sit to stands from a dining chair.          of 10, twice a day\n2.                       the counter. 2 sets of 12, each side\n3. Wall push ups at arm's leng\n4. Standing balance by the sink, hold for 30 seconds",
+      "kind": "Exercises"
+    },
+    {
+      "name": "spanish-home-programme",
+      "why": "a Spanish sheet, which classifies on its numbers because 3 x 10 is written the same in any language",
+      "text": "Fisioterapia Los Olivos\nPrograma de ejercicios para casa\nPreparado el 14 de marzo de 2026 para Carmen Duarte\n\n1. Sentadillas apoyandose en la silla. 3 x 10, dos veces al dia.\n2. Elevacion de talones sujetandose a la encimera. 2 x 12, cada lado.\n3. Flexiones contra la pared. 2 x 10, una vez al dia.\n4. Equilibrio de pie junto al fregadero. Mantener 30 segundos, 3 veces al dia.",
+      "kind": "Exercises"
+    },
+    {
+      "name": "balance-programme-in-sections",
+      "why": "a third layout: headings for the time of day, with the movements loose underneath them",
+      "text": "BALANCE AND WALKING, WEEK ONE TO WEEK FOUR\n\nEvery morning\nTandem stance at the kitchen counter, hold for 20 seconds, 3 times each side\nMarching on the spot, 20 steps, both legs\n\nEvery evening\nSit to stands from the dining chair, 2 sets of 8\nWalk the length of the hall and back four times, holding nothing\n\nIf one of them hurts more than the day before, leave it out and tell me next week.",
+      "kind": "Exercises"
+    },
+    {
+      "name": "rep-notation-sheet",
+      "why": "x10 down the margin, which no pattern in the classifier reads. The movements carry it",
+      "text": "Knee exercises after your operation\nDo these three times a day\n\nStatic quads             x10\nInner range quads        x10\nStraight leg raise       x10 each leg\nHeel slides              x10\nSitting knee bends       x10",
+      "kind": "Exercises"
+    },
+    {
+      "name": "pool-programme",
+      "why": "a pool sheet, where the movements have no clinic words round them at all",
+      "text": "HYDROTHERAPY POOL PROGRAMME\nTuesdays, shallow end, 34 degrees\n\nWalking forwards across the pool, 4 lengths\nWalking backwards, 2 lengths\nWalking sideways, 2 lengths each direction\nKnee bends holding the rail, 2 sets of 10\nHeel raises, 15 reps\nMarching in the water, 30 seconds, twice\nAsk at the desk for the pool key and get in at the shallow end",
+      "kind": "Exercises"
+    },
+    {
+      "name": "progress-note",
+      "why": "the progress note AI.md asks for: shorthand written to another clinician, and prose",
+      "text": "Ashfield Physiotherapy\nProgress note, visit 4 of 8\nDate of service: 11 May 2026\n\nMr Nolan came in today with his daughter and walked from the car park to the treatment\nroom without stopping, which he has not done before. He tells me he has been out to the\npostbox on his own three times since the last visit and that the kerb outside his gate\nis still the part he dislikes. AROM at the right shoulder is 0 to 140 degrees and MMT of\nthe rotator cuff is 4 out of 5 throughout. Gait is steady indoors and outdoors on level\nground, and transfers are effortless from a standard chair.\n\nWe read through the home programme together and left it as it is for now.\n\nRuth Amara, MPT",
+      "kind": "ReportOrLetter"
+    },
+    {
+      "name": "plan-of-care",
+      "why": "the plan of care AI.md asks for, with a frequency on it and no movement counts anywhere",
+      "text": "Ridgeway Physical Therapy\nPlan of care\nMargaret Doyle          Date of service: 2 March 2026, initial evaluation\n\nMrs Doyle was seen today following a left total knee replacement on 12 January. She\nlives alone in a two storey house with a rail on one side of the stairs and she is\nwalking indoors without a device over short distances. Transfers from her armchair are\neffortful and she uses her arms for all of them at present.\n\nFrequency: 2 times per week for six weeks\nInterventions: therapeutic exercise, gait training, stair training, manual therapy\nWhat she came in for: the stairs at home with one rail, and getting out of the armchair\nwithout pushing through her arms, both within six weeks.",
+      "kind": "ReportOrLetter"
+    },
+    {
+      "name": "initial-evaluation-form",
+      "why": "a form rather than a letter, with four clues on it and not one full stop anywhere",
+      "text": "Ridgeway Physical Therapy\nINITIAL EVALUATION\nName: Margaret Doyle              Date of service: 2 March 2026\nReferring physician: Dr H Aylmer\nPrecautions: none\n\nAROM L knee: 0 to 112             MMT quads: 4/5\nGait: steady, no device, level surfaces\nTransfers: independent, effortful from a low chair\nPlan: 2 times per week for 6 weeks, HEP issued",
+      "kind": "ReportOrLetter"
+    },
+    {
+      "name": "terse-progress-note",
+      "why": "the same note in the four letters everybody writes it in, and still nobody wrote a sentence",
+      "text": "Ridgeway Physical Therapy\nProgress note\nDate of service: 16 March 2026\n\nS: Less pain on the stairs. Sleeping through the night now.\nO: AROM L knee 0 to 115. MMT quads 4/5. Gait steady, no device.\nA: Tolerating the progression.\nP: Continue HEP. Review in 2 weeks.\n\nE Voss PT",
+      "kind": "ReportOrLetter"
+    },
+    {
+      "name": "appointment-letter",
+      "why": "a letter about the logistics and nothing else, which Part 7 covers and people photograph most",
+      "text": "Fenwick Physiotherapy\n2 July 2026\n\nDear Mrs Doyle,\n\nYou have an appointment in the physiotherapy department on Tuesday 14 July at two\no'clock. Please arrive fifteen minutes early and wear something you can move in.\n\nIf you cannot come, telephone the number above so that we can offer the time to\nsomebody else. There is a waiting list at the moment and the next free morning after\nthat one is in September.\n\nYours sincerely\nOutpatient Booking",
+      "kind": "ReportOrLetter"
+    },
+    {
+      "name": "discharge-summary",
+      "why": "the discharge summary AI.md asks for, with the programme kept somewhere else",
+      "text": "Hollis Rehabilitation\nDischarge summary\nTreatment dates: 3 February to 20 April 2026\nDischarge date: 20 April 2026\n\nMrs Okafor attended twelve sessions after her hip fracture in January and was discharged\ntoday having done the two things she came in for. She walks indoors without a frame and\ngets on and off the bed on her own, neither of which she could do at the initial\nevaluation. Gait is steady over level ground and she uses a stick outdoors by choice.\nADLs are independent with the exception of the bath, which her daughter helps with. MMT\nof the right hip abductors is 4 out of 5 and AROM is within functional limits.\n\nShe has been given a written programme to carry on with at home and knows to ring the\ndepartment if anything changes.\n\nDaniel Reyes, PT",
+      "kind": "ReportOrLetter"
+    },
+    {
+      "name": "occupational-therapy-plan",
+      "why": "an occupational therapy home visit plan: bullets, but about rails and stools rather than movements",
+      "text": "Meadow Lane Occupational Therapy\nHome visit and plan\nDate of visit: 3 April 2026\n\nWe visited Mrs Okafor at home on 3 April to look at how she is managing in the kitchen\nand the bathroom. She is independent with dressing and washing and needs a hand only\nwith the bath. ADLs were read through together and transfers on and off the bed are safe\nwith the rail she already has.\n\nWhat we agreed:\n- A perching stool by the worktop so she can prepare food sitting down\n- A second rail beside the back step\n- Practise standing at the sink while the kettle boils, before making tea",
+      "kind": "ReportOrLetter"
+    },
+    {
+      "name": "insurance-benefits-letter",
+      "why": "the insurance letter AI.md asks for, written in the flattest prose anybody sends",
+      "text": "Meridian Health Plan\nBenefits determination        Member 44-11982\n\nDear Mrs Doyle,\n\nWe have read the request from Ridgeway Physical Therapy for eight further outpatient\nvisits between 1 June and 31 July 2026. Six of those visits have been approved under\nyour plan and the remaining two have not, as your plan allows twenty visits in a benefit\nyear and eighteen of them have been used.\n\nIf you would like this looked at again, you or your therapist may write to the address\nat the top of this letter within sixty days of the date printed above.\n\nYours sincerely\nBenefits Administration",
+      "kind": "ReportOrLetter"
+    },
+    {
+      "name": "letter-to-the-person",
+      "why": "a plain letter with no shorthand on it at all, which is what most people are actually handed",
+      "text": "Ashfield Physiotherapy\n6 June 2026\n\nDear Mrs Doyle,\n\nI am writing to let you know that I am leaving the department at the end of this month\nand that Ruth Amara will be taking over your appointments from July. She has read\nthrough everything we have done together and there is no need to start again at the\nbeginning with her.\n\nYour next appointment is on Tuesday 7 July at half past ten, in the same room as before.\nIf that morning does not suit you, ring the department and we will move it.\n\nKind regards\nEllen Voss",
+      "kind": "ReportOrLetter"
+    },
+    {
+      "name": "gp-referral",
+      "why": "the referral AI.md asks for, going the other way: a doctor writing to a therapy department",
+      "text": "ELM ROAD SURGERY\n4 Elm Road, Ardmore\n\nDear Physiotherapy Department,\n\nThank you for seeing Mr Patrick Nolan, who is 78 and has had increasing difficulty\ngetting out of a low chair and getting up the stairs at home over the past year. He has\nhad two near stumbles indoors since the autumn and has stopped walking to the shops on\nhis own since the second of them.\n\nHe lives alone in a terraced house with the bathroom upstairs and his daughter calls in\ntwice a week. I would be grateful for your view on what can be done at home.\n\nKind regards\nDr H Aylmer",
+      "kind": "ReportOrLetter"
+    },
+    {
+      "name": "therapist-letter-to-the-doctor",
+      "why": "the same relationship reversed, and the densest shorthand in the corpus",
+      "text": "Ashfield Physiotherapy\nRe: Mrs Margaret Doyle, born 4 August 1948\n\nDear Dr Aylmer,\n\nThank you for the referral. I saw Mrs Doyle on 2 March and again on 16 March for the\nleft knee she had replaced in January. She is walking indoors without a stick and taking\nthe stairs one at a time with the rail on the left.\n\nAROM of the left knee is 0 to 112 degrees and MMT of the quadriceps is 4 out of 5. Gait\nis steady over level ground without a device. Transfers from a low chair remain\neffortful and that is what we are working on next.\n\nI will write again after her eighth visit. Please do not hesitate to ring me if anything\nchanges in the meantime.\n\nYours sincerely\nEllen Voss, PT, DPT",
+      "kind": "ReportOrLetter"
+    },
+    {
+      "name": "clinic-letter-mentioning-one-scan",
+      "why": "one imaging word inside a letter. One is a coincidence, so the letter is still a letter",
+      "text": "Northgate Orthopaedics\nClinic letter\nDate of visit: 28 April 2026\n\nDear Dr Aylmer,\n\nI saw Mrs Doyle in the knee clinic this afternoon, four months after her left total knee\nreplacement. She tells me she is walking to the shops again and that the stairs at home\nare no longer the trouble they were in February. The x-ray we took in January is\nunchanged from the one before it.\n\nShe would like to get back to her bowls club in the summer and I have said there is\nnothing from my side keeping her from it. I have asked the physiotherapy department to\nsee her twice more before I see her again in October.\n\nYours sincerely\nM. Okonjo\nConsultant Orthopaedic Surgeon",
+      "kind": "ReportOrLetter"
+    },
+    {
+      "name": "community-team-letter",
+      "why": "care logistics rather than therapy, which Part 7 handles and the classifier has to reach",
+      "text": "Meadow Lane Community Team\nHome visit, 3 April 2026\n\nDear Mrs Okafor,\n\nThank you for seeing me at home on Thursday. I have written down what we agreed so that\nyou have it in front of you and so that your daughter can read it too.\n\nThe occupational therapist will ring you next week about the perching stool and about\nthe second rail by the back step. The waiting time for fitting is around three weeks at\nthe moment and I will chase it if you have not heard by the end of April.\n\nKind regards\nPriya Raman\nCare Coordinator",
+      "kind": "ReportOrLetter"
+    },
+    {
+      "name": "letter-with-a-programme-in-it",
+      "why": "the page AI.md asks for that is both: a letter to the person with the sheet underneath it",
+      "text": "Fenwick Physiotherapy\nRe: Alan Whitfield\n9 May 2026\n\nDear Mr Whitfield,\n\nIt was good to see you on Thursday. Your shoulder is moving further than it was at the\nfirst visit in February and you reached the top shelf of the cupboard without holding\nyour breath, which is new.\n\nI have written the programme out again below with the changes we talked about. Ring the\ndepartment if the band feels too heavy and we will drop to the next colour down.\n\n1. Wall slides, 3 sets of 10, twice a day\n2. Shoulder flexion with the red band, 2 sets of 12, each side\n3. Pendulum swings, hold for 30 seconds, three times a day\n\nKind regards\nEllen Voss, PT",
+      "kind": "Both"
+    },
+    {
+      "name": "post-operative-protocol",
+      "why": "a surgeon's handout: paragraphs of what to expect, then the movements, on one page",
+      "text": "Northgate Orthopaedics\nAfter a total knee replacement, week nought to week six\n\nYou are weight bearing as tolerated on the left leg from the day of the operation, and\nthe crutches are there for balance rather than to take your weight. Most people are down\nto one crutch indoors by the end of the second week and to none by the end of the sixth.\nTransfers in and out of a low chair are the hardest part for a fortnight and your gait\nwill be uneven until the swelling settles, and both of those are expected.\n\nDo these four times a day, morning, midday, teatime and before bed:\n\n1. Ankle pumps, 20 reps each leg\n2. Quad sets, hold for 5 seconds, 10 reps\n3. Straight leg raises, 10 reps\n4. Knee bends sitting over the edge of the bed, 10 reps each side",
+      "kind": "Both"
+    },
+    {
+      "name": "plan-of-care-with-the-programme-attached",
+      "why": "the same plan of care as above with the home programme printed on it, which moves it to Both",
+      "text": "Ridgeway Physical Therapy\nPlan of care and home programme\nMargaret Doyle          Date of service: 2 March 2026, initial evaluation\n\nMrs Doyle was seen today following a left total knee replacement on 12 January. She\nlives alone in a two storey house with a rail on one side of the stairs and she is\nwalking indoors without a device over short distances. Transfers from her armchair are\neffortful and she uses her arms for all of them at present.\n\nFrequency: 2 times per week for six weeks. Interventions: therapeutic exercise, gait\ntraining, stair training and manual therapy.\n\nHome programme, twice a day:\n- Sit to stands from a dining chair, 3 sets of 10\n- Heel raises at the worktop, 2 sets of 12, each side\n- Quad sets, hold for 5 seconds, 10 reps",
+      "kind": "Both"
+    },
+    {
+      "name": "blank-page",
+      "why": "the blank page AI.md asks for. Nothing came back from extraction, and nothing is a fine answer",
+      "text": "",
+      "kind": "Unclear"
+    },
+    {
+      "name": "letterhead-only",
+      "why": "the letterhead rule at its limit: a clinic name and three sets of initials, and no page under them",
+      "text": "RIVERSIDE PHYSICAL THERAPY AND SPORTS INJURY CLINIC\n14 Bridge Street, Ardmore\nTelephone 555 0142\nEllen Voss PT DPT      Ruth Amara MPT      Daniel Reyes PTA",
+      "kind": "Unclear"
+    },
+    {
+      "name": "shopping-list",
+      "why": "the wrong photograph entirely. Part 5 asks the person rather than naming their shopping",
+      "text": "milk\nbread\nbananas\nteabags\nwashing powder\n2 tins of soup\nkitchen roll\nring the surgery about tuesday\nbirthday card for joan\nstamps",
+      "kind": "Unclear"
+    },
+    {
+      "name": "spanish-letter",
+      "why": "a Spanish letter, which has prose and nothing else the English clue lists can read",
+      "text": "Fisioterapia Los Olivos\nCalle Mayor 12, Valencia\n\nEstimada Sra. Duarte:\n\nLe escribimos para confirmar que su tratamiento continuara durante seis semanas mas,\ncon una sesion cada martes por la manana a las diez y media. Si algun dia no puede\nacudir a la cita, le rogamos que nos avise con veinticuatro horas de antelacion para\npoder ofrecer la hora a otra persona.\n\nUn cordial saludo,\nMarta Ferran",
+      "kind": "Unclear"
+    },
+    {
+      "name": "glare-damaged-note",
+      "why": "the badly photographed page AI.md asks for, damaged past the point of being readable",
+      "text": "Ridgeway Physical Thera\nProgr                    ote\nDate of ser              arch 2026\n\nShe was seen today for her sixth visit and walked in without her stick.\n                         stairs at home are\nbecoming easier and she no lon\n                without a device over level ground",
+      "kind": "Unclear"
+    },
+    {
+      "name": "directions-to-the-clinic",
+      "why": "prose on its own is not a letter. Two long sentences and no clue about who wrote them",
+      "text": "GETTING TO US\n\nRidgeway is on the first floor above the bakery on Bridge Street. The blue door beside\nthe bakery is the right one and the buzzer is marked Ridgeway.\n\nThere is parking behind the library on Mill Lane, free for two hours. The number 14 bus\nstops outside the post office, two minutes walk away.",
+      "kind": "Unclear"
+    },
+    {
+      "name": "two-column-page-read-across",
+      "why": "a two column page read straight across, which is what extraction does to a newsletter layout",
+      "text": "Fenwick Physiotherapy      Appointment reminder\nDear Mr Whitfield,         Tuesday 14 July, 2pm\nThank you for coming in    Please bring flat shoes\non Thursday. Your shoulder Ring 555 0142 to change\nis moving further than it  the time if you need to\nwas in February and you    Cancellations need a day\nreached the top shelf      of notice from you",
+      "kind": "Unclear"
+    },
+    {
+      "name": "the-persons-own-questions",
+      "why": "a page the person wrote themselves. It is about their care and it is still not a document",
+      "text": "things to ask on thursday\nis it ok to walk to the shops on my own yet\nthe knee still clicks going down the stairs\ncan i stop using the stick indoors\nwhen do i come back",
+      "kind": "Unclear"
+    },
+    {
+      "name": "blood-test-panel",
+      "why": "the safety case. A blood test is never read, whatever else Part 5 would have offered",
+      "text": "MERIDIAN CLINICAL LABORATORY\nSpecimen collected 12 May 2026 at 08:40, fasting\nOrdering provider: Dr H Aylmer\n\nSodium               140 mmol/L      (135 - 145)\nPotassium            4.2 mmol/L      (3.5 - 5.3)\nCreatinine            78 umol/L      (45 - 84)\nGlucose, fasting      5.4 mmol/L     (3.9 - 5.8)\nHbA1c                  39 mmol/mol   (20 - 41)",
+      "kind": "OutOfScope"
+    },
+    {
+      "name": "blood-test-photographed-badly",
+      "why": "the same safety case with the header and half the letters lost. Still never read",
+      "text": "                     LABORAT0RY\nHaem0gl0bin               l3.4 g/dL\nWhite cell c0unt           6.2 x10^9/L\nPlatelets                  2l8 x10^9/L\nCreatinine                  78 umol/L\nPlease bring this with you when you come in",
+      "kind": "OutOfScope"
+    },
+    {
+      "name": "letter-carrying-blood-values",
+      "why": "a letter by every other measure, with one blood value in the middle of it. Still never read",
+      "text": "ELM ROAD SURGERY\n4 Elm Road, Ardmore\n\nDear Mrs Doyle,\n\nI am writing about the blood test you had on 4 March. Your cholesterol is 5.2 mmol/L\nand the rest of it is where it was last year. There is nothing that needs doing before\nyour appointment in September, and the practice nurse will go through it with you then\nif you would like her to.\n\nKind regards\nDr H Aylmer",
+      "kind": "OutOfScope"
+    },
+    {
+      "name": "prescription",
+      "why": "a prescription. Nothing in this app reasons about a medicine, so nothing in this app reads one",
+      "text": "ELM ROAD SURGERY\n4 Elm Road, Ardmore\n\nRx\nNaproxen 250 mg tablets\nTake one tablet twice a day with food\n\nQuantity: 56        Refills: 1\nDr H Aylmer                12 May 2026\nDispense at Elm Road Pharmacy",
+      "kind": "OutOfScope"
+    },
+    {
+      "name": "plain-film-report",
+      "why": "an imaging page, which reads exactly like the therapy pages the app does explain, and is not one",
+      "text": "Northgate Imaging\nPlain radiographs of the right hip, three views\nClinical indication: pain on weight bearing since a fall in March\n\nFINDINGS: The right hip is located. There is moderate joint space narrowing of the\nsuperior compartment with subchondral sclerosis. No fracture is seen. The soft tissues\nare unremarkable.\n\nIMPRESSION: Moderate degenerative changes of the right hip. No acute bony injury.\n\nReported by A. Sandhu, Consultant Radiologist",
+      "kind": "OutOfScope"
+    },
+    {
+      "name": "bone-density-scan",
+      "why": "a second imaging page in a shape the app must not mistake for a table of movements",
+      "text": "Bone density scan, DXA\nLumbar spine and left hip\n\nSite                    BMD g/cm2     T score     Z score\nL1 to L4                  0.812         -2.1        -0.4\nLeft femoral neck         0.694         -2.3        -0.6\n\nComparison with the scan of March 2023.\nDepartment of Radiology, Northgate",
+      "kind": "OutOfScope"
+    },
+    {
+      "name": "discharge-letter-carrying-medicines",
+      "why": "the hardest safety case: a letter by every other measure, with a medicine list inside it",
+      "text": "Hollis Hospital, Ward 6\nDischarge letter, 20 April 2026\n\nDear Dr Aylmer,\n\nMrs Okafor was admitted on 11 April after a fall at home and had a left hip\nhemiarthroplasty the following morning. She walked with the physiotherapy team on the\nfirst day afterwards and went home on 20 April with a frame and a package of care twice\na day.\n\nMedications on discharge:\nParacetamol 500 mg tablets, two by mouth up to four times a day\nApixaban 2.5 mg tablets, one by mouth twice a day for 28 days\nLansoprazole 15 mg capsules, one by mouth each morning\n\nKind regards\nWard 6",
+      "kind": "OutOfScope"
+    }
+  ]
+}

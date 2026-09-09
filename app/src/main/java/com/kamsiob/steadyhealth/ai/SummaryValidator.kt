@@ -183,7 +183,7 @@ object SummaryValidator {
 
     /** Numbers written as words, with the value each one carries. */
     fun spelledIn(text: String): List<Pair<String, Double?>> =
-        SPELLED.filterKeys { Words.says(text, it) }.map { it.key to it.value.toDouble() }
+        spelledWords.filterKeys { Words.says(text, it) }.map { it.key to it.value.toDouble() }
 
     /** "most", "all", "twice": a quantity with no single value behind it. */
     private fun quantitiesIn(text: String): List<Pair<String, Double?>> =
@@ -195,7 +195,14 @@ object SummaryValidator {
 
     fun words(text: String): Int = text.trim().split(Regex("\\s+")).count { it.isNotBlank() }
 
-    private val SPELLED = mapOf(
+    /**
+     * The words a number can be written with, and the value each one carries.
+     *
+     * Shared rather than copied. Job 9's validator reads the same table to put
+     * "one hundred and eighteen" back together as one number, and two tables of
+     * number words in one app drift the day somebody adds a word to one of them.
+     */
+    val spelledWords = mapOf(
         "one" to 1, "two" to 2, "three" to 3, "four" to 4, "five" to 5,
         "six" to 6, "seven" to 7, "eight" to 8, "nine" to 9, "ten" to 10,
         "eleven" to 11, "twelve" to 12, "thirteen" to 13, "fourteen" to 14,

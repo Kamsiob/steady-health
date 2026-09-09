@@ -296,6 +296,50 @@ class PlanMatchingTest {
     }
 
     @Test
+    fun aSpokenSentenceWithThePersonTalkingRoundItStillBecomesTwoItems() {
+        val said = "my physio wants me doing ten sit to stands twice a day and heel raises"
+
+        val items = PlanMatching.readAll(said)
+
+        assertThat(items.map { it.movement?.id }).containsExactly("sit_to_stand", "heel_raises")
+            .inOrder()
+        assertThat(items.first().howMany).isEqualTo(HowMany.Reps(10))
+        assertThat(items.first().howOften).isEqualTo(HowOften.ADay(2))
+    }
+
+    @Test
+    fun aSpokenListWithCommasInItBecomesOneItemPerMovement() {
+        val said = "chair stands, heel raises and a walk"
+
+        val items = PlanMatching.readAll(said)
+
+        assertThat(items.map { it.movement?.id })
+            .containsExactly("sit_to_stand", "heel_raises", "walk").inOrder()
+    }
+
+    @Test
+    fun aCommaBetweenAMovementAndItsNumbersIsNotACut() {
+        // The half after the comma names no movement, so the line stays whole and the
+        // numbers stay attached to the movement they were written for.
+        val items = PlanMatching.readAll("heel raises, 3 sets of 10, twice a day")
+
+        assertThat(items).hasSize(1)
+        assertThat(items.single().movement?.id).isEqualTo("heel_raises")
+        assertThat(items.single().howMany).isEqualTo(HowMany.Reps(reps = 10, sets = 3))
+        assertThat(items.single().howOften).isEqualTo(HowOften.ADay(2))
+    }
+
+    @Test
+    fun aCommaOnALineSayingNotToDoSomethingIsNotACutEither() {
+        val items = PlanMatching.readAll("avoid stairs, heel raises")
+
+        assertThat(items).hasSize(1)
+        assertWithMessage("the line said to avoid something and names nothing to do")
+            .that(items.single().movement).isNull()
+        assertThat(items.single().sureness).isEqualTo(Sureness.Unmatched)
+    }
+
+    @Test
     fun aMovementWithAndInItsNameIsNotCutInHalf() {
         val items = PlanMatching.readAll("heel and toe")
 

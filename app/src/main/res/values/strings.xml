@@ -477,7 +477,7 @@
     <string name="data_title">Your data</string>
     <string name="data_row">Export, put back, or delete everything</string>
     <string name="data_export">Export everything</string>
-    <string name="data_export_why">Spreadsheets and a one-page summary, in a zip you can open in anything. The same zip holds a backup this app can read back. Nothing is sent anywhere; you choose where it goes.</string>
+    <string name="data_export_why">Spreadsheets, your scanned pages and a one-page summary, in a zip you can open in anything. The same zip holds a backup this app can read back. Nothing is sent anywhere; you choose where it goes.</string>
     <string name="data_summary_row">Summary</string>
     <string name="data_summary_why">Read it, or export a page for your appointment.</string>
     <string name="data_delete">Delete everything</string>
@@ -611,5 +611,96 @@
     <string name="settings_up_and_about">The day between sessions</string>
     <string name="settings_up_and_about_sub">One line, now and then, when you have been up more than usual</string>
     <string name="settings_up_and_about_why">Your phone already counts steps. With this on, the app reads that count when you open it and says one line on the days you were up more than your own usual. It never shows a number, never sets one, and says nothing on an ordinary day.</string>
+
+    <!--
+      Progress, the rows ADDENDUM-03 Part 20 puts on it: the months, weight when it
+      is switched on, something new, and the page for an appointment. Every one of
+      them sits low on the screen and none of them is announced.
+    -->
+    <string name="progress_add">Add something you\'d like to be able to do</string>
+    <string name="progress_add_sub">Any time. It goes on your list beside the others.</string>
+    <string name="add_item_title">Add something</string>
+    <string name="add_item_why">The app keeps track of it and asks about it once a month with the rest of your list.</string>
+
+    <!--
+      The months. One month at a time, drawn as a picture, with nothing joining one
+      month to the next: a month is a month and not a step on the way to anything.
+    -->
+    <string name="months_row">Look back at a month</string>
+    <string name="months_row_sub">One month at a time, day by day</string>
+    <string name="months_days">Days you moved</string>
+    <string name="months_minutes">Minutes</string>
+    <string name="months_earlier">The month before</string>
+    <string name="months_later">The month after</string>
+    <string name="months_why">One month on its own. Nothing here adds a month to the one before it.</string>
+    <string name="months_none">A month appears here once you have moved in one.</string>
+    <!-- The year only when it is not this one, so two Augusts are told apart. -->
+    <string name="months_with_year">%1$s %2$s</string>
+    <plurals name="months_spoken">
+        <item quantity="one">%2$s. One day you moved.</item>
+        <item quantity="other">%2$s. %1$d days you moved.</item>
+    </plurals>
+
+    <!--
+      Your list, from You. The same items Progress shows, here so they can be
+      changed and taken off. Taking one off leaves everything already said about it
+      where it is, which is what makes it safe to do.
+    -->
+    <string name="your_list_row">Your list</string>
+    <string name="your_list_sub">The things you said you\'d like to be able to do</string>
+    <string name="your_list_empty">Nothing on it yet.</string>
+    <string name="your_item_title">In your words</string>
+    <string name="your_item_save">Save it</string>
+    <string name="your_item_remove">Take it off your list</string>
+    <string name="your_item_remove_why">It comes off the list and the app stops asking about it. Everything you already said about it stays where it is.</string>
+
+    <!-- The voice, from You. ADDENDUM-03 Part 1 asks for it in both places. -->
+    <string name="settings_audio">The voice in a session</string>
+    <string name="settings_audio_sub">Leads a session out loud, so the phone can go face down. The same switch is at the top of a session.</string>
+
+    <!--
+      About. COMPLIANCE.md and PRIVACY.md write these sentences and nothing here is
+      new: the standing position is load bearing and re-wording it is how it drifts.
+    -->
+    <string name="about_row">About</string>
+    <string name="about_row_sub">What this is, what it is not, and the licence</string>
+    <string name="about_title">About</string>
+    <string name="about_what">Steady Health keeps a record of what your body can do, and what changes it. Four abilities: getting up, going, carrying, and staying steady. You say what you would like to be able to do, in your own words, and the app keeps track of those things.</string>
+    <string name="about_not_heading">What it is not</string>
+    <string name="about_not">Steady is not a medical device and does not diagnose, treat, cure, or prevent any medical condition. It keeps a record and it leads a session. It never says what a number means for you, and it never advises for or against what a clinician told you. Talk to a healthcare professional for medical advice.</string>
+    <string name="about_version">Version %1$s</string>
+    <!--
+      Lint reads a version number beside a noun as a count waiting to become a
+      plural. A licence is named, not counted, and the same note is on the model
+      credits for the same reason.
+    -->
+    <string name="about_licence" tools:ignore="PluralsCandidate">Free and open source under the AGPL-3.0 licence. The source code is the proof of everything here.</string>
+    <string name="about_made_with">Made with</string>
+    <string name="about_made_with_body" tools:ignore="PluralsCandidate">Figtree, under the SIL Open Font Licence. Phosphor icons, under the MIT licence. Material 3 and Vico, under the Apache 2.0 licence. The full text of each ships with the source.</string>
+    <string name="about_contact">hello@kamsiob.com</string>
+
+    <!--
+      The privacy policy, inside the app, because PRIVACY.md promises it is
+      published here as well as at its address. It is the hosted document\'s own
+      words, shortened only where a sentence named something this app calls
+      something else.
+    -->
+    <string name="about_privacy">What the app does with your information</string>
+    <string name="about_privacy_sub">The whole privacy policy, in the app</string>
+    <string name="privacy_title">Your information</string>
+    <string name="privacy_effective">Effective September 6, 2026.</string>
+    <string name="privacy_lede">Steady Health stores everything on your phone and nothing anywhere else.</string>
+    <string name="privacy_collects_heading">What the app collects</string>
+    <string name="privacy_collects">Nothing. Steady has no account, no server, no analytics, and no advertising. What you enter is written to an encrypted database on your device and never leaves it unless you export it yourself.</string>
+    <string name="privacy_never_heading">What the app never does</string>
+    <string name="privacy_never">It never sends your data anywhere. It never sells or shares anything, because it has nothing to sell or share. It never reads anything on your phone outside its own storage. It never contacts a server of ours, because there isn\'t one.</string>
+    <string name="privacy_optional_heading">Optional, and only when you turn it on</string>
+    <string name="privacy_optional">The reader the app can add is a model file downloaded once from a stated source, when you choose to add it. After the download it runs entirely on your phone. Nothing you enter is sent during it or after it.</string>
+    <string name="privacy_permissions_heading">Permissions</string>
+    <string name="privacy_permissions">Steady asks for a permission only at the moment a feature needs it, and says why in the request. Activity recognition for counting steps during a walk. Camera for counting repetitions during a check, and for Sunday photos if you use them. When the camera counts repetitions the picture is looked at as it happens and never saved. Location only if you start a walk with distance on. You can say no to any of them and the app keeps working without that feature.</string>
+    <string name="privacy_yours_heading">Your data is yours</string>
+    <string name="privacy_yours">Export everything at any time as ordinary files: spreadsheets, your photos, and a one-page summary. Delete everything at any time. Deletion is immediate and there is no copy anywhere else to delete.</string>
+    <string name="privacy_children">Steady Health is for adults and is not directed at anyone under eighteen.</string>
+    <string name="privacy_changes">If this ever changes, the new version and its date are published inside the app and at the same address as this one. The app will never begin collecting data as a change to this policy; that would be a different app.</string>
 
 </resources>

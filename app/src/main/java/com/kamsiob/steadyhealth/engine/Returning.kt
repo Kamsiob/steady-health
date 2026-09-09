@@ -14,12 +14,21 @@ sealed interface Returning {
      * [askAgain] is the ninety day rule: the capability questions are re-run
      * before any step is suggested, because a year-old answer about stairs is not
      * an answer about today.
+     *
+     * [askTheWayAgain] is the other half of that, and a separate question with a
+     * separate answer: how somebody gets around is the one setting that decides
+     * which library, which measures and which sentences exist, and half a year is
+     * long enough for it to have changed in either direction. LOGIC.md 3b re-asks
+     * it after a gap over ninety days; ADDENDUM-03 Part 15 re-runs O2 after sixty,
+     * which is the same rule said stricter, so sixty is what this uses. Asking is
+     * all it is: the previous answer is filled in and one tap keeps it.
      */
     data class AfterAGap(
         val days: Int,
         val stepsBack: Int,
         val easingUntilDay: Long?,
         val askAgain: Boolean,
+        val askTheWayAgain: Boolean,
     ) : Returning
 }
 
@@ -45,6 +54,15 @@ object ReturningEngine {
     /** After this long the capability questions are asked again. */
     const val ASK_AGAIN_DAYS = 90
 
+    /**
+     * After this long, how somebody gets around is asked again as well.
+     *
+     * ADDENDUM-03 Part 15 and LOGIC.md 15b: a gap of sixty days or more re-runs O2
+     * and O3 with the previous answers filled in. Nothing is changed for them and
+     * nothing is lost by keeping the same answer; the app simply stops assuming.
+     */
+    const val ASK_THE_WAY_AGAIN_DAYS = 60
+
     fun decide(lastSessionDay: Long?, today: Long): Returning {
         val gap = (today - (lastSessionDay ?: return Returning.Ordinary)).toInt()
         if (gap < SHORT_GAP_DAYS) return Returning.Ordinary
@@ -54,6 +72,7 @@ object ReturningEngine {
             stepsBack = if (long) 2 else 1,
             easingUntilDay = if (long) today + EASING_DAYS else null,
             askAgain = gap >= ASK_AGAIN_DAYS,
+            askTheWayAgain = gap >= ASK_THE_WAY_AGAIN_DAYS,
         )
     }
 }

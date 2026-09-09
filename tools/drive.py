@@ -99,15 +99,30 @@ class Device:
         return None
 
     def _switchHere(self, text):
+        """The nearest thing to a switch row carrying [text], and its state.
+
+        The row is looked for by what it STARTS with, not by what it contains. A
+        scrolling list has a parent that carries every row's words joined together
+        and its own checked attribute, so a contains-match finds the list rather
+        than the row and reports whatever the list happens to say. That is how a
+        gate came to believe a setting was off while the app was showing it on.
+
+        Where several nodes still match, the shortest wins, which is the row itself
+        rather than anything wrapped around it.
+        """
         raw = self._adb("exec-out", "uiautomator", "dump", "/dev/tty")
+        best = None
         for node in raw.split("<node")[1:]:
-            words = re.findall(r'(?:text|content-desc)="([^"]*)"', node)
-            if not any(text.lower() in word.lower() for word in words if word):
+            words = [w for w in re.findall(r'(?:text|content-desc)="([^"]*)"', node) if w]
+            match = next((w for w in words if w.lower().startswith(text.lower())), None)
+            if match is None:
                 continue
             state = re.search(r'checked="(true|false)"', node)
-            if state:
-                return state.group(1) == "true"
-        return None
+            if state is None:
+                continue
+            if best is None or len(match) < best[0]:
+                best = (len(match), state.group(1) == "true")
+        return best[1] if best else None
 
     def scan(self, sweeps=6):
         """Every piece of text on a screen, including what is below the fold.

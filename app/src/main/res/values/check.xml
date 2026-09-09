@@ -35,7 +35,13 @@
 
     <string name="check_by_motion">The phone is counting from its motion sensor.</string>
     <string name="check_by_hand">Tap once each time.</string>
-    <string name="check_by_clock">Tap stop when you put your foot down.</string>
+    <!--
+      The clock measures are one foot and the four stances on feet, sitting
+      unsupported in a wheelchair, and the towel squeeze in bed. Each one's own
+      line already says what stopping means, so this says only that the clock is
+      running rather than telling three of the four to put a foot down.
+    -->
+    <string name="check_by_clock">The clock is running until you tap stop.</string>
 
     <!-- One line each, from LOGIC.md section 8 and research/03 Part 5. -->
     <string name="measure_chair_stand_30">Chair stands</string>

@@ -8,26 +8,61 @@ import java.util.zip.ZipOutputStream
 /** One spreadsheet: its file name and its rows, the first of which is the header. */
 data class Sheet(val name: String, val rows: List<List<String>>)
 
+/** One file in the zip that is already text, written in as it is. */
+data class TextFile(val name: String, val text: String)
+
 /**
  * Everything the person has, as ordinary files.
  *
  * PRIVACY.md promises this in those words: "Export everything at any time from
  * Settings as ordinary files: spreadsheets, your photos, and a one-page summary."
- * So it is CSV and PDF in a zip, openable by anything, rather than a format only
- * this app can read. An export somebody cannot open is not an export.
+ * So it is CSV, JPEG and PDF in a zip, openable by anything, rather than a format
+ * only this app can read. An export somebody cannot open is not an export, and a
+ * photograph that comes out only as Base64 inside the backup is not a photograph.
+ *
+ * One more file goes in beside them, the backup, which is the same data in the
+ * shape this app can read back. The spreadsheets are for a person and are lossy on
+ * purpose: they format the dates, leave out the ids that join one table to
+ * another, and flatten the tags into a column. Nothing could be rebuilt from them.
+ * Keeping both in one zip means somebody who kept their export can open it and can
+ * also put it back, without having had to know in advance which of those they were
+ * going to want.
  *
  * Nothing is transmitted. The zip is written into the app's own cache and handed
  * to the share sheet, and the person decides where it goes.
  */
 object DataExport {
 
-    fun write(context: Context, sheets: List<Sheet>, extras: List<File>, name: String): File {
+    fun write(
+        context: Context,
+        sheets: List<Sheet>,
+        extras: List<File>,
+        name: String,
+        files: List<TextFile> = emptyList(),
+        pictures: List<Picture> = emptyList(),
+    ): File {
         val dir = File(context.cacheDir, "shared").apply { mkdirs() }
         val file = File(dir, name)
         ZipOutputStream(file.outputStream().buffered()).use { zip ->
             sheets.forEach { sheet ->
                 zip.putNextEntry(ZipEntry("${sheet.name}.csv"))
                 zip.write(csv(sheet.rows).toByteArray())
+                zip.closeEntry()
+            }
+            // Straight from memory into the zip, never onto the disk on the way. The
+            // backup holds everything the database holds, and a second unencrypted
+            // copy of it sitting in the cache afterwards is not something this app
+            // should leave behind.
+            files.forEach { text ->
+                zip.putNextEntry(ZipEntry(text.name))
+                zip.write(text.text.toByteArray())
+                zip.closeEntry()
+            }
+            // The scanned pages, under the names the paperwork sheet printed for
+            // them, so a row and its photograph are found together.
+            pictures.forEach { picture ->
+                zip.putNextEntry(ZipEntry(picture.name))
+                zip.write(picture.bytes)
                 zip.closeEntry()
             }
             extras.forEach { extra ->

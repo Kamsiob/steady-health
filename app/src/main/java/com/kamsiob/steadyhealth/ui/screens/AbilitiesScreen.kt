@@ -54,6 +54,13 @@ data class TrackedItemState(
 data class AbilitiesUiState(
     val abilities: List<AbilityRowState> = emptyList(),
     val items: List<TrackedItemState> = emptyList(),
+
+    /**
+     * True until the first monthly check has happened, and false ever after.
+     *
+     * It draws the one sentence that says why the list has no numbers beside it yet.
+     * Once there has been a check the sentence is not true any more, so it goes.
+     */
     val waiting: Boolean = true,
 
     /**
@@ -89,6 +96,21 @@ data class AbilitiesUiState(
      * check and the bed check never ask for.
      */
     val checkLede: String = "",
+
+    /**
+     * Whether weighing in is switched on. MASTER_SPEC 6.1, ADDENDUM-03 Part 18.
+     *
+     * Weight is never on Today and never has a tab. Part 20 gives it a way in here
+     * and here only, and it is the last thing on the screen because it is one of the
+     * levers rather than the point.
+     */
+    val weighsIn: Boolean = false,
+
+    /** True once a therapist's plan exists, which is the only time the page means anything. */
+    val hasPlan: Boolean = false,
+
+    /** True once there is a month with something in it to look back at. */
+    val hasMonths: Boolean = false,
 )
 
 /** The first month card, already worded. Part 16, the second warm place. */
@@ -105,15 +127,23 @@ data class FirstMonthCard(val heading: String, val line: String)
 data class WeekBar(val done: Int, val wanted: Int, val spoken: String, val label: String = "")
 
 /**
- * Abilities, from the grid, screen 8. The tab that replaced History.
+ * Progress, from the grid's screen 8, carrying what ADDENDUM-03 Part 20 says it does.
  *
- * Four rows, each with its life sentence and its state, then the person's own
- * list underneath. Same is drawn exactly as Better is drawn: same type, same
- * size, same weight, and only the pill colour differs, because holding a number
- * for a year is the work rather than the absence of it.
+ * The order is Part 20's order and the order is the argument. What you said you want
+ * comes first, because it is the reason any of this is happening. Then what changed,
+ * then the weeks, then the look back, then a month, then the numbers, then weight if
+ * it is on, then the things somebody might have come here to do.
+ *
+ * Same is drawn exactly as Better is drawn: same type, same size, same weight, and
+ * only the pill colour differs, because holding a number for a year is the work
+ * rather than the absence of it.
+ *
+ * Everything at the bottom is unbadged and unannounced. A card, a month, a page for
+ * an appointment and one more thing you would like to be able to do are all things
+ * somebody comes looking for rather than things the app should ask them about.
  */
 @Composable
-@Suppress("LongParameterList") // One screen, one callback for each thing on it.
+@Suppress("LongParameterList", "LongMethod") // One screen, one callback for each thing on it.
 fun AbilitiesScreen(
     state: AbilitiesUiState,
     onAbility: (AbilityDomain) -> Unit,
@@ -121,7 +151,11 @@ fun AbilitiesScreen(
     onSummary: () -> Unit,
     onTry: () -> Unit,
     onCard: () -> Unit,
-    onPlaces: () -> Unit,
+    onMonths: () -> Unit,
+    onAdd: () -> Unit,
+    onWeight: () -> Unit,
+    onWeighIn: () -> Unit,
+    onTherapistPage: () -> Unit,
     modifier: Modifier = Modifier,
     tryOffer: Boolean = false,
     tryResult: Boolean = false,
@@ -133,28 +167,31 @@ fun AbilitiesScreen(
             color = SteadyPalette.Navy,
         )
 
-        // ADDENDUM-03 Part 10. Four bars, each its own week, with nothing joining them.
-        if (state.weeks.isNotEmpty()) {
-            SectionTitle(stringResource(R.string.weeks_title))
-            Row(
-                modifier = Modifier.fillMaxWidth().height(BAR_AREA),
-                horizontalArrangement = Arrangement.spacedBy(SteadySpacing.ListGap),
-                verticalAlignment = Alignment.Bottom,
-            ) {
-                state.weeks.forEach { week -> WeekColumn(week, Modifier.weight(1f)) }
-            }
-            Paragraph(state.weeksSaid)
-        }
-
-        // Above the abilities and above the look back, because for the fortnight
-        // it exists it is the thing worth reading first, and after that it is gone.
+        // Above everything, because for the fortnight it exists it is the thing worth
+        // reading first, and after that it is gone.
         state.firstMonth?.let { card ->
             NoteBlock(heading = card.heading, text = card.line)
         }
 
-        state.lookBack?.let {
-            SectionTitle(stringResource(R.string.look_back_title))
-            NoteBlock(it)
+        if (state.items.isNotEmpty()) {
+            SectionTitle(stringResource(R.string.abilities_your_list))
+            state.items.forEach { item ->
+                ListItem(
+                    heading = item.text,
+                    // The rating is what the person said, reported back to them,
+                    // so it is one of the figures that becomes a word. NumbersOff
+                    // says why at length. Blank until the first check has asked.
+                    subtitle = item.said.takeIf { it.isNotBlank() },
+                    tileTint = tintFor(item.domain),
+                    glyph = { AbilityGlyph(item.domain) },
+                    value = null,
+                )
+            }
+
+            // Directly under the list it is about. It used to sit nine blocks lower,
+            // where it read as a sentence about the weeks above it rather than about
+            // the rows with nothing yet under them.
+            if (state.waiting) Paragraph(stringResource(R.string.abilities_waiting))
         }
 
         state.abilities.forEach { ability ->
@@ -168,6 +205,8 @@ fun AbilitiesScreen(
                 glyph = { AbilityGlyph(ability.domain) },
             )
         }
+
+        LookingBack(state = state, onMonths = onMonths)
 
         // Only when there is something to say. Never announced, never badged: an
         // app that nags somebody about an optional experiment has misunderstood
@@ -185,7 +224,7 @@ fun AbilitiesScreen(
 
         ListItem(
             heading = stringResource(R.string.check_title),
-            subtitle = state.checkLede,
+            subtitle = state.checkLede.takeIf { it.isNotBlank() },
             onClick = onCheck,
         )
 
@@ -203,40 +242,111 @@ fun AbilitiesScreen(
             state.week.forEach { paragraph -> Paragraph(paragraph) }
         }
 
-        if (state.items.isNotEmpty()) {
-            SectionTitle(stringResource(R.string.abilities_your_list))
-            state.items.forEach { item ->
-                ListItem(
-                    heading = item.text,
-                    // The rating is what the person said, reported back to them,
-                    // so it is one of the figures that becomes a word. NumbersOff
-                    // says why at length.
-                    subtitle = item.said,
-                    tileTint = tintFor(item.domain),
-                    glyph = { AbilityGlyph(item.domain) },
-                    value = null,
-                )
-            }
-        }
+        ProgressDoors(
+            state = state,
+            onWeight = onWeight,
+            onWeighIn = onWeighIn,
+            onCard = onCard,
+            onAdd = onAdd,
+            onTherapistPage = onTherapistPage,
+        )
+    }
+}
 
-        if (state.waiting) {
-            Paragraph(stringResource(R.string.abilities_waiting))
+/**
+ * The three ways of looking back, in the order Part 20 lists them.
+ *
+ * The four weeks, then the look back card, then a way into one month. Its own
+ * composable because they belong together and because the screen that holds them
+ * carries eleven other things.
+ *
+ * Nothing joins any of them to any other. The four bars are four weeks with no line
+ * between them, the look back card is one comparison the person's own history
+ * already contains, and a month is a month.
+ */
+@Composable
+private fun LookingBack(state: AbilitiesUiState, onMonths: () -> Unit) {
+    // ADDENDUM-03 Part 10. Four bars, each its own week, with nothing joining them.
+    if (state.weeks.isNotEmpty()) {
+        SectionTitle(stringResource(R.string.weeks_title))
+        Row(
+            modifier = Modifier.fillMaxWidth().height(BAR_AREA),
+            horizontalArrangement = Arrangement.spacedBy(SteadySpacing.ListGap),
+            verticalAlignment = Alignment.Bottom,
+        ) {
+            state.weeks.forEach { week -> WeekColumn(week, Modifier.weight(1f)) }
         }
+        Paragraph(state.weeksSaid)
+    }
 
-        // Both of these live at the bottom, unbadged and unannounced. Part 11 says
-        // the card is offered once at the second Sunday review and lives in Progress
-        // afterwards, and Part 8 says the walkthrough is optional and off by default.
-        // Neither is a thing the app should ask anybody about twice.
+    state.lookBack?.let {
+        SectionTitle(stringResource(R.string.look_back_title))
+        NoteBlock(it)
+    }
+
+    // Only once there is a month with something in it. Part 20 asks for the months,
+    // and a month with nothing in it is not one.
+    if (state.hasMonths) {
         ListItem(
-            heading = stringResource(R.string.card_title),
-            subtitle = stringResource(R.string.card_offer_sub),
-            onClick = onCard,
+            heading = stringResource(R.string.months_row),
+            subtitle = stringResource(R.string.months_row_sub),
+            onClick = onMonths,
+        )
+    }
+}
+
+/**
+ * What can be done from Progress, at the bottom, unbadged and unannounced.
+ *
+ * Its own composable because two of the five only exist sometimes and because the
+ * screen above them is already every section Part 20 names. Nothing here is counted
+ * and nothing is offered twice: each is something somebody comes looking for rather
+ * than something the app should ask them about.
+ */
+@Composable
+private fun ProgressDoors(
+    state: AbilitiesUiState,
+    onWeight: () -> Unit,
+    onWeighIn: () -> Unit,
+    onCard: () -> Unit,
+    onAdd: () -> Unit,
+    onTherapistPage: () -> Unit,
+) {
+    // Weight, and only when it is switched on. MASTER_SPEC 6.1 keeps it off Today
+    // and out of the tabs; Part 20 gives it this one way in. Weighing in is beside
+    // the page rather than inside it, because writing a number down and reading the
+    // line back are two different errands.
+    if (state.weighsIn) {
+        ListItem(
+            heading = stringResource(R.string.weight_page_title),
+            subtitle = stringResource(R.string.settings_weigh_in_sub),
+            onClick = onWeight,
         )
         ListItem(
-            heading = stringResource(R.string.places_offer),
-            subtitle = stringResource(R.string.places_offer_sub),
-            onClick = onPlaces,
+            heading = stringResource(R.string.today_weigh_in),
+            subtitle = stringResource(R.string.today_weigh_sub),
+            onClick = onWeighIn,
         )
+    }
+
+    ListItem(
+        heading = stringResource(R.string.card_title),
+        subtitle = stringResource(R.string.card_offer_sub),
+        onClick = onCard,
+    )
+
+    // Part 18 makes the first job reusable: the same question setup asks, asked
+    // again whenever somebody wants something else kept track of.
+    ListItem(
+        heading = stringResource(R.string.progress_add),
+        subtitle = stringResource(R.string.progress_add_sub),
+        onClick = onAdd,
+    )
+
+    // Only once there is a plan. A row offering to make a page about a plan nobody
+    // has is a row that does nothing.
+    if (state.hasPlan) {
+        ListItem(heading = stringResource(R.string.plan_export), onClick = onTherapistPage)
     }
 }
 

@@ -55,20 +55,26 @@ import com.kamsiob.steadyhealth.ui.scan.ScanScreen
 import com.kamsiob.steadyhealth.ui.scan.ScanViewModel
 import com.kamsiob.steadyhealth.ui.screens.AbilitiesScreen
 import com.kamsiob.steadyhealth.ui.screens.AbilityDetailScreen
+import com.kamsiob.steadyhealth.ui.screens.AboutScreen
+import com.kamsiob.steadyhealth.ui.screens.AddSomethingScreen
 import com.kamsiob.steadyhealth.ui.screens.AskScreen
 import com.kamsiob.steadyhealth.ui.screens.CardScreen
 import com.kamsiob.steadyhealth.ui.screens.CheckDoneScreen
 import com.kamsiob.steadyhealth.ui.screens.CheckIntroScreen
 import com.kamsiob.steadyhealth.ui.screens.CheckMeasureScreen
-import com.kamsiob.steadyhealth.ui.screens.DataScreen
+import com.kamsiob.steadyhealth.ui.screens.DataRoute
 import com.kamsiob.steadyhealth.ui.screens.GettingAroundScreen
+import com.kamsiob.steadyhealth.ui.screens.KitScreen
 import com.kamsiob.steadyhealth.ui.screens.LeaveOutSettingsScreen
 import com.kamsiob.steadyhealth.ui.screens.LogPastScreen
+import com.kamsiob.steadyhealth.ui.screens.MonthsScreen
 import com.kamsiob.steadyhealth.ui.screens.OfferScreen
 import com.kamsiob.steadyhealth.ui.screens.PacingScreen
 import com.kamsiob.steadyhealth.ui.screens.PastSessionScreen
 import com.kamsiob.steadyhealth.ui.screens.PatternScreen
 import com.kamsiob.steadyhealth.ui.screens.PlacesScreen
+import com.kamsiob.steadyhealth.ui.screens.PlansScreen
+import com.kamsiob.steadyhealth.ui.screens.PrivacyScreen
 import com.kamsiob.steadyhealth.ui.screens.QuieterScreen
 import com.kamsiob.steadyhealth.ui.screens.RateAgainScreen
 import com.kamsiob.steadyhealth.ui.screens.RemindersScreen
@@ -85,6 +91,8 @@ import com.kamsiob.steadyhealth.ui.screens.WalkDoneScreen
 import com.kamsiob.steadyhealth.ui.screens.WalkingScreen
 import com.kamsiob.steadyhealth.ui.screens.WeighInScreen
 import com.kamsiob.steadyhealth.ui.screens.WeightPageScreen
+import com.kamsiob.steadyhealth.ui.screens.YourItemScreen
+import com.kamsiob.steadyhealth.ui.screens.YourListScreen
 import com.kamsiob.steadyhealth.ui.session.PhoneFreeScreen
 import com.kamsiob.steadyhealth.ui.session.SessionHost
 import com.kamsiob.steadyhealth.ui.session.SessionViewModel
@@ -196,7 +204,6 @@ private fun Tabs(
                             modelsViewModel = modelsViewModel,
                             therapistPageViewModel = therapistPageViewModel,
                             cardViewModel = cardViewModel,
-                            placesViewModel = placesViewModel,
                             navController = navController,
                         )
                     }
@@ -233,6 +240,14 @@ private fun Tabs(
                     summaryRoutes(summaryViewModel, back)
                     tryRoutes(tryViewModel, back)
                     sessionRoutes(sessionViewModel, back)
+
+                    youRoutes(
+                        viewModel = settingsViewModel,
+                        steadyViewModel = viewModel,
+                        therapistPageViewModel = therapistPageViewModel,
+                        navController = navController,
+                        back = back,
+                    )
 
                     settingsRoutes(
                         viewModel = settingsViewModel,
@@ -424,7 +439,6 @@ private fun TabBody(
     modelsViewModel: ModelsViewModel,
     therapistPageViewModel: TherapistPageViewModel,
     cardViewModel: CardViewModel,
-    placesViewModel: PlacesViewModel,
     navController: NavHostController,
 ) {
     when (tab) {
@@ -564,10 +578,20 @@ private fun TabBody(
                     cardViewModel.open(CardKind.Blank, "")
                     navController.navigate(Route.SEND_CARD)
                 },
-                onPlaces = {
-                    placesViewModel.open()
-                    navController.navigate(Route.PLACES)
+                onMonths = {
+                    viewModel.openMonths()
+                    navController.navigate(Route.MONTHS)
                 },
+                onAdd = { navController.navigate(Route.ADD_ITEM) },
+                onWeight = {
+                    abilityViewModel.openWeight()
+                    navController.navigate(Route.WEIGHT)
+                },
+                onWeighIn = {
+                    viewModel.openWeighIn()
+                    navController.navigate(Route.WEIGH_IN)
+                },
+                onTherapistPage = therapistPageViewModel::share,
             )
         }
     }
@@ -1062,7 +1086,124 @@ private fun settingsActions(
         navController.navigate(Route.MODELS)
     },
     onExtras = viewModel::setExtras,
+    onList = {
+        viewModel.openList()
+        navController.navigate(Route.YOUR_LIST)
+    },
+    onKit = {
+        viewModel.openKit()
+        navController.navigate(Route.KIT)
+    },
+    onPlans = {
+        viewModel.openPlans()
+        navController.navigate(Route.PLANS)
+    },
+    // ADDENDUM-03 Part 20 moves the walkthrough here from Progress. The route
+    // opens it for itself, so this only has to be the door.
+    onPlaces = { navController.navigate(Route.PLACES) },
+    onAudio = viewModel::setAudio,
+    onAbout = { navController.navigate(Route.ABOUT) },
 )
+
+/**
+ * The screens ADDENDUM-03 Part 20 adds to You, and the two Progress shares with it.
+ *
+ * Their own builder rather than more of [settingsRoutes], because none of them is a
+ * setting: they are the person's own list, what is in their room, whose plans they
+ * are on, and what this app is. The add screen and the months are here rather than
+ * with Progress because both are reached from both tabs, and a screen with two ways
+ * in should be declared once.
+ */
+private fun NavGraphBuilder.youRoutes(
+    viewModel: SettingsViewModel,
+    steadyViewModel: SteadyViewModel,
+    therapistPageViewModel: TherapistPageViewModel,
+    navController: NavHostController,
+    back: () -> Unit,
+) {
+    composable(Route.YOUR_LIST) {
+        val state by viewModel.yourList.collectAsStateWithLifecycle()
+        LifecycleResumeEffect(Unit) {
+            viewModel.openList()
+            onPauseOrDispose { }
+        }
+        YourListScreen(
+            state = state,
+            onOpen = {
+                viewModel.openItem(it)
+                navController.navigate(Route.YOUR_ITEM)
+            },
+            onAdd = { navController.navigate(Route.ADD_ITEM) },
+            onBack = back,
+        )
+    }
+
+    composable(Route.YOUR_ITEM) {
+        val state by viewModel.yourList.collectAsStateWithLifecycle()
+        YourItemScreen(
+            state = state,
+            onTyped = viewModel::setItemText,
+            onSave = { viewModel.saveItem(back) },
+            onRemove = { viewModel.removeItem(back) },
+            onBack = back,
+        )
+    }
+
+    composable(Route.ADD_ITEM) {
+        val state by viewModel.settings.collectAsStateWithLifecycle()
+        LaunchedEffect(Unit) { viewModel.openSettings() }
+        // Nothing until the profile is read: the six chips depend on how somebody
+        // gets around, and the wrong six for a frame is the app describing a life
+        // that is not theirs.
+        if (state.loaded) {
+            AddSomethingScreen(
+                way = state.gettingAround,
+                onAdd = { text, domain -> viewModel.addItem(text, domain) { back() } },
+                onBack = back,
+            )
+        }
+    }
+
+    composable(Route.KIT) {
+        val state by viewModel.kit.collectAsStateWithLifecycle()
+        KitScreen(
+            state = state,
+            onKit = viewModel::toggleKit,
+            onArms = viewModel::setChairArms,
+            onHeight = viewModel::setChairHeight,
+            onBack = back,
+        )
+    }
+
+    composable(Route.PLANS) {
+        val state by viewModel.plansState.collectAsStateWithLifecycle()
+        PlansScreen(
+            state = state,
+            onReviewDay = viewModel::setReviewDay,
+            onArchive = viewModel::archivePlan,
+            onExport = therapistPageViewModel::share,
+            onBack = back,
+        )
+    }
+
+    composable(Route.MONTHS) {
+        val state by steadyViewModel.months.collectAsStateWithLifecycle()
+        MonthsScreen(
+            state = state,
+            onEarlier = steadyViewModel::earlierMonth,
+            onLater = steadyViewModel::laterMonth,
+            onBack = back,
+        )
+    }
+
+    composable(Route.ABOUT) {
+        AboutScreen(onPrivacy = { navController.navigate(Route.PRIVACY) }, onBack = back)
+    }
+
+    composable(Route.PRIVACY) {
+        PrivacyScreen(onBack = back)
+    }
+}
 
 /**
  * The card and the places walkthrough. ADDENDUM-03 Parts 11 and 8.
@@ -1171,18 +1312,11 @@ private fun NavGraphBuilder.settingsRoutes(
     }
 
     composable(Route.DATA) {
-        val confirming by viewModel.confirmingDelete.collectAsStateWithLifecycle()
-        DataScreen(
-            onExport = viewModel::exportEverything,
+        DataRoute(
+            viewModel = viewModel,
             onSummary = onSummary,
-            onDelete = viewModel::askToDelete,
-            onBack = {
-                viewModel.keepEverything()
-                back()
-            },
-            confirming = confirming,
-            onConfirm = { viewModel.deleteEverything(onDeleted) },
-            onCancel = viewModel::keepEverything,
+            onDeleted = onDeleted,
+            onBack = back,
         )
     }
 

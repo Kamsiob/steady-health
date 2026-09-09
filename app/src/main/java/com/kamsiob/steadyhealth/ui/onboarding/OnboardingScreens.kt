@@ -109,6 +109,10 @@ fun HowYouGetAroundScreen(onChoose: (GettingAround) -> Unit) {
  * The sentence appears exactly as they typed it. The six chips are for anybody who
  * would rather point than type, and two of the six are about being stronger than
  * today rather than holding on to it.
+ *
+ * Which six depends on the answer to O2, one screen back. A chip is an example of
+ * something worth wanting, and a list of them that assumes two feet tells everybody
+ * else that the app was written for somebody who is not them.
  */
 @Composable
 fun TheirWordsScreen(
@@ -157,7 +161,7 @@ fun TheirWordsScreen(
             horizontalArrangement = Arrangement.spacedBy(SteadySpacing.ListGap),
             verticalArrangement = Arrangement.spacedBy(SteadySpacing.ListGap),
         ) {
-            Starters.all.forEach { starter ->
+            Starters.forWay(state.gettingAround).forEach { starter ->
                 val label = stringResource(starterLabel(starter.id))
                 TagPill(
                     label = label,
@@ -246,7 +250,7 @@ fun AfterTheSessionScreen(
             )
         }
 
-        SectionTitle(stringResource(R.string.o5_chair))
+        SectionTitle(stringResource(chairQuestion(state.gettingAround)))
         ChairAnswer.entries.forEach { answer ->
             ListItem(
                 heading = stringResource(chairLabel(answer)),
@@ -257,17 +261,48 @@ fun AfterTheSessionScreen(
     }
 }
 
+/** Which chair is being asked about, which depends on what it is for. */
+private fun chairQuestion(way: GettingAround?) = when (way) {
+    GettingAround.Wheelchair, GettingAround.InBed -> R.string.o5_chair_transfer
+    else -> R.string.o5_chair
+}
+
 private fun chairLabel(answer: ChairAnswer) = when (answer) {
     ChairAnswer.Sturdy -> R.string.o5_chair_yes
     ChairAnswer.WithArms -> R.string.o5_chair_arms
     ChairAnswer.None -> R.string.o5_chair_no
 }
 
-private fun starterLabel(id: String) = when (id) {
-    "floor" -> R.string.o3_chip_floor
-    "stairs" -> R.string.o3_chip_stairs
-    "shopping" -> R.string.o3_chip_shopping
-    "grandkids" -> R.string.o3_chip_grandkids
-    "further" -> R.string.o3_chip_further
-    else -> R.string.o3_chip_stronger
-}
+/**
+ * The words on each chip, by id.
+ *
+ * A map rather than a `when`, because fifteen branches is fifteen branches and this
+ * one is a table with nothing to decide.
+ */
+private val STARTER_LABELS = mapOf(
+    "floor" to R.string.o3_chip_floor,
+    "stairs" to R.string.o3_chip_stairs,
+    "shopping" to R.string.o3_chip_shopping,
+    "grandkids" to R.string.o3_chip_grandkids,
+    "further" to R.string.o3_chip_further,
+    "transfer" to R.string.o3_chip_transfer,
+    "block" to R.string.o3_chip_block,
+    "lap" to R.string.o3_chip_lap,
+    "further_wheel" to R.string.o3_chip_further_wheel,
+    "sit_up" to R.string.o3_chip_sit_up,
+    "chair_back" to R.string.o3_chip_chair_back,
+    "cup" to R.string.o3_chip_cup,
+    "breath" to R.string.o3_chip_breath,
+    "edge" to R.string.o3_chip_edge,
+    "stronger" to R.string.o3_chip_stronger,
+)
+
+/**
+ * The words on one chip, by id.
+ *
+ * Internal rather than private because ADDENDUM-03 Part 18 makes this question
+ * reusable from Progress, and the second place has to offer the same six chips with
+ * the same words. Two lists of starter labels would read as two different questions
+ * within a fortnight of one of them being edited.
+ */
+internal fun starterLabel(id: String) = STARTER_LABELS[id] ?: R.string.o3_chip_stronger

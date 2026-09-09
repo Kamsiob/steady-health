@@ -64,6 +64,12 @@
     <!-- How the two plans sit beside each other on Today. -->
     <string name="plan_from">From your %1$s</string>
     <string name="plan_them">therapist</string>
+    <!--
+      The eyebrow once a second therapist has given them one. With one plan the card
+      says whose it is; with two it cannot, so each plan carries its own name inside
+      and this only says what the card is.
+    -->
+    <string name="plan_yours">Your plans</string>
     <plurals name="plan_how_many">
         <item quantity="one">One movement</item>
         <item quantity="other">%1$d movements</item>
@@ -84,6 +90,50 @@
     <string name="plan_review_soon">You see your %1$s on %2$s. Your page is ready.</string>
     <string name="plan_export">Make the page for your appointment</string>
 
+    <!--
+      The four ways in. ADDENDUM-03 Part 6. The camera is first because it is the
+      one most people will use and the one that also handles a letter, which is
+      Part 5's job and not this one. The other three are a plan and nothing else,
+      and all four end on the confirmation screen above.
+    -->
+    <string name="ways_title">What have you got?</string>
+    <string name="ways_intro">Photograph anything on paper. The other three are for your therapist\'s plan.</string>
+    <string name="ways_camera">Something on paper</string>
+    <string name="ways_camera_sub">A sheet, a letter, anything printed</string>
+    <string name="ways_say">Say it out loud</string>
+    <string name="ways_say_sub">What they asked you to do</string>
+    <string name="ways_pick">Pick from the library</string>
+    <string name="ways_pick_sub">Tap the movements they named</string>
+    <string name="ways_type">Type it</string>
+    <string name="ways_type_sub">One movement to a line</string>
+
+    <!-- Typing it. The plainest way in, and the one the other two fall back to. -->
+    <string name="type_title">Type their plan</string>
+    <string name="type_how">One movement to a line, in their words.</string>
+    <string name="type_hint">10 chair stands twice a day</string>
+
+    <!-- Picking it off the library. Nothing is guessed: they tapped the movement. -->
+    <string name="pick_title">Pick from the library</string>
+    <string name="pick_how">Tap everything they asked you to do.</string>
+
+    <!--
+      Saying it out loud. The words are made on this phone or not at all: the only
+      other way Android does this sends the sound to a server.
+    -->
+    <string name="spoken_title">Say it out loud</string>
+    <string name="spoken_how">Say the whole thing in one go, in their words.</string>
+    <string name="spoken_example">Like ten chair stands twice a day and heel raises.</string>
+    <string name="spoken_stays_here">Your voice becomes words here, on this phone, and nothing is sent anywhere.</string>
+    <string name="spoken_start">Start talking</string>
+    <string name="spoken_listening">Listening</string>
+    <string name="spoken_stop">That\'s all of it</string>
+    <string name="spoken_heard">Here is what the app heard.</string>
+    <string name="spoken_again">Say it again</string>
+    <string name="spoken_nothing">Nothing came through that time. Try again, or type it instead.</string>
+    <string name="spoken_not_here">This phone can only do that by sending your voice away, so the app will not.</string>
+    <string name="spoken_needs_mic">The app needs the microphone to hear you. Nothing else uses it.</string>
+    <string name="spoken_allow">Allow the microphone</string>
+
     <!-- Everything photographed, kept forever. -->
     <string name="documents_title">Your documents</string>
     <string name="documents_sub">Everything you have photographed, kept here</string>
@@ -91,5 +141,18 @@
     <string name="documents_from">From %1$s</string>
     <string name="documents_open">Open</string>
     <string name="documents_remove">Remove this document</string>
+
+    <!--
+      Every plan somebody has, with its own date. ADDENDUM-03 Part 6 says plans
+      coexist, each labelled and each separate, so this screen shows all of them
+      rather than the first one and a guess about the rest.
+    -->
+    <string name="plans_row">Your therapist and review date</string>
+    <string name="plans_row_sub">The plans you have, and when you next go in</string>
+    <string name="plans_title">Your therapist</string>
+    <string name="plans_why">Each plan stays as the person who gave it to you set it. The app keeps track of it and changes nothing in it.</string>
+    <string name="plans_none">Nothing here yet. Anything your therapist gives you can be added from Scan something.</string>
+    <string name="plans_away">Put this plan away</string>
+    <string name="plans_away_why">It stops being offered. What you already did from it stays in your history, and so does the page for your appointment.</string>
 
 </resources>

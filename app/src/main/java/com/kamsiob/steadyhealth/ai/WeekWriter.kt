@@ -40,8 +40,16 @@ object WeekWriter {
         return parts.joinToString(" ")
     }
 
+    /**
+     * How many days had a session in them.
+     *
+     * The empty week is stated and not characterised. "You did not get out this
+     * week" assumed a front door somebody went through, which is not what a session
+     * is in three of the four versions of the app, and it read as a note about
+     * somebody's failure to leave the house.
+     */
     private fun daysLine(brief: WeekBrief): String = when {
-        brief.daysMoved == 0 -> "You did not get out this week."
+        brief.daysMoved == 0 -> "No sessions this week."
         brief.minutes == null -> "You moved on ${days(brief.daysMoved)}."
         else -> "You moved on ${days(brief.daysMoved)}, ${brief.minutes} minutes in all."
     }

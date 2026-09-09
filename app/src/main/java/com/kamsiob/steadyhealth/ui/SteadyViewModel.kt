@@ -55,6 +55,8 @@ import com.kamsiob.steadyhealth.ui.screens.AbilityRowState
 import com.kamsiob.steadyhealth.ui.screens.AbilityTileState
 import com.kamsiob.steadyhealth.ui.screens.BringBack
 import com.kamsiob.steadyhealth.ui.screens.FirstMonthCard
+import com.kamsiob.steadyhealth.ui.screens.MonthPicture
+import com.kamsiob.steadyhealth.ui.screens.MonthsUiState
 import com.kamsiob.steadyhealth.ui.screens.MoveItem
 import com.kamsiob.steadyhealth.ui.screens.MoveUiState
 import com.kamsiob.steadyhealth.ui.screens.OfferUiState
@@ -74,6 +76,7 @@ import kotlinx.coroutines.launch
 import java.time.DayOfWeek
 import java.time.LocalDate
 import java.time.LocalTime
+import java.time.YearMonth
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
@@ -904,9 +907,6 @@ class SteadyViewModel(application: Application) : AndroidViewModel(application) 
     private suspend fun refreshAbilities() {
         val context = getApplication<Application>()
         val items = abilities.items()
-        val ratings = items.mapNotNull { item ->
-            abilities.latestRating(item.id)?.let { item to it.rating }
-        }
 
         val results = checks.results()
         val measured = checks.latestValues()
@@ -927,22 +927,112 @@ class SteadyViewModel(application: Application) : AndroidViewModel(application) 
                     state = AbilityEngine.stateOf(domain, results),
                 )
             },
-            items = ratings.map { (item, rating) ->
+            // Every item, rated or not. It used to be only the rated ones, which
+            // meant something added today did not appear until the first monthly
+            // check a month later, and Part 18 makes adding one a thing somebody
+            // does whenever. A list that swallows what was just put on it is worse
+            // than one with a row that has nothing under it yet.
+            items = items.map { item ->
+                val rating = abilities.latestRating(item.id)?.rating
                 TrackedItemState(
                     text = item.text,
                     domain = AbilityDomain.fromId(item.domain) ?: AbilityDomain.GetUp,
-                    rating = rating,
-                    said = ratingSaid(item.id, rating, numbersOn),
+                    rating = rating ?: 0,
+                    said = rating?.let { ratingSaid(item.id, it, numbersOn) }.orEmpty(),
                 )
             },
-            waiting = true,
+            // Only until the first check has happened. The sentence says the first
+            // check is a month away, and a screen that goes on saying that after the
+            // check is done is telling somebody their own history has not started.
+            waiting = results.isEmpty(),
             week = weekNote(),
             weeks = cards.weekBars(numbersOn),
             weeksSaid = cards.weeksSaid(),
             lookBack = cards.lookBackLine(),
             firstMonth = firstMonthCard(),
             checkLede = string(checkLede()),
+            // The same two answers Today asks, in the same order. Somebody mostly in
+            // bed is not weighing themselves daily, and Progress offering the two
+            // weight rows to them anyway would be the one screen in the app that had
+            // not been told how they get around.
+            weighsIn = way.weighsIn && profile.weighsIn(),
+            hasPlan = PlanRepository(db).live().isNotEmpty(),
+            hasMonths = countedSessions().isNotEmpty(),
         )
+    }
+
+    /**
+     * Every session long enough to be one, ever.
+     *
+     * The threshold is the one the visit summary counts by, so a dot on the months
+     * screen and a day in that document mean the same thing rather than nearly the
+     * same thing.
+     */
+    private suspend fun countedSessions() = movement
+        .sessionsBetween(0, today())
+        .filter { it.durationSeconds >= Ladders.COUNTS_AS_A_SESSION_SECONDS }
+
+    // --- The months ----------------------------------------------------------
+
+    private val _months = MutableStateFlow(MonthsUiState())
+
+    /** Every month with something in it, and which one is on the screen. */
+    val months: StateFlow<MonthsUiState> = _months.asStateFlow()
+
+    /**
+     * The months, built from the sessions themselves. ADDENDUM-03 Part 20.
+     *
+     * Only months with something in them, oldest first, opening on the last of them,
+     * which is the one somebody came to look at. Nothing is carried from one month to
+     * the next: each is counted from its own rows and there is no total across them.
+     *
+     * The year is on the name only when it is not this year. Two Augusts a year apart
+     * are two different pictures and a screen that calls both of them August is a
+     * screen somebody can be looking at the wrong one of without knowing.
+     */
+    fun openMonths() = viewModelScope.launch {
+        val context = getApplication<Application>()
+        val numbersOn = profile.showNumbers()
+        val thisYear = LocalDate.now(ZoneId.systemDefault()).year
+        val byMonth = countedSessions()
+            .groupBy { YearMonth.from(LocalDate.ofEpochDay(it.epochDay)) }
+        val pictures = byMonth.keys.sorted().map { month ->
+            val rows = byMonth.getValue(month)
+            val days = rows.map { LocalDate.ofEpochDay(it.epochDay).dayOfMonth }.toSet()
+            val plain = month.month.getDisplayName(TextStyle.FULL, Locale.getDefault())
+            val name = if (month.year == thisYear) {
+                plain
+            } else {
+                string(R.string.months_with_year, plain, month.year.toString())
+            }
+            MonthPicture(
+                name = name,
+                moved = (1..month.lengthOfMonth()).map { it in days },
+                // Blank with numbers off, and the picture is then the whole screen.
+                // A direction word in their place would have to be a direction
+                // against the month before, which is the one thing this cannot say.
+                daysMoved = if (numbersOn) days.size.toString() else "",
+                minutes = if (numbersOn) minutesOf(rows.sumOf { it.durationSeconds }) else "",
+                spoken = context.resources.getQuantityString(
+                    R.plurals.months_spoken,
+                    days.size,
+                    days.size,
+                    name,
+                ),
+            )
+        }
+        _months.value = MonthsUiState(
+            months = pictures,
+            at = pictures.lastIndex.coerceAtLeast(0),
+        )
+    }
+
+    private fun minutesOf(seconds: Int) = (seconds / SECONDS_PER_MINUTE).toString()
+
+    fun earlierMonth() = _months.update { it.copy(at = (it.at - 1).coerceAtLeast(0)) }
+
+    fun laterMonth() = _months.update {
+        it.copy(at = (it.at + 1).coerceAtMost(it.months.lastIndex.coerceAtLeast(0)))
     }
 
     /**

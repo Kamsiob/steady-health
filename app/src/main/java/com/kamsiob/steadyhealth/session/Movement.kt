@@ -94,8 +94,16 @@ data class Movement(
     val ceiling: Int? = null,
     val easier: String? = null,
     val harder: String? = null,
-    /** The ways of getting around this movement makes sense for. */
-    val ways: Set<GettingAround> = setOf(GettingAround.OnFeet, GettingAround.Walker),
+    /**
+     * The ways of getting around this movement makes sense for.
+     *
+     * No default on purpose. It once fell back to on feet and with a walker, which
+     * meant a movement written for somebody sitting down was tagged for somebody
+     * standing up unless whoever added it remembered, and several were. The compiler
+     * asking the question of every new movement is the only check that cannot be
+     * forgotten.
+     */
+    val ways: Set<GettingAround>,
     /** Anything the person left out that hides this movement. */
     val excludedBy: Set<Exclusion> = emptySet(),
     /** Roughly how long one set takes, for planning a four to eight minute session. */

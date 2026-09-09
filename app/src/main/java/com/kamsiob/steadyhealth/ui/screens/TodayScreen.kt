@@ -157,6 +157,7 @@ fun TodayScreen(
     onGo: () -> Unit,
     onSomethingSmall: () -> Unit,
     onWithoutThePhone: () -> Unit,
+    onExtras: () -> Unit,
     onBringBack: (Boolean) -> Unit,
     onSunday: () -> Unit,
     onWhyAway: (WhyAway) -> Unit,
@@ -201,6 +202,7 @@ fun TodayScreen(
                 onGo = onGo,
                 onSomethingSmall = onSomethingSmall,
                 onWithoutThePhone = onWithoutThePhone,
+                onExtras = onExtras,
             )
         }
 

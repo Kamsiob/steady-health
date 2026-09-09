@@ -73,6 +73,17 @@ class PageKindTest {
     }
 
     @Test
+    fun aFormWrittenInShorthandWithNoSentencesOnItIsStillAReport() {
+        // The other half of the letterhead rule, and the thing that rule used to cost.
+        // Prose is one way a page shows somebody wrote it and the shorthand is the
+        // other, and there is not a full stop anywhere on this one.
+        val kind = PageKind.of(EVALUATION_FORM)
+        assertWithMessage("signals were ${kind.signals}")
+            .that(kind)
+            .isInstanceOf(PageKind.ReportOrLetter::class.java)
+    }
+
+    @Test
     fun anAppointmentCardIsUnclear() {
         assertThat(PageKind.of(APPOINTMENT_CARD)).isInstanceOf(PageKind.Unclear::class.java)
     }
@@ -353,6 +364,23 @@ class PageKindTest {
             - Wall slides, 3 sets of 10, twice a day
             - Shoulder flexion with a resistance band, 2 sets of 12, each side
             - Pendulum swings, hold for 30 seconds, 3 times per day
+        """.trimIndent()
+
+        /**
+         * A re-evaluation, in the shape most of a therapy file is actually in: field
+         * names down the left, shorthand down the right, and nobody writing sentences
+         * to anybody.
+         */
+        val EVALUATION_FORM = """
+            Fenwick Physiotherapy
+            Re-evaluation, visit 8
+            Date seen: 6 May 2026
+
+            AROM right shoulder: 0 to 140        MMT: 4/5 throughout
+            Gait: independent with a stick outdoors
+            Transfers: independent
+            ADLs: independent except overhead reaching
+            Plan: 4 more visits, HEP updated
         """.trimIndent()
 
         val APPOINTMENT_CARD = """

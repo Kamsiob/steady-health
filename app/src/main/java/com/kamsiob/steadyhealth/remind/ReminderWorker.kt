@@ -186,6 +186,7 @@ class ReminderWorker(
                 today = today,
                 lastSessionDay = runs.lastSessionDay(),
                 strengthRunLength = runs.strengthRunLength(),
+                pacingMinutes = if (profile.pacing()) profile.envelope().minutes else null,
             ),
         )
         val first = plan.main.firstOrNull()?.movement?.name ?: return null

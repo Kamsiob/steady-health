@@ -7,6 +7,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import com.kamsiob.steadyhealth.R
+import com.kamsiob.steadyhealth.backup.BackupRead
+import com.kamsiob.steadyhealth.backup.RestoreStep
 import com.kamsiob.steadyhealth.domain.Exclusion
 import com.kamsiob.steadyhealth.domain.GettingAround
 import com.kamsiob.steadyhealth.domain.PemAnswer
@@ -53,6 +55,18 @@ data class SettingsUiState(
     val hasPlan: Boolean = false,
     val extras: Boolean = true,
     val dailyOn: Boolean = true,
+    /** Whether a session speaks. ADDENDUM-03 Part 1 puts the switch here as well. */
+    val audio: Boolean = true,
+    /**
+     * True once the profile has actually been read.
+     *
+     * Every other value here has a sensible default, which is exactly the problem
+     * for the ones a screen branches on. Adding something to the list offers six
+     * chips chosen by how somebody gets around, and the default is on two feet, so
+     * a screen drawn before the read finishes shows a wheelchair user a list of
+     * things to want that are not theirs and then swaps them a frame later.
+     */
+    val loaded: Boolean = false,
 )
 
 /**
@@ -80,17 +94,29 @@ data class SettingsActions(
     val onExtras: (Boolean) -> Unit,
     val onDocuments: () -> Unit,
     val onModels: () -> Unit,
+    val onList: () -> Unit,
+    val onKit: () -> Unit,
+    val onPlans: () -> Unit,
+    val onPlaces: () -> Unit,
+    val onAudio: (Boolean) -> Unit,
+    val onAbout: () -> Unit,
 )
 
 /**
- * Settings, from grid screen 22.
+ * You, from grid screen 22, in the order ADDENDUM-03 Part 20 sets out.
  *
- * How you get around is the first row because it decides which version of the app
- * this is, and it is the one thing here that changes what every other screen
- * says. Nothing on this screen is behind a confirmation, because everything on it
- * is reversible by tapping it again.
+ * The order is the argument. Your own list is first, because a tab called You opens
+ * on the person's own words rather than on a switch. Then the four answers that
+ * decide what the app offers at all: how you get around, what is in the room,
+ * anything to leave out, and whose plan you are on. Then the things the app holds
+ * for you, then the ways it can speak to you, then your data and what this is.
+ *
+ * Nothing on this screen is behind a confirmation, because everything on it is
+ * reversible by tapping it again. The three rows that only exist sometimes say so in
+ * their own comments; a row that would open a screen with nothing on it is not shown.
  */
 @Composable
+@Suppress("LongMethod") // One list of rows, in the order Part 20 names them.
 fun SettingsScreen(
     state: SettingsUiState,
     actions: SettingsActions,
@@ -107,10 +133,55 @@ fun SettingsScreen(
         help = Place.Settings,
     ) {
         ListItem(
+            heading = stringResource(R.string.your_list_row),
+            subtitle = stringResource(R.string.your_list_sub),
+            onClick = actions.onList,
+        )
+
+        ListItem(
             heading = stringResource(R.string.settings_getting_around),
             subtitle = state.gettingAroundLabel,
             onClick = actions.onGettingAround,
         )
+
+        ListItem(
+            heading = stringResource(R.string.kit_row),
+            subtitle = stringResource(R.string.kit_row_sub),
+            onClick = actions.onKit,
+        )
+
+        ListItem(
+            heading = stringResource(R.string.settings_leave_out),
+            subtitle = state.exclusionsLabel,
+            onClick = actions.onExclusions,
+        )
+
+        SwitchRow(
+            label = stringResource(R.string.settings_therapist),
+            subtitle = stringResource(R.string.settings_therapist_sub),
+            checked = state.withTherapist,
+            onChange = actions.onTherapist,
+        )
+
+        // The plans and their dates, once there is a plan. A row offering to show
+        // somebody the plans they have when they have none is a row that opens an
+        // apology, and the way in to a first plan is Scan something, three rows down.
+        if (state.hasPlan) {
+            ListItem(
+                heading = stringResource(R.string.plans_row),
+                subtitle = stringResource(R.string.plans_row_sub),
+                onClick = actions.onPlans,
+            )
+
+            // Set once and changeable, which is what makes it a choice rather than a
+            // number the app decided for somebody.
+            SwitchRow(
+                label = stringResource(R.string.settings_extras),
+                subtitle = stringResource(R.string.settings_extras_sub),
+                checked = state.extras,
+                onChange = actions.onExtras,
+            )
+        }
 
         ListItem(
             heading = stringResource(R.string.scan_something),
@@ -130,24 +201,27 @@ fun SettingsScreen(
             onClick = actions.onModels,
         )
 
-        // Asking a question moved here when the help dot took the top right corner of
-        // every screen. Two question marks on Today was one too many.
+        // ADDENDUM-03 Part 20 moves this here from the bottom of Progress. It is a
+        // thing about the rooms somebody lives in rather than about what changed.
         ListItem(
-            heading = stringResource(R.string.ask_title),
-            subtitle = stringResource(R.string.settings_ask_sub),
-            onClick = actions.onAsk,
+            heading = stringResource(R.string.places_offer),
+            subtitle = stringResource(R.string.places_offer_sub),
+            onClick = actions.onPlaces,
         )
 
-        // Set once and changeable, which is what makes it a choice rather than a
-        // number the app decided for somebody.
-        if (state.hasPlan) {
-            SwitchRow(
-                label = stringResource(R.string.settings_extras),
-                subtitle = stringResource(R.string.settings_extras_sub),
-                checked = state.extras,
-                onChange = actions.onExtras,
-            )
-        }
+        ListItem(
+            heading = stringResource(R.string.settings_reminders),
+            subtitle = if (state.remindersOn.isEmpty()) {
+                stringResource(R.string.settings_reminders_off)
+            } else {
+                pluralStringResource(
+                    R.plurals.settings_reminders_left,
+                    state.remindersLeft,
+                    state.remindersLeft,
+                )
+            },
+            onClick = actions.onReminders,
+        )
 
         SwitchRow(
             label = stringResource(R.string.settings_daily),
@@ -157,19 +231,30 @@ fun SettingsScreen(
         )
         if (state.dailyGaveUp) NoteBlock(stringResource(R.string.settings_daily_off))
 
+        // The second half of ADDENDUM-03 Part 1's "on by default, speaker toggle in
+        // the session top bar and in You". One setting behind both switches, so
+        // turning it off mid session is still off tomorrow.
+        SwitchRow(
+            label = stringResource(R.string.settings_audio),
+            subtitle = stringResource(R.string.settings_audio_sub),
+            checked = state.audio,
+            onChange = actions.onAudio,
+        )
+
+        // Asking a question moved here when the help dot took the top right corner of
+        // every screen. Two question marks on Today was one too many.
+        ListItem(
+            heading = stringResource(R.string.ask_title),
+            subtitle = stringResource(R.string.settings_ask_sub),
+            onClick = actions.onAsk,
+        )
+
         SectionTitle(stringResource(R.string.settings_week))
         Paragraph(stringResource(R.string.settings_week_sub))
         ThreeUpChoice(
             options = Week.CHOICES.map { stringResource(R.string.week_choice, it) },
             selectedIndex = Week.CHOICES.indexOf(state.weekTarget).takeIf { it >= 0 },
             onSelect = { actions.onWeekTarget(Week.CHOICES[it]) },
-        )
-
-        SwitchRow(
-            label = stringResource(R.string.settings_therapist),
-            subtitle = stringResource(R.string.settings_therapist_sub),
-            checked = state.withTherapist,
-            onChange = actions.onTherapist,
         )
 
         SwitchRow(
@@ -194,35 +279,9 @@ fun SettingsScreen(
         )
 
         ListItem(
-            heading = stringResource(R.string.settings_leave_out),
-            subtitle = state.exclusionsLabel,
-            onClick = actions.onExclusions,
-        )
-
-        ListItem(
             heading = stringResource(R.string.settings_pattern),
             subtitle = state.pemLabel,
             onClick = actions.onPattern,
-        )
-
-        ListItem(
-            heading = stringResource(R.string.settings_reminders),
-            subtitle = if (state.remindersOn.isEmpty()) {
-                stringResource(R.string.settings_reminders_off)
-            } else {
-                pluralStringResource(
-                    R.plurals.settings_reminders_left,
-                    state.remindersLeft,
-                    state.remindersLeft,
-                )
-            },
-            onClick = actions.onReminders,
-        )
-
-        ListItem(
-            heading = stringResource(R.string.data_title),
-            subtitle = stringResource(R.string.data_row),
-            onClick = actions.onData,
         )
 
         if (state.pacing) {
@@ -237,6 +296,18 @@ fun SettingsScreen(
                 onClick = actions.onPacing,
             )
         }
+
+        ListItem(
+            heading = stringResource(R.string.data_title),
+            subtitle = stringResource(R.string.data_row),
+            onClick = actions.onData,
+        )
+
+        ListItem(
+            heading = stringResource(R.string.about_row),
+            subtitle = stringResource(R.string.about_row_sub),
+            onClick = actions.onAbout,
+        )
     }
 }
 
@@ -375,26 +446,34 @@ fun RemindersScreen(
 }
 
 /**
- * Your data: everything out, and everything gone.
+ * Your data: everything out, everything back, and everything gone.
  *
- * The two are on one screen because they are the same promise from two sides, and
- * because somebody who is about to delete everything should be one tap from
- * taking a copy first.
+ * The three are on one screen because they are the same promise from three sides,
+ * and because somebody who is about to replace or delete everything should be one
+ * tap from taking a copy first.
  *
- * Deleting asks once and says plainly what it means. There is no undo and the
- * screen does not pretend there might be.
+ * Both of the two that cannot be undone ask once, in the same shape: the plain
+ * sentence about what is about to happen, "keep it" under the thumb as the
+ * primary button, and the one that does the thing as the quiet one. Two
+ * destructive answers on one screen have to be asked the same way, or the shape of
+ * the question stops meaning anything.
  */
 @Composable
 fun DataScreen(
     onExport: () -> Unit,
     onSummary: () -> Unit,
+    onRestore: () -> Unit,
     onDelete: () -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
     confirming: Boolean = false,
     onConfirm: () -> Unit = {},
     onCancel: () -> Unit = {},
+    restore: RestoreStep = RestoreStep.Idle,
+    onRestoreConfirm: () -> Unit = {},
+    onRestoreCancel: () -> Unit = {},
 ) {
+    val asking = restore as? RestoreStep.Asking
     SteadyScreen(
         title = stringResource(R.string.data_title),
         onBack = onBack,
@@ -410,6 +489,16 @@ fun DataScreen(
                     onClick = onConfirm,
                 )
             }
+            if (asking != null) {
+                PrimaryButton(
+                    label = stringResource(R.string.data_restore_cancel),
+                    onClick = onRestoreCancel,
+                )
+                SecondaryButton(
+                    label = stringResource(R.string.data_restore_confirm),
+                    onClick = onRestoreConfirm,
+                )
+            }
         },
     ) {
         if (confirming) {
@@ -417,6 +506,27 @@ fun DataScreen(
             NoteBlock(stringResource(R.string.data_delete_why))
             return@SteadyScreen
         }
+
+        if (asking != null) {
+            SectionTitle(stringResource(R.string.data_restore_title))
+            NoteBlock(stringResource(R.string.data_restore_ask))
+            Paragraph(
+                stringResource(
+                    R.string.data_restore_written,
+                    asking.backup.header.writtenOn,
+                    asking.backup.header.appVersion,
+                ),
+            )
+            return@SteadyScreen
+        }
+
+        if (restore is RestoreStep.Working) {
+            SectionTitle(stringResource(R.string.data_restore_title))
+            NoteBlock(stringResource(R.string.data_restoring))
+            return@SteadyScreen
+        }
+
+        RestoreNote(restore)
 
         ListItem(
             heading = stringResource(R.string.data_summary_row),
@@ -431,11 +541,39 @@ fun DataScreen(
         )
 
         ListItem(
+            heading = stringResource(R.string.data_restore),
+            subtitle = stringResource(R.string.data_restore_why),
+            onClick = onRestore,
+        )
+
+        ListItem(
             heading = stringResource(R.string.data_delete),
             subtitle = stringResource(R.string.data_delete_why),
             onClick = onDelete,
         )
     }
+}
+
+/**
+ * What happened last time, said plainly and only once.
+ *
+ * A file the app cannot use gets a sentence about that file rather than a shrug,
+ * because "no" without a reason leaves somebody trying the same file again. Every
+ * one of these says that nothing has changed, which is the thing they actually
+ * want to know.
+ */
+@Composable
+private fun RestoreNote(step: RestoreStep) {
+    val said = when (step) {
+        is RestoreStep.Done -> R.string.data_restored
+        is RestoreStep.Refused -> when (step.why) {
+            is BackupRead.FromLater -> R.string.data_restore_later
+            is BackupRead.Damaged -> R.string.data_restore_damaged
+            else -> R.string.data_restore_not_ours
+        }
+        else -> null
+    }
+    if (said != null) NoteBlock(stringResource(said))
 }
 
 /** Anything to leave out, changed after setup. The same list as setup. */

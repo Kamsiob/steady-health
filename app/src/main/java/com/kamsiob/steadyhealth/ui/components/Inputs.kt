@@ -24,6 +24,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.kamsiob.steadyhealth.ui.theme.SteadyPalette
 import com.kamsiob.steadyhealth.ui.theme.SteadyShapes
@@ -91,8 +92,13 @@ private fun StepButton(glyph: String, spoken: String, onClick: () -> Unit) {
  *
  * Single line where the answer is a phrase, because the return key should submit
  * rather than type a line break into a field the person will not scroll.
+ *
+ * [minHeight] is the tap target for a phrase and a box several lines deep where the
+ * answer is a list. A list needs the room shown before anything is typed, because a
+ * field one line tall asks for one line however the sentence above it is worded.
  */
 @Composable
+@Suppress("LongParameterList") // One field, one option for each way it is used.
 fun TextEntry(
     value: String,
     onValue: (String) -> Unit,
@@ -100,8 +106,13 @@ fun TextEntry(
     modifier: Modifier = Modifier,
     singleLine: Boolean = true,
     imeAction: ImeAction = ImeAction.Done,
+    minHeight: Dp = SteadySpacing.TapTarget,
     onSubmit: () -> Unit = {},
 ) {
+    val align = if (singleLine) Alignment.CenterStart else Alignment.TopStart
+    // A single line field is unchanged. A box several lines deep needs room above the
+    // first line, or the text sits against the outline.
+    val inset = if (singleLine) 0.dp else SteadySpacing.ListGap
     Box(
         modifier = modifier
             .fillMaxWidth()
@@ -109,7 +120,7 @@ fun TextEntry(
             .background(SteadyPalette.White)
             .border(SteadySpacing.Outline, SteadyPalette.Sand, SteadyShapes.Card)
             .padding(horizontal = SteadySpacing.InsideTight),
-        contentAlignment = Alignment.CenterStart,
+        contentAlignment = align,
     ) {
         BasicTextField(
             value = value,
@@ -125,8 +136,10 @@ fun TextEntry(
             modifier = Modifier.fillMaxWidth(),
             decorationBox = { inner ->
                 Box(
-                    modifier = Modifier.heightIn(min = SteadySpacing.TapTarget),
-                    contentAlignment = Alignment.CenterStart,
+                    modifier = Modifier
+                        .heightIn(min = minHeight)
+                        .padding(vertical = inset),
+                    contentAlignment = align,
                 ) {
                     if (value.isEmpty()) {
                         SteadyText(text = hint, style = SteadyType.Body, color = SteadyPalette.Ink3Text)

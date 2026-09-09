@@ -1869,3 +1869,72 @@ the argument is the useful part: a number the app reports back becomes a word, a
 number that is part of doing something right now stays. The gate prints the screens it
 deliberately does not walk, with the reason for each, so that the list is a decision
 rather than an omission.
+
+## Part 20 read back clause by clause, September 9 2026
+
+Every item of ADDENDUM-03 Part 20 was checked against the code that draws it rather
+than against the report that said it was there. Thirty-six of the forty clauses hold.
+Three of the four that do not are on the Sessions tab and one is the help system.
+What follows is what was changed here and what was deliberately left.
+
+### Progress said the first check was a month away, forever
+
+`waiting` was passed as a literal `true`. The sentence under the list, "Your first
+check is after a month. Until then this is what you told the app you wanted", is true
+on day one and false the day after the first check, and it was being drawn for the
+life of the app. It is now `results.isEmpty()`, which is the same question asked of
+the checks themselves.
+
+It also moved. It sat nine blocks below the list it is about, under the four week
+bars, where it read as a sentence about the weeks rather than about rows with nothing
+yet beside them. An explanation belongs against the thing it explains.
+
+### Progress offered weight to somebody in bed
+
+Today asks two things before it shows anything about weight: whether this way of
+getting around weighs in at all, and whether the person has it switched on. Progress
+asked only the second, so the bed version of the app, which turns weighing off because
+a daily weight is not part of that picture, still carried both weight rows. Progress
+now asks the same two questions in the same order.
+
+Changing how you get around no longer switches weighing back **on**, either. It could
+turn it off, which is right, and it also turned it on when somebody moved back to on
+feet, which quietly undid a switch they had set themselves. A way of getting around
+can take weighing away and can never hand it back.
+
+### What was found and not fixed here, and why
+
+Four things are true findings in files this pass did not own, and each is written out
+in full in the handover rather than half-changed here:
+
+- **Sessions has no "Change it".** `session_change` exists in `session.xml` and
+  nothing uses it. Part 20 and DESIGN.md 5b both put it beside Start on the offer, and
+  there is no screen behind it: the three things that do change a session today are
+  the extras link, "Got a minute?" and doing it without the phone, all on the card
+  already. It needs a decision about what a fourth one would do, not a row.
+- **The library has no "Try this now"** and `sessions_try_this` is likewise unused.
+  Tapping a row starts that movement immediately, while the sentence above the list
+  says "tap any of these to read it, or start it on its own", and there is no page to
+  read. The promise and the behaviour have to be made the same, either way round.
+- **Sessions is in the wrong order**: the card, then history, then the scan and the
+  log rows, then the library last. Part 20 puts the library directly under the card
+  and history below it, which is the same argument Progress follows: the things
+  somebody might do come before the things they have done, and history grows forever
+  while the library does not.
+- **The weight page is still offered from an ability page** whether or not weighing in
+  is on, and the setting itself still defaults to **on** while Part 18 and MASTER_SPEC
+  6.1 both say off.
+
+### The help dot, which is one job and not thirteen
+
+DESIGN.md 4b puts a dot on every screen and a sand block on every screen's first open.
+Six screens of about sixty pass a `Place` to `SteadyScreen`, and those six are the
+four tabs, the rest screen inside a session, and the dead Move screen. Every other
+screen explains itself with a permanent paragraph instead of a dismissible one, except
+the count in and the live set, which explain nothing and should not: they are the two
+screens somebody is looking at while standing up out of a chair.
+
+Six more topics were not written here. "The same place, the same size, always" is the
+whole of what L2 promises, and a dot on eleven screens of sixty keeps that promise
+less well than a dot on four tabs does. It is one pass over every screen, with the
+copy written for each, or it is nothing.

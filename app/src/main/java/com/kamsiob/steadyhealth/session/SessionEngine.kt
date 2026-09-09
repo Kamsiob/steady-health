@@ -42,7 +42,8 @@ data class SessionPlan(
     /** The abilities this session feeds, for the one line under the name. */
     val feeds: List<AbilityDomain> = emptyList(),
 ) {
-    val seconds: Int get() = steps.sumOf { it.movement.seconds } + REST * (steps.size - 1)
+    val seconds: Int get() =
+        steps.sumOf { it.movement.seconds } + REST * (steps.size - 1).coerceAtLeast(0)
     val minutes: Int get() = ((seconds + HALF_A_MINUTE) / SECONDS_PER_MINUTE).coerceAtLeast(1)
     val main: List<Step> get() = steps.filter { it.movement.piece == Piece.Main }
     val hasWarmUp: Boolean get() = steps.any { it.movement.piece == Piece.WarmUp }
@@ -77,6 +78,17 @@ data class SessionInputs(
     val wantSmall: Boolean = false,
     /** Two weeks of easier sessions after "I was unwell". */
     val rampingAfterUnwell: Boolean = false,
+    /**
+     * The envelope from pacing mode, in minutes, or null when pacing mode is off.
+     *
+     * LOGIC.md section 7 is explicit that in pacing mode nothing increases and the
+     * app only ever suggests staying at or below a number the person set for
+     * themselves. Both halves of that are the engine's to keep: a session planned to
+     * eight minutes for somebody who said five is the app overriding them, and one
+     * more rep because the last two felt easy is graded exercise, which is the thing
+     * pacing mode exists to not be.
+     */
+    val pacingMinutes: Int? = null,
 )
 
 /**
@@ -99,6 +111,14 @@ object SessionEngine {
 
     /** A session over this many minutes ends with a cool down. */
     const val COOL_DOWN_OVER_MINUTES = 5
+
+    /**
+     * The longest a session ever comes to. ADDENDUM-03 Part 1: four to eight minutes.
+     *
+     * Held by choosing movements that fit rather than by cutting a session short, so
+     * nobody is ever offered something the app then takes away from them.
+     */
+    const val LONGEST_MINUTES = 8
 
     /** Rated hard: targets come down by about this much. */
     const val LIGHTER = 0.10
@@ -125,21 +145,25 @@ object SessionEngine {
         if (easyDayDue(inputs)) return easyDay(available, inputs)
 
         // Both thresholds are read against what the session will actually come to,
-        // not against the middle of it. Deciding the cool down from the body alone
-        // produced sessions over five minutes with no cool down in them, which is the
-        // rule saying one thing and the plan doing another.
-        val chosen = chooseMain(available, inputs)
+        // not against the middle of it. The warm up is decided from the body, and the
+        // cool down from the finished session, because the cool down is part of what
+        // makes a session longer than five minutes. Reading it against the opening
+        // alone left seven minute sessions ending on the last hard movement.
+        val lastDone = lastDoneByMovement(inputs)
+        val chosen = chooseMain(available, inputs, lastDone)
         val body = chosen.map { step(it, inputs) }
-        val warmUp = warmUp(available)
+        val warmUp = warmUp(available, lastDone)
             ?.takeIf { seconds(body) > WARM_UP_OVER_MINUTES * SECONDS_PER_MINUTE }
             ?.let { step(it, inputs) }
         val opening = listOfNotNull(warmUp) + body
-        val cool = if (seconds(opening) > COOL_DOWN_OVER_MINUTES * SECONDS_PER_MINUTE) {
-            coolDown(available).map { step(it, inputs) }
+        val cool = coolDown(available, lastDone).map { step(it, inputs) }
+        val whole = seconds(opening + cool)
+        val room = longestMinutes(inputs) * SECONDS_PER_MINUTE
+        val steps = if (whole > COOL_DOWN_OVER_MINUTES * SECONDS_PER_MINUTE && whole <= room) {
+            opening + cool
         } else {
-            emptyList()
+            opening
         }
-        val steps = opening + cool
         return SessionPlan(
             steps = steps,
             adaptation = adaptation(inputs, chosen),
@@ -157,10 +181,35 @@ object SessionEngine {
     fun easyDayDue(inputs: SessionInputs): Boolean =
         inputs.lastFelt == Felt.Hard || inputs.strengthRunLength >= STRENGTH_RUN_BEFORE_EASY
 
+    /**
+     * Two to three minutes of mobility, breathing or a short walk. LOGIC.md 15.
+     *
+     * Least recently done first, like the rest of a session, because an easy day that
+     * is the same two warm ups every time is the part people learn to skip. Breathing
+     * counts as well as walking: reading only the walks left somebody in bed, who has
+     * no walk, with warm ups and nothing else, and left everybody's easy day at eighty
+     * seconds rather than the two to three minutes it is meant to be.
+     *
+     * It stops when the run is long enough rather than after a fixed number of
+     * pieces, so three twenty second warm ups and one two minute walk both come to an
+     * easy day instead of to whatever two of them happen to add up to.
+     */
     private fun easyDay(available: List<Movement>, inputs: SessionInputs): SessionPlan {
-        val gentle = available.filter { it.piece == Piece.WarmUp } +
-            available.filter { it.piece == Piece.Main && it.counted == Counted.Minutes }
-        val steps = gentle.take(2).map { step(it, inputs) }
+        val lastDone = lastDoneByMovement(inputs)
+        val gentle = available.filter { isGentle(it) }
+            .sortedBy { lastDone[it.id] ?: Long.MIN_VALUE }
+        val enough = minOf(EASY_DAY_SECONDS, longestMinutes(inputs) * SECONDS_PER_MINUTE)
+        val chosen = mutableListOf<Movement>()
+        gentle.forEach { movement ->
+            if (runLength(chosen) < enough) chosen += movement
+        }
+        if (chosen.isEmpty()) {
+            // Everything gentle was left out, by an exclusion or by a sore area. Never
+            // a blank screen, so the lightest thing still on offer is the easy day.
+            available.filter { it.piece == Piece.Main }.minByOrNull { it.seconds }
+                ?.let { chosen += it }
+        }
+        val steps = chosen.map { step(it, inputs) }
         return SessionPlan(
             steps = steps,
             adaptation = Adaptation(
@@ -202,10 +251,18 @@ object SessionEngine {
      */
     fun stepFor(movement: Movement, inputs: SessionInputs): Step = step(movement, inputs)
 
-    /** Ninety seconds, and it counts as a session. */
+    /**
+     * Ninety seconds, and it counts as a session.
+     *
+     * Least recently done first, like everything else, because the person who presses
+     * "not today, but something small" is often the person who presses it all week.
+     */
     private fun small(available: List<Movement>, inputs: SessionInputs): SessionPlan {
-        val one = available.firstOrNull { it.piece == Piece.Main && it.seconds <= NINETY }
-            ?: available.first { it.piece == Piece.Main }
+        val lastDone = lastDoneByMovement(inputs)
+        val main = available.filter { it.piece == Piece.Main }
+        val one = main.filter { it.seconds <= NINETY }
+            .minByOrNull { lastDone[it.id] ?: Long.MIN_VALUE }
+            ?: main.first()
         return SessionPlan(
             steps = listOf(step(one, inputs)),
             adaptation = Adaptation(Adaptation.Kind.None),
@@ -217,28 +274,162 @@ object SessionEngine {
     /**
      * Which movements today.
      *
-     * One per ability where possible, so a week of sessions covers all four without
-     * anybody having to think about it, and the least recently done first so nothing
-     * is neglected. Deliberately not random: two people with the same history get the
-     * same session, and so does the same person twice, which is what makes a bug
+     * One per ability, least recently done first, so nothing is neglected and a week
+     * of sessions covers all four without anybody having to think about it. The
+     * abilities are taken least recently fed first rather than in the order the enum
+     * declares them: taking them in declaration order meant the fourth, Steady, was
+     * never reached at all, because three movements were always found before it.
+     *
+     * A movement is only taken if the session still has room for it and for what has
+     * to come after it. A session is eight minutes at most and one of these is a ten
+     * minute brisk walk, so choosing on recency alone produced sixteen minute
+     * sessions. Deliberately not random: two people with the same history get the same
+     * session, and so does the same person twice, which is what makes a bug
      * reproducible.
+     *
+     * One each is the first pass and not the whole rule. Somebody without a chair has
+     * nothing under Get up, and a sore shoulder and a sore arm together can empty
+     * Carry, and taking one per ability and stopping handed those people a two
+     * movement session while five Steady movements sat there unused. So the pass runs
+     * again over the abilities that still have something, which changes nothing on an
+     * ordinary day and keeps the session whole on a hard one.
      */
-    private fun chooseMain(available: List<Movement>, inputs: SessionInputs): List<Movement> {
+    private fun chooseMain(
+        available: List<Movement>,
+        inputs: SessionInputs,
+        lastDone: Map<String, Long>,
+    ): List<Movement> {
         val main = available.filter { it.piece == Piece.Main }
-        val lastDone = inputs.history.groupBy { it.movementId }
-            .mapValues { (_, done) -> done.maxOf { it.epochDay } }
+        val most = if (inputs.rampingAfterUnwell) MAIN_MOVEMENTS - 1 else MAIN_MOVEMENTS
+        val shortest = main.minOfOrNull { it.seconds } ?: 0
+        val wanted = howMany(available, inputs, lastDone, most, shortest)
+        val budget = mainBudget(available, inputs, lastDone, wanted)
+        val abilities = byAbility(main, inputs, lastDone)
 
+        val chosen = mutableListOf<Movement>()
+        var taken = 0
+        fun take(candidates: List<Movement>) {
+            if (chosen.size >= wanted) return
+            val room = budget - taken - shortest * (wanted - chosen.size - 1)
+            val next = candidates.firstOrNull { movement ->
+                movement.seconds <= room && chosen.none { it.id == movement.id }
+            } ?: return
+            chosen += next
+            taken += next.seconds
+        }
+
+        repeat(wanted) { abilities.forEach { candidates -> take(candidates) } }
+        if (chosen.isEmpty()) {
+            // Nothing fitted, which happens only when the room is smaller than the
+            // shortest movement there is: a one minute envelope in pacing mode. One
+            // movement over the number beats a session with nothing in it.
+            val lightest = compareBy<Movement>(
+                { it.seconds },
+                { lastDone[it.id] ?: Long.MIN_VALUE },
+            )
+            main.minWithOrNull(lightest)?.let { chosen += it }
+        }
+        return chosen
+    }
+
+    /**
+     * The abilities in the order today should feed them, each with its own movements.
+     *
+     * The ability whose movements were done longest ago comes first, and inside each
+     * one the movement done longest ago comes first, so both rotate on their own
+     * without anything having to remember whose turn it is.
+     */
+    private fun byAbility(
+        main: List<Movement>,
+        inputs: SessionInputs,
+        lastDone: Map<String, Long>,
+    ): List<List<Movement>> {
         val swapped = inputs.soreMentioned
         return AbilityDomain.entries
-            .mapNotNull { domain ->
+            .map { domain ->
                 main.filter { it.domain == domain }
                     .filter { swapped == null || it.area != swapped }
                     .map { atTheRightLevel(it, inputs) }
-                    .minByOrNull { lastDone[it.id] ?: Long.MIN_VALUE }
+                    .distinctBy { it.id }
+                    .sortedBy { lastDone[it.id] ?: Long.MIN_VALUE }
             }
-            .distinctBy { it.id }
-            .take(if (inputs.rampingAfterUnwell) MAIN_MOVEMENTS - 1 else MAIN_MOVEMENTS)
+            .filter { it.isNotEmpty() }
+            .sortedBy { candidates -> candidates.maxOf { lastDone[it.id] ?: Long.MIN_VALUE } }
     }
+
+    /**
+     * How many seconds the main movements have between them.
+     *
+     * Whatever the warm up and the cool down take is not available to the body of the
+     * session, so it is worked out before anything is chosen rather than discovered
+     * afterwards. The warm up and the cool down may still be dropped once the body is
+     * known, which only ever makes the session shorter than this allowed for.
+     */
+    private fun mainBudget(
+        available: List<Movement>,
+        inputs: SessionInputs,
+        lastDone: Map<String, Long>,
+        wanted: Int,
+    ): Int {
+        val longest = longestMinutes(inputs)
+        val warmUp = warmUp(available, lastDone)?.seconds ?: 0
+        val cool = coolDown(available, lastDone)
+        val withACoolDown = longest * SECONDS_PER_MINUTE - warmUp - cool.sumOf { it.seconds } -
+            rests(1 + cool.size + wanted)
+        val without = minOf(longest, COOL_DOWN_OVER_MINUTES) * SECONDS_PER_MINUTE -
+            warmUp - rests(1 + wanted)
+        return maxOf(withACoolDown, without)
+    }
+
+    /** The rests between a run of that many pieces. */
+    private fun rests(pieces: Int): Int = REST_BETWEEN * (pieces - 1).coerceAtLeast(0)
+
+    /**
+     * How many main movements today has room for.
+     *
+     * Three ordinarily. Fewer only in pacing mode, where the envelope can be smaller
+     * than three of anything: asking for three inside a two minute limit meant the
+     * room was smaller than the shortest movement in the library and the session came
+     * back with one thing in it, which is worse than two.
+     */
+    private fun howMany(
+        available: List<Movement>,
+        inputs: SessionInputs,
+        lastDone: Map<String, Long>,
+        most: Int,
+        shortest: Int,
+    ): Int = (most downTo 1).firstOrNull { many ->
+        shortest * many <= mainBudget(available, inputs, lastDone, many)
+    } ?: 1
+
+    /**
+     * The longest today's session may come to.
+     *
+     * Eight minutes ordinarily, and the person's own envelope in pacing mode. A
+     * session cannot both be planned to eight minutes and stay at or below the five
+     * the person set, and LOGIC.md section 7 is clear about which of those wins.
+     */
+    private fun longestMinutes(inputs: SessionInputs): Int =
+        inputs.pacingMinutes?.coerceAtLeast(1) ?: LONGEST_MINUTES
+
+    /** True in pacing mode, where nothing the app asks for is allowed to grow. */
+    private fun pacing(inputs: SessionInputs): Boolean = inputs.pacingMinutes != null
+
+    /**
+     * What an easy day is made of: mobility, breathing, or a short walk.
+     *
+     * The warm ups are the mobility and the main movements counted in minutes or in
+     * breaths are the other two. Everything else in the library is the work.
+     */
+    private fun isGentle(movement: Movement): Boolean = when (movement.piece) {
+        Piece.WarmUp -> true
+        Piece.Main -> movement.counted == Counted.Minutes || movement.counted == Counted.Taps
+        Piece.CoolDown -> false
+    }
+
+    private fun lastDoneByMovement(inputs: SessionInputs): Map<String, Long> =
+        inputs.history.groupBy { it.movementId }
+            .mapValues { (_, done) -> done.maxOf { it.epochDay } }
 
     /**
      * The variant this person is on, from the ceiling rule.
@@ -275,6 +466,7 @@ object SessionEngine {
         val adjusted = when {
             inputs.rampingAfterUnwell -> (asked * (1 - LIGHTER * 2)).roundToInt()
             inputs.lastFelt == Felt.Hard -> (asked * (1 - LIGHTER)).roundToInt()
+            pacing(inputs) -> asked
             inputs.lastFelt == Felt.Easy && inputs.feltBefore == Felt.Easy -> asked + 1
             daysAway(inputs) >= SHORTER_AFTER_DAYS -> (asked * (1 - LIGHTER)).roundToInt()
             else -> asked
@@ -315,7 +507,7 @@ object SessionEngine {
 
         inputs.lastFelt == Felt.Hard -> Adaptation(Adaptation.Kind.Lighter)
         daysAway(inputs) >= SHORTER_AFTER_DAYS -> Adaptation(Adaptation.Kind.Shorter)
-        inputs.lastFelt == Felt.Easy && inputs.feltBefore == Felt.Easy ->
+        !pacing(inputs) && inputs.lastFelt == Felt.Easy && inputs.feltBefore == Felt.Easy ->
             Adaptation(Adaptation.Kind.OneMore)
 
         else -> Adaptation(Adaptation.Kind.None)
@@ -324,15 +516,35 @@ object SessionEngine {
     private fun daysAway(inputs: SessionInputs): Long =
         inputs.lastSessionDay?.let { inputs.today - it } ?: 0
 
-    private fun warmUp(available: List<Movement>): Movement? =
-        available.firstOrNull { it.piece == Piece.WarmUp }
+    /**
+     * The warm up and the cool down rotate too.
+     *
+     * Least recently done first, the same rule the main movements follow. Taking the
+     * first one on the list meant every session for a week opened with the same thirty
+     * seconds and ended with the same two stretches, which is the part of a session
+     * people stop doing first.
+     */
+    private fun warmUp(available: List<Movement>, lastDone: Map<String, Long>): Movement? =
+        available.filter { it.piece == Piece.WarmUp }
+            .minByOrNull { lastDone[it.id] ?: Long.MIN_VALUE }
 
-    private fun coolDown(available: List<Movement>): List<Movement> =
-        available.filter { it.piece == Piece.CoolDown }.take(2)
+    private fun coolDown(available: List<Movement>, lastDone: Map<String, Long>): List<Movement> =
+        available.filter { it.piece == Piece.CoolDown }
+            .sortedBy { lastDone[it.id] ?: Long.MIN_VALUE }
+            .take(COOL_DOWN_PARTS)
 
     /** How long a run of steps takes, movements plus the rests between them. */
-    private fun seconds(steps: List<Step>): Int =
-        steps.sumOf { it.movement.seconds } + REST_BETWEEN * (steps.size - 1).coerceAtLeast(0)
+    private fun seconds(steps: List<Step>): Int = runLength(steps.map { it.movement })
+
+    /** The same, for movements that are not steps yet. */
+    private fun runLength(movements: List<Movement>): Int =
+        movements.sumOf { it.seconds } + REST_BETWEEN * (movements.size - 1).coerceAtLeast(0)
+
+    /** How many pieces a session ends with. */
+    private const val COOL_DOWN_PARTS = 2
+
+    /** How long an easy day runs to. LOGIC.md 15: two to three minutes. */
+    private const val EASY_DAY_SECONDS = 120
 
     private const val REST_BETWEEN = 30
     private const val SECONDS_PER_MINUTE = 60

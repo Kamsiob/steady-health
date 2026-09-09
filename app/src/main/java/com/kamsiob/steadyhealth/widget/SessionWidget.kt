@@ -113,6 +113,7 @@ class SessionWidget : GlanceAppWidget() {
                 today = today,
                 lastSessionDay = runs.lastSessionDay(),
                 strengthRunLength = runs.strengthRunLength(),
+                pacingMinutes = if (profile.pacing()) profile.envelope().minutes else null,
             ),
         )
         if (plan.steps.isEmpty()) {

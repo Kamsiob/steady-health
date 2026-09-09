@@ -26,12 +26,29 @@
     <string name="o3_add">Add it</string>
     <string name="o3_skip">Skip for now</string>
     <string name="o3_default">Move more easily</string>
+    <!--
+      Six chips per way of getting around, not six chips. ADDENDUM-03 Part 3 asks
+      for six that are "not all maintenance", and four of the original six only
+      make sense on two feet, so somebody in a wheelchair was being offered a list
+      of other people's lives. Each set has the same shape as the on-feet one: one
+      about getting up, three about going or keeping up, two about being stronger
+      than today. "Get stronger than I am" is in all three sets on purpose.
+    -->
     <string name="o3_chip_floor">Get off the floor</string>
     <string name="o3_chip_stairs">Stairs without stopping</string>
     <string name="o3_chip_shopping">Carry the shopping in one trip</string>
     <string name="o3_chip_grandkids">Keep up with the grandkids</string>
     <string name="o3_chip_further">Walk further than I do now</string>
     <string name="o3_chip_stronger">Get stronger than I am</string>
+    <string name="o3_chip_transfer">Transfer without help</string>
+    <string name="o3_chip_block">Get round the block</string>
+    <string name="o3_chip_lap">Carry the shopping on my lap</string>
+    <string name="o3_chip_further_wheel">Go further than I do now</string>
+    <string name="o3_chip_sit_up">Sit up on my own</string>
+    <string name="o3_chip_chair_back">Get to the chair and back</string>
+    <string name="o3_chip_cup">Hold a cup steadily</string>
+    <string name="o3_chip_breath">Get my breath back quicker</string>
+    <string name="o3_chip_edge">Sit on the edge without holding on</string>
 
     <!-- O4. The first session, which is not a question. -->
     <string name="o4_title">Here\'s something you can do right now.</string>
@@ -40,7 +57,15 @@
     <!-- O5. Three things afterwards, one tap each, all skippable. -->
     <string name="o5_avoid">Anything you avoid, or have been told not to do?</string>
     <string name="o5_avoid_nothing">Nothing</string>
+    <!--
+      Two questions, because there are two reasons to ask about a chair. On feet it
+      is the seat the chair stands are done from, which is why it asks for one
+      without arms. Sitting down already, it is the seat somebody moves across to,
+      and asking that person whether they have a chair to stand up from is the app
+      asking about a life it has already been told is not theirs.
+    -->
     <string name="o5_chair">Do you have a sturdy chair without arms?</string>
+    <string name="o5_chair_transfer">Is there a sturdy chair you could move across to?</string>
     <string name="o5_chair_yes">Yes</string>
     <string name="o5_chair_arms">Only with arms</string>
     <string name="o5_chair_no">No</string>
@@ -53,7 +78,13 @@
     <string name="says_sessions">Everything you can do, and everything you\'ve done.</string>
     <string name="says_progress">What\'s changed since you started.</string>
     <string name="says_you">Your list, your settings, and how the app works.</string>
-    <string name="says_library">Sixty or so movements. Tap any to read it, or start it now.</string>
+    <!--
+      Not a count. ADDENDUM-03 Part 4 writes this as "sixty or so movements", but
+      the library is not the same length in the four versions of the app, and a
+      number that is right for one of them tells the other three how much of it
+      they are not getting.
+    -->
+    <string name="says_library">Everything the app can ask you to do. Tap any to read it, or start it now.</string>
     <string name="says_dismiss">Got it</string>
     <string name="says_close_mark" translatable="false">\u00d7</string>
 

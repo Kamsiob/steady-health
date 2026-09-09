@@ -35,18 +35,20 @@ object PlanMatching {
     /**
      * A block of text cut into the lines a plan is made of.
      *
-     * Newlines and semicolons, list markers taken off the front, and "and" only where
-     * both halves name a movement on their own. That last rule is the whole reason
-     * this is not a one liner: "heel and toe" is a movement in the library and
-     * "morning and evening" is a frequency, so splitting on the word itself would
-     * invent items nobody wrote. Splitting only when both halves stand up on their own
-     * gets the spoken case, which is one long sentence with two movements in it.
+     * Newlines and semicolons, list markers taken off the front, then "and" and the
+     * comma, but only where every piece names a movement on its own. That last rule is
+     * the whole reason this is not a one liner: "heel and toe" is a movement in the
+     * library, "morning and evening" is a frequency, and "heel raises, 3 sets of 10"
+     * is one item with its numbers after it, so cutting on the word or the mark alone
+     * would invent items nobody wrote. Cutting only when every piece stands up on its
+     * own gets the spoken case, which is one long sentence with the movements listed
+     * inside it.
      */
     fun lines(text: String): List<String> = text
         .split('\n', ';')
         .map { LIST_MARKER.replace(it.trim(), "").trim() }
         .filter { line -> line.any(Char::isLetter) }
-        .flatMap(::splitOnAnd)
+        .flatMap(::splitRunOn)
 
     /** A block of text straight to proposals, for the spoken and the scanned way in. */
     fun readAll(text: String): List<PlanItem> = read(lines(text))
@@ -144,11 +146,11 @@ object PlanMatching {
 
     // --- Splitting -----------------------------------------------------------
 
-    private fun splitOnAnd(line: String): List<String> {
+    private fun splitRunOn(line: String): List<String> {
         // "Avoid deep squats and stairs" has to stay one line. Cut in half, the second
         // half loses the word that made it a warning and comes back as an item to do.
         if (SAID_NOT_TO.containsMatchIn(normalise(line))) return listOf(line)
-        val parts = line.split(AND).map(String::trim).filter { it.isNotBlank() }
+        val parts = line.split(RUN_ON).map(String::trim).filter { it.isNotBlank() }
         val eachStandsAlone = parts.size > 1 && parts.all { match(it).movement != null }
         return if (eachStandsAlone) parts else listOf(line)
     }
@@ -406,6 +408,11 @@ object PlanMatching {
         "warm_side_reach" to listOf("reaching side to side", "side reaches", "side bends"),
         "warm_heel_toe" to listOf("heel and toe", "heel and toe rocking"),
         "warm_seated_march" to listOf("seated marching", "sitting marching"),
+        "warm_seated_ankles" to listOf("seated ankle circles", "ankle circles sitting"),
+        "warm_arm_circles" to listOf("arm circles"),
+        "warm_easy_pushes" to listOf("easy pushes"),
+        "warm_hands" to listOf("opening and closing the hands", "opening and closing your hands"),
+        "warm_knee_rolls" to listOf("knee rolls", "knee rocking"),
         "sit_to_stand" to listOf("sit to stands", "sts", "chair stands", "chair rises"),
         "sit_to_stand_slow" to listOf("slow chair stands", "slow sit to stands"),
         "sit_to_stand_high" to listOf("stands from a high seat", "high seat stands", "high chair stands"),
@@ -420,6 +427,11 @@ object PlanMatching {
         "pressure_relief_lift" to listOf("lifts from the armrests", "pressure relief lifts", "armrest lifts"),
         "transfer_practice" to listOf("transfers", "transfer practice"),
         "sit_to_edge" to listOf("sitting up to the edge", "sit to the edge", "edge of bed sitting"),
+        "pressure_relief_lean" to listOf("leaning to one side", "side leans"),
+        "seat_shuffle" to listOf("shuffling in the seat", "seat shuffles"),
+        "bed_bridge" to listOf("bridges in bed", "bed bridges"),
+        "bed_roll" to listOf("rolling onto your side", "rolling in bed", "log rolls"),
+        "bed_to_chair" to listOf("bed to the chair", "bed to chair transfers"),
         "walk" to listOf("walk", "walking"),
         "walk_brisk" to listOf("brisk walk", "brisk walking", "fast walking"),
         "step_in_place" to listOf("stepping on the spot", "step on the spot", "stepping in place"),
@@ -427,6 +439,10 @@ object PlanMatching {
         "wheeling" to listOf("wheeling", "wheel yourself"),
         "slow_breaths" to listOf("slow breaths", "deep breaths", "breathing exercises"),
         "heel_slides" to listOf("heel slides"),
+        "wheeling_bursts" to listOf("quicker pushes", "faster pushes"),
+        "seated_punches" to listOf("punching out", "seated punches", "arm punches"),
+        "bed_marching" to listOf("marching lying down", "lying marching"),
+        "breathing_arms" to listOf("breathing with your arms", "breathing with arms"),
         "wall_push_up" to listOf("wall push ups", "wall press ups", "push ups against the wall"),
         "counter_push_up" to listOf("counter push ups", "kitchen counter push ups"),
         "incline_push_up" to listOf("incline push ups", "low incline push ups"),
@@ -435,6 +451,10 @@ object PlanMatching {
         "carry_walk" to listOf("carrying something", "farmers carry", "carrying shopping"),
         "towel_squeeze" to listOf("towel squeezes", "grip squeezes", "hand squeezes"),
         "overhead_reach" to listOf("overhead reaches", "reaching overhead", "arms overhead"),
+        "arm_press_overhead" to listOf("pressing overhead", "overhead press", "shoulder press"),
+        "palm_press" to listOf("palm press"),
+        "side_raises" to listOf("arms out to the side", "side raises", "lateral raises"),
+        "bottle_curls" to listOf("bottle curls", "arm curls", "biceps curls"),
         "feet_together" to listOf("feet together"),
         // "Semi tandem stand" has to be here whole. Half of it names one movement and
         // the other half names another, and neither half is inside the other.
@@ -447,11 +467,20 @@ object PlanMatching {
         "seated_balance" to listOf("sitting unsupported", "unsupported sitting", "seated balance"),
         "ankle_pumps" to listOf("ankle pumps"),
         "seated_rotation" to listOf("turning to look behind", "seated rotation", "trunk rotation"),
+        "seated_reach_across" to listOf("reaching across", "reaching across your body"),
+        "seated_head_turns" to listOf("looking around", "seated head turns"),
+        "seated_balance_eyes_closed" to listOf("sitting unsupported with eyes closed"),
+        "sit_unsupported_edge" to listOf("sitting on the edge", "sitting on the edge of the bed"),
+        "edge_reach" to listOf("reaching from the edge", "reaching from the edge of the bed"),
         "cool_walk" to listOf("easy walking", "gentle walking", "easy walk", "gentle walk"),
         "cool_calf_stretch" to listOf("calf stretches"),
         "cool_chest_stretch" to listOf("chest stretches", "doorway stretches"),
         "cool_seated_breathing" to listOf("sitting and breathing", "seated breathing"),
         "cool_thigh_stretch" to listOf("thigh stretches", "quad stretches", "quadriceps stretches"),
+        "cool_neck_stretch" to listOf("neck stretches", "ear to shoulder"),
+        "cool_shoulder_stretch" to listOf("shoulder stretches"),
+        "cool_easy_wheeling" to listOf("easy wheeling", "gentle wheeling"),
+        "cool_lying_still" to listOf("lying and breathing", "lying still"),
     )
 
     /**
@@ -524,7 +553,17 @@ object PlanMatching {
     )
 
     private val LIST_MARKER = Regex("""^(?:[-*•]|\d+\s*[.)])\s*""")
-    private val AND = Regex("""\s+and\s+""", RegexOption.IGNORE_CASE)
+
+    /**
+     * Where a run on sentence can be cut, if every piece of it names a movement.
+     *
+     * The comma is here for the way people say a list out loud, "chair stands, heel
+     * raises and a walk", where only the last join is a word. It is safe next to
+     * "heel raises, 10 each time" only because of the rule in [splitRunOn]: a piece
+     * that names no movement stops the whole line being cut.
+     */
+    private val RUN_ON = Regex("""\s+and\s+|\s*,\s*""", RegexOption.IGNORE_CASE)
+
     private val EACH_SIDE = Regex("""(?:each|both|per)\s+(?:side|leg|arm|hand|way)s?""")
     private val EVERY_OTHER_DAY = Regex("""every other day""")
     private val TIMES_A_DAY = Regex("""(\d+)\s*times?\s*(?:a|per|each)\s*day""")
