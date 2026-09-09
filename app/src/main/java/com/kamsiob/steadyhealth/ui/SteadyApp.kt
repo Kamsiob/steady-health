@@ -208,7 +208,15 @@ private fun Tabs(
 
                     asideRoutes(cardViewModel, placesViewModel, back)
                     askRoutes(askViewModel, navController, back)
-                    checkRoutes(checkViewModel, navController, back) {
+                    checkRoutes(
+                        viewModel = checkViewModel,
+                        navController = navController,
+                        back = back,
+                        onCard = { line ->
+                            cardViewModel.open(CardKind.Milestone, line)
+                            navController.navigate(Route.SEND_CARD)
+                        },
+                    ) {
                         summaryViewModel.open()
                         navController.navigate(Route.SUMMARY)
                     }
@@ -442,6 +450,7 @@ private fun TabBody(
                     sessionViewModel.openPhoneFree()
                     navController.navigate(Route.PHONE_FREE)
                 },
+                onExtras = viewModel::toggleExtras,
                 onBringBack = { yes ->
                     state.bringBack?.let { viewModel.bringBack(it.area, yes) }
                 },
@@ -475,6 +484,7 @@ private fun TabBody(
                     sessionViewModel.openPhoneFree()
                     navController.navigate(Route.PHONE_FREE)
                 },
+                onExtras = sessionsViewModel::toggleExtras,
                 onMovement = { id: String ->
                     sessionViewModel.startOne(id)
                     navController.navigate(Route.SESSION)
@@ -642,6 +652,7 @@ private fun NavGraphBuilder.checkRoutes(
     viewModel: CheckViewModel,
     navController: NavHostController,
     back: () -> Unit,
+    onCard: (String) -> Unit,
     onSummary: () -> Unit,
 ) {
     composable(Route.CHECK) {
@@ -694,6 +705,7 @@ private fun NavGraphBuilder.checkRoutes(
         val state by viewModel.done.collectAsStateWithLifecycle()
         CheckDoneScreen(
             state = state,
+            onCard = onCard,
             onSave = {
                 viewModel.save { quieter ->
                     if (quieter) {

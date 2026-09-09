@@ -296,6 +296,13 @@ data class CheckDoneUiState(
      * need one. It names what was done. It does not evaluate it.
      */
     val justDidIt: String = "",
+    /**
+     * The line a milestone card would start from, in the person's own voice.
+     *
+     * Separate from [justDidIt] because that one is the app talking to them and this
+     * one is them talking to somebody else, and the two are not the same sentence.
+     */
+    val cardLine: String = "",
 )
 
 /**
@@ -311,6 +318,7 @@ data class CheckDoneUiState(
 fun CheckDoneScreen(
     state: CheckDoneUiState,
     onSave: () -> Unit,
+    onCard: (String) -> Unit,
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -340,6 +348,16 @@ fun CheckDoneScreen(
         // about something they said they wanted rather than about a measurement.
         if (state.justDidIt.isNotBlank()) {
             NoteBlock(state.justDidIt, tint = SteadyPalette.Butter)
+            // Part 11 calls the milestone card "the one people will actually send",
+            // and this is the moment it exists. Offered as a row and never as a
+            // prompt: somebody who does not want to tell anybody scrolls past it.
+            if (state.cardLine.isNotBlank()) {
+                ListItem(
+                    heading = stringResource(R.string.card_offer),
+                    subtitle = stringResource(R.string.card_offer_sub),
+                    onClick = { onCard(state.cardLine) },
+                )
+            }
         }
 
         state.rows.forEach { row ->

@@ -304,6 +304,8 @@ class CheckViewModel(application: Application) : AndroidViewModel(application) {
      * named something for that ability: saying "you just did it" about a thing nobody
      * asked for is the app applauding itself.
      */
+    private var crossedThisTime = false
+
     private suspend fun justDidIt(values: Map<String, Double>): String {
         val items = abilities.items()
         return items.firstNotNullOfOrNull { item ->
@@ -315,8 +317,27 @@ class CheckViewModel(application: Application) : AndroidViewModel(application) {
                 saidAlready = emptySet(),
             ) ?: return@firstNotNullOfOrNull null
             val fresh = profile.showOnce("crossed_${'$'}{said.sentenceId}", System.currentTimeMillis())
-            if (fresh) string(R.string.just_did_it, said.itemText) else null
+            if (!fresh) return@firstNotNullOfOrNull null
+            crossedThisTime = true
+            string(R.string.just_did_it, said.itemText)
         }.orEmpty()
+    }
+
+    /**
+     * The line a milestone card starts from, or nothing.
+     *
+     * The same crossing the sentence above is about, said the way the person would
+     * say it rather than the way the app says it to them. It does not consume the
+     * once, because [justDidIt] has already done that: reading the sentence and
+     * sending a card are one occasion.
+     */
+    private suspend fun cardLine(values: Map<String, Double>): String {
+        if (_done.value.justDidIt.isBlank() && !crossedThisTime) return ""
+        val item = abilities.items().firstOrNull { item ->
+            val domain = AbilityDomain.fromId(item.domain) ?: return@firstOrNull false
+            Warmth.justDidIt(item.text, domain, values, emptySet()) != null
+        } ?: return ""
+        return string(R.string.card_milestone, item.text)
     }
 
     /**
@@ -380,6 +401,7 @@ class CheckViewModel(application: Application) : AndroidViewModel(application) {
             anySame = (rows + ratingRows).any { it.state == AbilityState.Same },
             surer = surer(statesByDomain(measured, rows)),
             justDidIt = justDidIt(values),
+            cardLine = cardLine(values),
         )
         _finished.value = true
     }
