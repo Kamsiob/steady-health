@@ -90,8 +90,26 @@ NOT_WALKED = {
 }
 
 
+# Dates are allowed wherever they appear, not only as a whole line. The summary
+# names the window it was written from ("between 11 March 2026 and 9 September
+# 2026"), which is a sentence with two dates in it and no figure about anybody.
+# So these are cut out of a line before it is looked at for digits, rather than
+# matched against the whole of it.
+DATES = [
+    re.compile(r"\b\d{1,2} \w+ \d{4}\b"),
+    re.compile(r"\b\w+ \d{1,2},? \d{4}\b"),
+    re.compile(r"\b\d{4}-\d{2}-\d{2}\b"),
+    re.compile(r"\b\d{1,2}:\d{2}\s?[ap]?m?\b", re.I),
+]
+
+
 def allowed(text):
-    return any(pattern.match(text.strip()) for pattern in ALLOWED)
+    line = text.strip()
+    if any(pattern.match(line) for pattern in ALLOWED):
+        return True
+    for pattern in DATES:
+        line = pattern.sub("", line)
+    return not DIGIT.search(line)
 
 
 def offences(screen):

@@ -276,9 +276,11 @@ class TodayCards(private val application: Application, private val db: SteadyDat
         return yours to string(R.string.want_where, name, last.result)
     }
 
-    suspend fun noticedLines(today: Long): List<String> =
-        listOfNotNull(upAndAbout(today)) +
-            Noticed.all(runs.history(), today, profile.anchorDay()).map { say(it) }
+    suspend fun noticedLines(today: Long): List<String> {
+        val numbersOn = profile.showNumbers()
+        return listOfNotNull(upAndAbout(today)) +
+            Noticed.all(runs.history(), today, profile.anchorDay()).map { say(it, numbersOn) }
+    }
 
     /**
      * The one line about the day between sessions, or nothing. Part 8 item 1.
@@ -298,7 +300,7 @@ class TodayCards(private val application: Application, private val db: SteadyDat
         return string(R.string.up_and_about)
     }
 
-    private fun say(noticed: Noticed): String =
+    private fun say(noticed: Noticed, numbersOn: Boolean = true): String =
         when (noticed) {
             is Noticed.Climbed -> string(
                 R.string.noticed_climbed,
@@ -320,7 +322,14 @@ class TodayCards(private val application: Application, private val db: SteadyDat
                 noticed.sessions,
             )
 
-            is Noticed.DayNumber -> string(R.string.noticed_day, noticed.day)
+            is Noticed.DayNumber ->
+                if (numbersOn) {
+                    string(R.string.noticed_day, noticed.day)
+                } else {
+                    // Which day it is is a count of what they have done, reported
+                    // back. NumbersOff says those become words.
+                    string(R.string.noticed_day_word)
+                }
         }
 
     /**

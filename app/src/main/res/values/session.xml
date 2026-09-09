@@ -133,6 +133,8 @@
         <item quantity="other">%1$d days with a session this week, against %2$d last week.</item>
     </plurals>
     <string name="noticed_day">Day %1$d.</string>
+    <!-- The same, with numbers off. Which day it is, without the tally. -->
+    <string name="noticed_day_word">Another day of this.</string>
 
     <!--
       What you said you want, and where you are on the way to it. ADDENDUM-03 Part 9.
