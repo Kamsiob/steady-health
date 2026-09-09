@@ -19,6 +19,7 @@ import com.kamsiob.steadyhealth.engine.Measure
 import com.kamsiob.steadyhealth.engine.MeasureUnit
 import com.kamsiob.steadyhealth.engine.Measures
 import com.kamsiob.steadyhealth.engine.SurerLine
+import com.kamsiob.steadyhealth.engine.Warmth
 import com.kamsiob.steadyhealth.sensing.Motion
 import com.kamsiob.steadyhealth.sensing.RepCounter
 import com.kamsiob.steadyhealth.ui.screens.CheckDoneUiState
@@ -295,6 +296,30 @@ class CheckViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     /**
+     * The fourth warm place, at the moment it happens. ADDENDUM-03 Part 16.
+     *
+     * A measure crossing the point where it stops being a number and starts being
+     * something somebody can do, named against the words they used for it. Said once
+     * ever, which is what the notices table is for, and only when the person actually
+     * named something for that ability: saying "you just did it" about a thing nobody
+     * asked for is the app applauding itself.
+     */
+    private suspend fun justDidIt(values: Map<String, Double>): String {
+        val items = abilities.items()
+        return items.firstNotNullOfOrNull { item ->
+            val domain = AbilityDomain.fromId(item.domain) ?: return@firstNotNullOfOrNull null
+            val said = Warmth.justDidIt(
+                itemText = item.text,
+                domain = domain,
+                values = values,
+                saidAlready = emptySet(),
+            ) ?: return@firstNotNullOfOrNull null
+            val fresh = profile.showOnce("crossed_${'$'}{said.sentenceId}", System.currentTimeMillis())
+            if (fresh) string(R.string.just_did_it, said.itemText) else null
+        }.orEmpty()
+    }
+
+    /**
      * What this month's measures said, one answer per ability.
      *
      * Quieter wins over Better within an ability, which is AbilityEngine's own rule:
@@ -354,6 +379,7 @@ class CheckViewModel(application: Application) : AndroidViewModel(application) {
             rows = rows + ratingRows,
             anySame = (rows + ratingRows).any { it.state == AbilityState.Same },
             surer = surer(statesByDomain(measured, rows)),
+            justDidIt = justDidIt(values),
         )
         _finished.value = true
     }

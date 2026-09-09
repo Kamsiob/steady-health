@@ -287,6 +287,15 @@ data class CheckDoneUiState(
      * and saying it every month about every item would spend it.
      */
     val surer: String = "",
+    /**
+     * The fourth warm place. Part 16, said once ever, per crossing.
+     *
+     * "You said you wanted to get off the floor without your hands. You just did
+     * it." Part 16 writes it with an exclamation mark and it does not have one,
+     * because DESIGN.md section 6 bans them everywhere and the sentence does not
+     * need one. It names what was done. It does not evaluate it.
+     */
+    val justDidIt: String = "",
 )
 
 /**
@@ -325,6 +334,12 @@ fun CheckDoneScreen(
                 modifier = Modifier.semantics { heading() },
             )
             if (state.wanted.isNotBlank()) Paragraph(state.wanted)
+        }
+
+        // Above the numbers, because it is the only thing on this screen that is
+        // about something they said they wanted rather than about a measurement.
+        if (state.justDidIt.isNotBlank()) {
+            NoteBlock(state.justDidIt, tint = SteadyPalette.Butter)
         }
 
         state.rows.forEach { row ->
