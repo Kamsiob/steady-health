@@ -77,14 +77,28 @@ class Device:
                     found.setdefault(word, middle)
         return found
 
-    def switch(self, text):
+    def switch(self, text, scroll=6):
         """Whether the switch on the row carrying [text] is on, or None.
 
         A switch says so in the view hierarchy, and a gate that toggles without
         looking is a gate that inverts the setting whenever a previous run was cut
         off. That happened, and it made the app look like it was ignoring the
         setting when it was the harness turning it back on.
+
+        It scrolls to find the row, for the same reason `tap` does: uiautomator only
+        reports what is drawn, and a switch further down a long screen is not there
+        as far as this is concerned. It leaves the screen where it found it, because
+        the next thing a caller does is tap the row it just read.
         """
+        for _ in range(scroll + 1):
+            state = self._switchHere(text)
+            if state is not None:
+                return state
+            self._adb("shell", "input", "swipe", "540", "1700", "540", "800", "400")
+            time.sleep(0.7)
+        return None
+
+    def _switchHere(self, text):
         raw = self._adb("exec-out", "uiautomator", "dump", "/dev/tty")
         for node in raw.split("<node")[1:]:
             words = re.findall(r'(?:text|content-desc)="([^"]*)"', node)

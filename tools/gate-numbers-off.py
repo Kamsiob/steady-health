@@ -129,13 +129,10 @@ def set_numbers(device, on):
     """
     back_to_today(device)
     device.tap("You")
-    # Scroll it into view without acting on it, so its state can be read.
-    device.scan()
     already = device.switch("Show numbers")
     if already is None:
         # Older builds kept it behind a Settings row.
         device.tap("Settings")
-        device.scan()
         already = device.switch("Show numbers")
     if already is None:
         raise NotOnScreen("the Show numbers switch is nowhere on the You tab")
