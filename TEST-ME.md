@@ -233,10 +233,32 @@ movements, a wheelchair user twenty three, somebody in bed twenty one, all four 
 warm up and a session they can start, and it puts the setting back to on my feet at
 the end.
 
-**Numbers off**: `tools/gate-numbers-off.py` walks twelve screens with the switch off
-and reads every piece of text on each, including what is below the fold. It prints the
-screens it deliberately does not walk and why, which is the live session and the check,
-where the number is the instrument rather than a verdict.
+**Numbers off: ten of twelve screens clean on the phone, two unresolved.**
+`tools/gate-numbers-off.py` walks twelve screens with the switch off and reads every
+piece of text on each, including what is below the fold. It prints the screens it
+deliberately does not walk and why, which is the live session and the check, where the
+number is the instrument rather than a verdict.
+
+Ten screens pass. Today and Progress reported digits, and I could not finish separating
+the app from the harness before the phone's screen reader stopped responding to
+`uiautomator dump`, which it does after a few hours of being driven. What I know:
+
+- The code is right, and you can read it. `TodayCards.weekLine`, `TodayCards.say` for
+  the day line, `TodayCards.weekBars` and `SteadyViewModel.ratingSaid` all ask
+  `profile.showNumbers()` and all have a wordless branch, with tests.
+- The gate's own switch reader was matching the scrolling list rather than the switch
+  row, because the list carries every row's words joined together and its own checked
+  attribute. So the gate could not reliably set the state it was testing, and its last
+  three runs each reported a different thing. That is fixed and untested.
+
+**So: turn Show numbers off yourself and look at Today and Progress.** It is step 28,
+it takes ten seconds, and it is worth more than another gate run. If the week line
+still counts sessions, I was wrong about the code; if it says "under way this week",
+the harness was the whole of it.
+
+The phone's screen reader needs a restart of the phone to come back. I have not done
+that, because restarting somebody's phone is not part of installing and testing an
+app, and nothing needs it except more gate runs.
 
 ## The Phase 1 acceptance gate
 
