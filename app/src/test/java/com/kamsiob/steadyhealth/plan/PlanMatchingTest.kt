@@ -14,8 +14,9 @@ import org.junit.Test
  * Reading a therapist's plan. ADDENDUM-03 Part 6.
  *
  * The rules worth holding are the ones about refusing. A line the app cannot read
- * comes back visibly unread, a line naming two movements comes back naming neither,
- * and a number the app cannot believe comes back as no number at all. All three cost
+ * comes back visibly unread, a line naming two movements comes back naming neither, a
+ * line saying to avoid something is never matched to the thing it names, and a number
+ * the app cannot believe comes back as no number at all. All four cost
  * the person one tap on a screen they were going to look at anyway, which is the
  * trade, because a confident wrong match on a sheet somebody was handed at a hospital
  * is not something they would ever think to check.
@@ -198,6 +199,86 @@ class PlanMatchingTest {
         val given = "Sit-to-stands (from the dining chair) x10, twice a day"
 
         assertThat(PlanMatching.readOne(given).line).isEqualTo(given)
+    }
+
+    @Test
+    fun aLineSayingNotToDoSomethingIsNeverMatchedToIt() {
+        val lines = listOf(
+            "avoid stairs",
+            "no push ups for now",
+            "do not do stairs",
+            "chair stands, never on the deep sofa",
+        )
+
+        lines.forEach { line ->
+            val item = PlanMatching.readOne(line)
+            assertWithMessage(line).that(item.movement).isNull()
+            assertWithMessage(line).that(item.sureness).isEqualTo(Sureness.Unmatched)
+        }
+    }
+
+    @Test
+    fun aLineSayingToAvoidTwoThingsIsNotCutIntoTwoThingsToDo() {
+        val items = PlanMatching.readAll("Avoid deep squats and stairs")
+
+        assertThat(items).hasSize(1)
+        assertWithMessage("cut in half, the second half loses the word that made it a warning")
+            .that(items.single().movement).isNull()
+    }
+
+    @Test
+    fun aQualifierTheTableKnowsInAnotherOrderIsAskedAboutRatherThanReadPast() {
+        val item = PlanMatching.readOne("step ups on a higher step x10")
+
+        assertThat(item.movement).isNull()
+        assertThat(item.sureness).isEqualTo(Sureness.MoreThanOne)
+        assertThat(item.couldBe.map { it.id }).containsExactly("step_up_low", "step_up_high")
+        assertWithMessage("the number on the line is still the number")
+            .that(item.howMany).isEqualTo(HowMany.Reps(10))
+    }
+
+    @Test
+    fun aNumberAnXAndAStretchOfTimeIsLeftForThePersonToSay() {
+        val item = PlanMatching.readOne("heel raises 2 x daily")
+
+        assertThat(item.movement?.id).isEqualTo("heel_raises")
+        assertWithMessage("two is either the repetitions or the times, so it is neither")
+            .that(item.howMany).isEqualTo(HowMany.Unsaid)
+        assertThat(item.howOften).isEqualTo(HowOften.Unsaid)
+    }
+
+    @Test
+    fun anArticleSettlesTheSameNotation() {
+        assertThat(PlanMatching.readOne("chair stands 2 x a day").howOften)
+            .isEqualTo(HowOften.ADay(2))
+        assertThat(PlanMatching.readOne("chair stands 3 x a week").howOften)
+            .isEqualTo(HowOften.AWeek(3))
+    }
+
+    @Test
+    fun aRateTheAppHasNoWordForIsNotReadAsRepetitions() {
+        val item = PlanMatching.readOne("chair stands 5 times an hour")
+
+        assertThat(item.movement?.id).isEqualTo("sit_to_stand")
+        assertWithMessage("five is how often, and there is nowhere to put an hour")
+            .that(item.howMany).isEqualTo(HowMany.Unsaid)
+        assertThat(item.howOften).isEqualTo(HowOften.Unsaid)
+    }
+
+    @Test
+    fun setsWrittenAfterTheNumberCountForAsMuchAsSetsWrittenBeforeIt() {
+        assertThat(PlanMatching.readOne("chair stands 8 reps 3 sets").howMany)
+            .isEqualTo(HowMany.Reps(reps = 8, sets = 3))
+        assertThat(PlanMatching.readOne("3 sets of 8 chair stands").howMany)
+            .isEqualTo(HowMany.Reps(reps = 8, sets = 3))
+    }
+
+    @Test
+    fun setsByRepsWithADayOnTheEndIsStillSetsByReps() {
+        val item = PlanMatching.readOne("3 x 10 chair stands daily")
+
+        assertThat(item.howMany).isEqualTo(HowMany.Reps(reps = 10, sets = 3))
+        assertThat(item.howOften).isEqualTo(HowOften.ADay(1))
     }
 
     // --- Cutting text into lines -------------------------------------------------

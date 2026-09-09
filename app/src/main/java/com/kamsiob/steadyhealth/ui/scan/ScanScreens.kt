@@ -167,9 +167,15 @@ fun PageFoundScreen(
             imeAction = ImeAction.Done,
         )
 
-        kind?.signals?.takeIf { it.isNotEmpty() }?.let { signals ->
-            SectionTitle(stringResource(R.string.found_saw))
-            Paragraph(signals.joinToString(", ") { it.name })
+        // Never for an out of scope page. Part 5 gives that outcome exactly one
+        // sentence and it does not name the kind of document, and the clues that
+        // fired would name it: telling somebody the app decided their page was a
+        // blood test is the app saying something about their health.
+        if (kind !is PageKind.OutOfScope) {
+            kind?.signals?.takeIf { it.isNotEmpty() }?.let { signals ->
+                SectionTitle(stringResource(R.string.found_saw))
+                Paragraph(signals.joinToString(", ") { it.name })
+            }
         }
     }
 }

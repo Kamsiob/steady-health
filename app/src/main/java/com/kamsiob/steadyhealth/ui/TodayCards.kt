@@ -128,7 +128,11 @@ class TodayCards(private val application: Application, private val db: SteadyDat
             .ifBlank { string(R.string.plan_them) }
         val both = PlanMatching.onBoth(theirs, ours)
         return SessionCardState(
-            length = string(R.string.plan_from, label),
+            // The label is the eyebrow above the card; the big line says what the plan
+            // actually is. A plan has no length the app can work out, because it does
+            // not know how long a therapist expects any of it to take and guessing
+            // would be the app adding something to somebody else's plan.
+            length = plural(R.plurals.plan_how_many, theirs.size, theirs.size),
             movements = theirs.map { it.movement?.name ?: it.line },
             doneToday = history.any { it.epochDay == today },
             theirs = string(R.string.plan_from, label),

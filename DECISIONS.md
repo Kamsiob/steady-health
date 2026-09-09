@@ -1158,3 +1158,53 @@ semantics tree are asserted in `SessionAccessibilityTest`, which changes nothing
 any device, and the interruption is driven with the home button, which is the same
 stopped activity a call produces. Nothing is waiting on the emulator. It is recorded
 because the next session should not spend an hour rediscovering it.
+
+### What the Phase 3 review pass found
+
+Three defects, all in code that compiled, passed its own tests, and read well. Worth
+recording because all three are the same shape: a confident answer where an honest
+uncertain one was required, which is the failure mode this app can least afford.
+
+**A lab report could reach the reader.** The classifier guarded out-of-scope pages by
+counting clues, so a half-photographed blood test that fired two report clues escaped
+the guard and came back Unclear. Part 5's unclear screen offers "explain it in plain
+words" as one of its two buttons, so a blood test was one tap from Part 7. It now
+computes what the page looks like first and lets a single out-of-scope clue overrule
+anything that would otherwise have been Unclear.
+
+**An ordinary physio sheet could be condemned as an imaging page.** The two-clue bar
+pooled across the three out-of-scope families, so one imaging word plus one medicine
+word added up to a scan. "Technique" and "as needed for" are ordinary English on a
+handout. The bar is now counted within one family, which is strictly more conservative
+on real out-of-scope pages and stops condemning real sheets.
+
+**The plan matcher read prohibitions as prescriptions.** "Avoid stairs" came back as
+stairs, confidently matched, and "Avoid: deep squats and stairs" was split on the
+"and" into two confident items. On a confirmation screen that puts somebody in front
+of the exact thing the line was written to keep them away from. This is the worst
+outcome available in Part 6 and the reason its restraint is written the way it is.
+
+**One thing the review could not fix, so I did.** The classifier can say which of the
+three out-of-scope families it saw, which is useful in a test and in a bug report.
+Part 5 gives an out-of-scope page exactly one sentence and that sentence does not name
+the kind of document. The scan screen shows what the app saw on every other outcome
+and shows nothing on this one: telling somebody the app decided their page was a blood
+test is the app saying something about their health.
+
+### The Phase 3 gate
+
+"The therapist plan and the app's suggestions are visibly separate on Today and in
+history, verified by screenshot, and a movement in both is counted once."
+
+**Pass**, as `PlanSeparateTest` on the phone rather than as a screenshot somebody
+looked at once: both headings are on the card, the plan's movements sit under the
+plan's heading and the app's under "Also, if you want more", the sentence about a
+movement on both lists is said once and not once per movement, a clash is flagged with
+the movement still on the list, and a card with no plan behind it offers no extras at
+all because until then the app's suggestions are not extras, they are the session.
+
+Writing that test found a real duplication: the plan's label was drawn twice, as the
+eyebrow and as the card's big line. The big line now says how many movements the plan
+has. A plan has no length the app can work out, because it does not know how long a
+therapist expects any of it to take, and guessing would be the app adding something to
+somebody else's plan.

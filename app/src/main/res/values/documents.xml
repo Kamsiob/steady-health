@@ -64,6 +64,10 @@
     <!-- How the two plans sit beside each other on Today. -->
     <string name="plan_from">From your %1$s</string>
     <string name="plan_them">therapist</string>
+    <plurals name="plan_how_many">
+        <item quantity="one">One movement</item>
+        <item quantity="other">%1$d movements</item>
+    </plurals>
     <string name="plan_also">Also, if you want more</string>
     <string name="settings_extras">The app\'s own suggestions</string>
     <string name="settings_extras_sub">Shown under your therapist\'s plan. Off leaves only theirs.</string>

@@ -79,8 +79,8 @@ object PlanMatching {
     fun readOne(line: String): PlanItem {
         val text = X_RATE.replace(digits(line), " ")
         val often = readOften(text)
-        val said = often?.let { text.replace(it.words, " ") } ?: text
-        val rest = UNKNOWN_RATE.replace(said, " ")
+        val left = often?.let { text.replace(it.words, " ") } ?: text
+        val rest = UNKNOWN_RATE.replace(left, " ")
         val found = match(line)
         return PlanItem(
             line = line.trim(),
@@ -125,6 +125,10 @@ object PlanMatching {
      * is flagged and left in, and the app asks them to raise it at the appointment.
      * So this returns items and never a shorter plan, and the caller has nowhere to
      * put the answer if it decided to remove one.
+     *
+     * The way they get around counts as a clash for the same reason: a sheet asking
+     * somebody who uses a wheelchair for heel raises is worth a sentence at the next
+     * appointment, and it is still their therapist's line to change and not the app's.
      */
     fun toAskAbout(
         plan: List<PlanItem>,
