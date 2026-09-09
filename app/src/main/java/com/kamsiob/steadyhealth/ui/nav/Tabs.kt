@@ -64,9 +64,17 @@ object Route {
     const val PHONE_FREE = "phone-free"
     const val PAST_SESSION = "past-session"
     const val SUNDAY = "sunday"
+    const val PLAN_WAYS = "plan-ways"
     const val SCAN = "scan"
+    const val PLAN_TYPE = "plan-type"
+    const val PLAN_PICK = "plan-pick"
+    const val PLAN_SAY = "plan-say"
     const val PAGE_FOUND = "page-found"
     const val PLAN_CONFIRM = "plan-confirm"
     const val DOCUMENTS = "documents"
     const val MODELS = "models"
+
+    /** The card somebody sends. ADDENDUM-03 Part 11. CARD above is a help card. */
+    const val SEND_CARD = "send-card"
+    const val PLACES = "places"
 }

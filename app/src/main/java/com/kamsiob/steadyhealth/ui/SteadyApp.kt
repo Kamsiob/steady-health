@@ -32,6 +32,7 @@ import androidx.navigation.compose.rememberNavController
 import com.kamsiob.steadyhealth.domain.Exclusion
 import com.kamsiob.steadyhealth.engine.ReminderKind
 import com.kamsiob.steadyhealth.remind.Reminding
+import com.kamsiob.steadyhealth.share.CardKind
 import com.kamsiob.steadyhealth.ui.components.SteadyTabBar
 import com.kamsiob.steadyhealth.ui.model.ModelsActions
 import com.kamsiob.steadyhealth.ui.model.ModelsScreen
@@ -39,11 +40,17 @@ import com.kamsiob.steadyhealth.ui.model.ModelsViewModel
 import com.kamsiob.steadyhealth.ui.nav.Route
 import com.kamsiob.steadyhealth.ui.nav.Tab
 import com.kamsiob.steadyhealth.ui.onboarding.OnboardingFlow
+import com.kamsiob.steadyhealth.ui.places.PlacesViewModel
 import com.kamsiob.steadyhealth.ui.scan.Camera
 import com.kamsiob.steadyhealth.ui.scan.CameraPreview
 import com.kamsiob.steadyhealth.ui.scan.DocumentsScreen
 import com.kamsiob.steadyhealth.ui.scan.PageFoundScreen
 import com.kamsiob.steadyhealth.ui.scan.PlanConfirmScreen
+import com.kamsiob.steadyhealth.ui.scan.PlanPickScreen
+import com.kamsiob.steadyhealth.ui.scan.PlanSayScreen
+import com.kamsiob.steadyhealth.ui.scan.PlanTypeScreen
+import com.kamsiob.steadyhealth.ui.scan.PlanWaysScreen
+import com.kamsiob.steadyhealth.ui.scan.PlanWaysViewModel
 import com.kamsiob.steadyhealth.ui.scan.ScanScreen
 import com.kamsiob.steadyhealth.ui.scan.ScanViewModel
 import com.kamsiob.steadyhealth.ui.screens.AbilitiesScreen
@@ -61,6 +68,7 @@ import com.kamsiob.steadyhealth.ui.screens.OfferScreen
 import com.kamsiob.steadyhealth.ui.screens.PacingScreen
 import com.kamsiob.steadyhealth.ui.screens.PastSessionScreen
 import com.kamsiob.steadyhealth.ui.screens.PatternScreen
+import com.kamsiob.steadyhealth.ui.screens.PlacesScreen
 import com.kamsiob.steadyhealth.ui.screens.QuieterScreen
 import com.kamsiob.steadyhealth.ui.screens.RateAgainScreen
 import com.kamsiob.steadyhealth.ui.screens.RemindersScreen
@@ -80,6 +88,8 @@ import com.kamsiob.steadyhealth.ui.screens.WeightPageScreen
 import com.kamsiob.steadyhealth.ui.session.PhoneFreeScreen
 import com.kamsiob.steadyhealth.ui.session.SessionHost
 import com.kamsiob.steadyhealth.ui.session.SessionViewModel
+import com.kamsiob.steadyhealth.ui.share.CardScreen
+import com.kamsiob.steadyhealth.ui.share.CardViewModel
 import com.kamsiob.steadyhealth.ui.theme.SteadyPalette
 import kotlinx.coroutines.delay
 
@@ -103,6 +113,8 @@ fun SteadyApp(openSession: Boolean = false) {
     val sessionsViewModel: SessionsViewModel = viewModel()
     val scanViewModel: ScanViewModel = viewModel()
     val modelsViewModel: ModelsViewModel = viewModel()
+    val cardViewModel: CardViewModel = viewModel()
+    val placesViewModel: PlacesViewModel = viewModel()
     val therapistPageViewModel: TherapistPageViewModel = viewModel()
     val onboarded by viewModel.onboardingComplete.collectAsStateWithLifecycle()
 
@@ -123,6 +135,8 @@ fun SteadyApp(openSession: Boolean = false) {
             scanViewModel,
             modelsViewModel,
             therapistPageViewModel,
+            cardViewModel,
+            placesViewModel,
         )
     }
 }
@@ -143,6 +157,8 @@ private fun Tabs(
     scanViewModel: ScanViewModel,
     modelsViewModel: ModelsViewModel,
     therapistPageViewModel: TherapistPageViewModel,
+    cardViewModel: CardViewModel,
+    placesViewModel: PlacesViewModel,
 ) {
     val navController = rememberNavController()
     var tab by rememberSaveable { mutableStateOf(Tab.Today) }
@@ -179,6 +195,8 @@ private fun Tabs(
                             scanViewModel = scanViewModel,
                             modelsViewModel = modelsViewModel,
                             therapistPageViewModel = therapistPageViewModel,
+                            cardViewModel = cardViewModel,
+                            placesViewModel = placesViewModel,
                             navController = navController,
                         )
                     }
@@ -188,6 +206,7 @@ private fun Tabs(
                     sessionsRoutes(sessionsViewModel, sessionViewModel, navController, back)
                     scanRoutes(scanViewModel, modelsViewModel, navController, back)
 
+                    asideRoutes(cardViewModel, placesViewModel, back)
                     askRoutes(askViewModel, navController, back)
                     checkRoutes(checkViewModel, navController, back) {
                         summaryViewModel.open()
@@ -372,7 +391,7 @@ private fun NavGraphBuilder.dailyRoutes(
  * longer than any screen in it.
  */
 @Composable
-@Suppress("LongParameterList") // Three tabs, seven view models, one place.
+@Suppress("LongParameterList") // Four tabs, one view model each, one place.
 private fun TabBody(
     tab: Tab,
     viewModel: SteadyViewModel,
@@ -387,6 +406,8 @@ private fun TabBody(
     scanViewModel: ScanViewModel,
     modelsViewModel: ModelsViewModel,
     therapistPageViewModel: TherapistPageViewModel,
+    cardViewModel: CardViewModel,
+    placesViewModel: PlacesViewModel,
     navController: NavHostController,
 ) {
     when (tab) {
@@ -466,10 +487,7 @@ private fun TabBody(
                     sessionsViewModel.openLogPast()
                     navController.navigate(Route.LOG_PAST)
                 },
-                onScan = {
-                    scanViewModel.open()
-                    navController.navigate(Route.SCAN)
-                },
+                onScan = { navController.navigate(Route.PLAN_WAYS) },
             )
         }
 
@@ -518,6 +536,18 @@ private fun TabBody(
                 onCheck = {
                     checkViewModel.open()
                     navController.navigate(Route.CHECK)
+                },
+                onCard = {
+                    // Blank from here. The kinds with a line already in them are
+                    // offered where that line is, on the Sunday review and after a
+                    // crossing, and this is the door for somebody who just wants to
+                    // say something.
+                    cardViewModel.open(CardKind.Blank, "")
+                    navController.navigate(Route.SEND_CARD)
+                },
+                onPlaces = {
+                    placesViewModel.open()
+                    navController.navigate(Route.PLACES)
                 },
             )
         }
@@ -654,6 +684,7 @@ private fun NavGraphBuilder.checkRoutes(
         RateAgainScreen(
             items = items,
             onRate = viewModel::rate,
+            onSureness = viewModel::sureness,
             onDone = viewModel::ratingsDone,
             onBack = { navController.popBackStack(Route.TABS, inclusive = false) },
         )
@@ -719,11 +750,18 @@ private fun NavGraphBuilder.askRoutes(
 }
 
 /**
- * Scanning a page, and the plan that can come out of it.
+ * The ways into a therapist's plan, and the page a plan can come off.
  *
- * ADDENDUM-03 Parts 5 and 6. Three screens in a line: the camera, the one question,
- * and the confirmation. Its own builder because it is one flow rather than three
- * places, and because nothing else in the app can reach the middle of it.
+ * ADDENDUM-03 Parts 5 and 6. The chooser is the only door: everywhere in the app that
+ * used to open the camera opens this instead, so nothing reaches the camera without
+ * passing the four ways, and all four ways reach one confirmation screen. Its own
+ * builder because it is one flow rather than seven places, and because nothing else in
+ * the app can reach the middle of it.
+ *
+ * The three ways that are not the camera each hold their own [PlanWaysViewModel],
+ * scoped to their own entry on the back stack. Each is one screen with one answer on
+ * it, so there is nothing to share between them, and leaving a screen is then what
+ * lets go of what it was holding, which for the spoken way is the microphone.
  */
 private fun NavGraphBuilder.scanRoutes(
     viewModel: ScanViewModel,
@@ -731,6 +769,21 @@ private fun NavGraphBuilder.scanRoutes(
     navController: NavHostController,
     back: () -> Unit,
 ) {
+    composable(Route.PLAN_WAYS) {
+        PlanWaysScreen(
+            onCamera = {
+                viewModel.open()
+                navController.navigate(Route.SCAN)
+            },
+            onSay = { navController.navigate(Route.PLAN_SAY) },
+            onPick = { navController.navigate(Route.PLAN_PICK) },
+            onType = { navController.navigate(Route.PLAN_TYPE) },
+            onBack = back,
+        )
+    }
+
+    planWaysRoutes(viewModel, navController, back)
+
     composable(Route.SCAN) {
         val state by viewModel.state.collectAsStateWithLifecycle()
         val context = LocalContext.current
@@ -809,6 +862,81 @@ private fun NavGraphBuilder.scanRoutes(
             onDrop = viewModel::dropItem,
             onReviewDay = viewModel::setPlanReviewDay,
             onSave = { viewModel.savePlan { navController.popBackStack(Route.TABS, false) } },
+            onBack = back,
+        )
+    }
+}
+
+/**
+ * The three ways into a plan that have no page behind them. ADDENDUM-03 Part 6.
+ *
+ * All three end on the same confirmation screen the photographed sheet ends on, with
+ * the same draft behind it, so "nothing is saved unconfirmed" is one screen's job and
+ * not four.
+ */
+private fun NavGraphBuilder.planWaysRoutes(
+    scan: ScanViewModel,
+    navController: NavHostController,
+    back: () -> Unit,
+) {
+    composable(Route.PLAN_TYPE) {
+        val ways: PlanWaysViewModel = viewModel()
+        val state by ways.state.collectAsStateWithLifecycle()
+        PlanTypeScreen(
+            state = state,
+            onTyped = ways::setTyped,
+            onContinue = {
+                scan.propose(ways.typedItems())
+                navController.navigate(Route.PLAN_CONFIRM)
+            },
+            onBack = back,
+        )
+    }
+
+    composable(Route.PLAN_PICK) {
+        val ways: PlanWaysViewModel = viewModel()
+        val state by ways.state.collectAsStateWithLifecycle()
+        LaunchedEffect(Unit) { ways.open() }
+        PlanPickScreen(
+            state = state,
+            onMovement = ways::togglePicked,
+            onContinue = {
+                scan.propose(ways.pickedItems())
+                navController.navigate(Route.PLAN_CONFIRM)
+            },
+            onBack = back,
+        )
+    }
+
+    composable(Route.PLAN_SAY) {
+        val ways: PlanWaysViewModel = viewModel()
+        val state by ways.state.collectAsStateWithLifecycle()
+        // The microphone is asked for on the tap that needs it, never on the way in,
+        // and only on a phone that has already said it can do this without a server.
+        val ask = rememberLauncherForActivityResult(
+            ActivityResultContracts.RequestPermission(),
+        ) { ways.microphoneNow() }
+
+        LaunchedEffect(Unit) { ways.open() }
+        // Whether the permission is held is asked again on every return, because the
+        // person may have just granted it in Settings. The recogniser is let go on the
+        // way out rather than merely stopped, so that the app is not holding the
+        // microphone off screen even for as long as one last result would take.
+        LifecycleResumeEffect(Unit) {
+            ways.microphoneNow()
+            onPauseOrDispose { ways.release() }
+        }
+
+        PlanSayScreen(
+            state = state,
+            onAllow = { ask.launch(android.Manifest.permission.RECORD_AUDIO) },
+            onListen = ways::listen,
+            onStop = ways::stopListening,
+            onContinue = {
+                scan.propose(ways.heardItems())
+                navController.navigate(Route.PLAN_CONFIRM)
+            },
+            onType = { navController.navigate(Route.PLAN_TYPE) },
             onBack = back,
         )
     }
@@ -900,10 +1028,7 @@ private fun settingsActions(
     },
     onWeekTarget = viewModel::setWeekTarget,
     onDaily = { viewModel.setReminder(ReminderKind.Daily, it) },
-    onScan = {
-        scanViewModel.open()
-        navController.navigate(Route.SCAN)
-    },
+    onScan = { navController.navigate(Route.PLAN_WAYS) },
     onDocuments = {
         scanViewModel.openDocuments()
         navController.navigate(Route.DOCUMENTS)
@@ -914,6 +1039,39 @@ private fun settingsActions(
     },
     onExtras = viewModel::setExtras,
 )
+
+/**
+ * The card and the places walkthrough. ADDENDUM-03 Parts 11 and 8.
+ *
+ * Their own group rather than inside the settings routes, because neither is a
+ * setting: both are things somebody does once and both are reached from Progress.
+ */
+private fun NavGraphBuilder.asideRoutes(
+    cardViewModel: CardViewModel,
+    placesViewModel: PlacesViewModel,
+    back: () -> Unit,
+) {
+    composable(Route.SEND_CARD) {
+        val state by cardViewModel.state.collectAsStateWithLifecycle()
+        CardScreen(
+            state = state,
+            onLine = cardViewModel::setLine,
+            onSend = cardViewModel::send,
+            onBack = back,
+        )
+    }
+
+    composable(Route.PLACES) {
+        val state by placesViewModel.state.collectAsStateWithLifecycle()
+        LaunchedEffect(Unit) { placesViewModel.open() }
+        PlacesScreen(
+            state = state,
+            onSaid = placesViewModel::said,
+            onStartAgain = placesViewModel::startAgain,
+            onBack = back,
+        )
+    }
+}
 
 private fun NavGraphBuilder.settingsRoutes(
     viewModel: SettingsViewModel,

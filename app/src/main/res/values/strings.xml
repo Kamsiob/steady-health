@@ -532,4 +532,42 @@
     <string name="welcome_back_short">Good to see you. Your next one is a little shorter than where you left off, so the first one back is easy.</string>
     <string name="welcome_back_long">Good to see you. Move starts a couple of steps back and stays there for a fortnight. Coming back is meant to be the easy part.</string>
     <string name="welcome_back_ask">Good to see you. A few questions have gone stale, so the app will ask them again before it suggests anything.</string>
+
+    <!--
+      The card. ADDENDUM-03 Part 11: exactly one other person, no feed, no
+      comparison, no account, no server, nothing inbound. Every sentence here is
+      about the person's own line, because the line is the card.
+    -->
+    <string name="card_title">Send a card</string>
+    <string name="card_intro">A picture with one line on it, for one person who\'d like to know. Change the words to whatever you want to say.</string>
+    <string name="card_line">What it says</string>
+    <string name="card_hint">One line, in your words</string>
+    <string name="card_send">Send it</string>
+    <string name="card_too_long" tools:ignore="PluralsCandidate">That is longer than fits on the card. About %1$d characters is the most.</string>
+    <string name="card_check_heading">Worth a look</string>
+    <string name="card_check">Your line mentions %1$s. That is up to you, and the card will say it if you send it. The app never puts anything like that on a card on its own.</string>
+    <string name="card_private">Nothing about who you send it to is stored, and nothing comes back. Your phone hands the picture to whatever you choose.</string>
+    <string name="card_offer">Some people send these to someone who\'d like to know.</string>
+    <string name="card_offer_sub">Entirely up to you.</string>
+    <!--
+      The three suggested lines, and every one of them is only a starting point:
+      the field is editable and the sentence becomes the person's the moment they
+      touch it.
+
+      None of them carries a rating out of ten, a weight or a clinical measure,
+      because Part 11 says those never go on a card and the app's own suggestions
+      are the one place it could put one there without being asked. A test holds
+      these three to CardRules, the same check a typed line gets.
+
+      The month card is the one that had to change shape for that rule. Then and
+      now is a rating out of ten in Progress, so on a card it is the length of
+      time and the thing they named, and what changed is theirs to write.
+    -->
+    <plurals name="card_week">
+        <item quantity="one">A good week. One session, and I am still at it.</item>
+        <item quantity="other">A good week. %1$d sessions, and I am still at it.</item>
+    </plurals>
+    <string name="card_milestone">I said I wanted to %1$s. I just did it.</string>
+    <string name="card_month">A month of this now. What I am working on is %1$s.</string>
+
 </resources>

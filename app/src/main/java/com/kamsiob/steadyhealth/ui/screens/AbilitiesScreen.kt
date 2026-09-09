@@ -91,12 +91,15 @@ data class WeekBar(val done: Int, val wanted: Int, val spoken: String)
  * for a year is the work rather than the absence of it.
  */
 @Composable
+@Suppress("LongParameterList") // One screen, one callback for each thing on it.
 fun AbilitiesScreen(
     state: AbilitiesUiState,
     onAbility: (AbilityDomain) -> Unit,
     onCheck: () -> Unit,
     onSummary: () -> Unit,
     onTry: () -> Unit,
+    onCard: () -> Unit,
+    onPlaces: () -> Unit,
     modifier: Modifier = Modifier,
     tryOffer: Boolean = false,
     tryResult: Boolean = false,
@@ -193,6 +196,21 @@ fun AbilitiesScreen(
         if (state.waiting) {
             Paragraph(stringResource(R.string.abilities_waiting))
         }
+
+        // Both of these live at the bottom, unbadged and unannounced. Part 11 says
+        // the card is offered once at the second Sunday review and lives in Progress
+        // afterwards, and Part 8 says the walkthrough is optional and off by default.
+        // Neither is a thing the app should ask anybody about twice.
+        ListItem(
+            heading = stringResource(R.string.card_title),
+            subtitle = stringResource(R.string.card_offer_sub),
+            onClick = onCard,
+        )
+        ListItem(
+            heading = stringResource(R.string.places_offer),
+            subtitle = stringResource(R.string.places_offer_sub),
+            onClick = onPlaces,
+        )
     }
 }
 
