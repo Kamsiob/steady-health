@@ -13,13 +13,26 @@ this folder, in one line:
 cd "/var/home/Kamsiob/Kamiob Apps/-- Android/Steady Health" && source ./gradle-env.sh && ./gradlew :app:assembleDebug && adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
 
-It is an in-place upgrade. It keeps whatever is already in the app.
+It is an in-place upgrade. It keeps whatever is already in the app, which is what
+every install in this project has been: the database has gone from version 1 to
+version 7 over the build and each step is an automatic migration, so an old install
+opens with everything still in it.
 
 To start from nothing, which the walkthrough below assumes:
 
 ```
 adb shell pm clear com.kamsiob.steadyhealth
 ```
+
+And to run every check, off the phone and on it:
+
+```
+tools/all-gates.sh          # about half an hour, most of it driving the phone
+tools/all-gates.sh --quick  # the five that touch nothing, about a minute
+```
+
+Run one at a time. Two of them driving the phone together makes the screen reader
+return nothing for both, which reads exactly like the app having gone blank.
 
 ---
 
