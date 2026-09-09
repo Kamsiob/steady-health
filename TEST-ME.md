@@ -37,16 +37,31 @@ adb shell pm clear com.kamsiob.steadyhealth
    checked its number against a person's. It is the one measurement in the app whose
    accuracy is unverified, and it matters more than it did.
 
-3. **A health tech attorney has to review the HAI-DEF Clinical Use boundary** before
-   the report reading of ADDENDUM-03 Part 7 can be turned on. Phase 4 builds it behind
-   a flag that stays off until that clears. Nothing is waiting on it right now.
+3. **Say a plan out loud, on this phone.** The spoken way into a therapist's plan
+   uses the on-device recogniser only, and refuses rather than falling back to the one
+   that sends your voice to a server. Nobody has run it against a real recogniser. If
+   your phone has none, the app should say so in one sentence and offer typing, and
+   that is worth seeing too. Step 20.
 
-4. **The three translations.** Spanish, Chinese and Arabic are declared and empty. The
-   picker hides itself until a translation lands, so nothing is broken; it is Phase 8.
+4. **A health tech attorney has to review the HAI-DEF Clinical Use boundary** before
+   the report reading of ADDENDUM-03 Part 7 can be turned on. It is built, its
+   validator is built, and both stay behind a flag until that clears. Nothing else is
+   waiting on it.
+
+5. **Make the signing key, and back it up somewhere that is not this machine.**
+   LAUNCH.md section 1 is the whole of it, and the backup matters more than the key:
+   lose it and this app can never be updated again under this package name. Choose
+   Play App Signing when you create the entry, which is the one thing that makes
+   losing it survivable and has to be decided at the start.
+
+6. **The three translations.** Spanish, Chinese and Arabic are declared and empty. The
+   picker hides itself until one lands, so nothing is broken. Producing three
+   translations of a health app by machine is the one thing in this build I would not
+   do without a person who speaks the language.
 
 ---
 
-## Twenty steps, from a fresh install
+## Thirty steps, from a fresh install
 
 Run `adb shell pm clear com.kamsiob.steadyhealth` first. Every step below has been
 driven on the phone except where it says otherwise.
