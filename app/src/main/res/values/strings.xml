@@ -475,9 +475,9 @@
     <string name="reminders_denied">Android is not letting notifications through. You can change that in the system settings for this app.</string>
 
     <string name="data_title">Your data</string>
-    <string name="data_row">Export or delete everything</string>
+    <string name="data_row">Export, put back, or delete everything</string>
     <string name="data_export">Export everything</string>
-    <string name="data_export_why">Spreadsheets and a one-page summary, in a zip you can open in anything. Nothing is sent anywhere; you choose where it goes.</string>
+    <string name="data_export_why">Spreadsheets and a one-page summary, in a zip you can open in anything. The same zip holds a backup this app can read back. Nothing is sent anywhere; you choose where it goes.</string>
     <string name="data_summary_row">Summary</string>
     <string name="data_summary_why">Read it, or export a page for your appointment.</string>
     <string name="data_delete">Delete everything</string>
@@ -486,6 +486,18 @@
     <string name="data_delete_cancel">Keep it</string>
     <string name="data_delete_title">Delete everything?</string>
     <string name="data_deleted">It is gone. The app will start again from the beginning.</string>
+    <string name="data_restore">Put everything back from a file</string>
+    <string name="data_restore_why">From a zip you exported from this app. Everything in the app now is replaced by what is in the file.</string>
+    <string name="data_restore_title">Replace everything?</string>
+    <string name="data_restore_ask">Everything in the app now goes, and everything in this file takes its place. The two are never joined together: there is no honest way to join two histories of the same person, so the app does not try. There is nothing to get back afterwards.</string>
+    <string name="data_restore_written">Written on %1$s, by version %2$s.</string>
+    <string name="data_restore_confirm">Yes, replace everything</string>
+    <string name="data_restore_cancel">Keep what is here</string>
+    <string name="data_restoring">Putting everything back. This can take a moment.</string>
+    <string name="data_restored">It is back. Everything in the file is here.</string>
+    <string name="data_restore_not_ours">That file did not come from this app. Look for the zip you exported, or the backup file inside it. Nothing has changed.</string>
+    <string name="data_restore_later">That backup was written by a newer version of Steady Health. It can hold things this version has nowhere to put, so it is left alone rather than half read. Update the app and try again. Nothing has changed.</string>
+    <string name="data_restore_damaged">That backup came from this app, but it is damaged and cannot be read. Nothing has changed.</string>
 
     <string name="notice_ok">Got it</string>
 
@@ -587,5 +599,17 @@
     </plurals>
     <string name="card_milestone">I said I wanted to %1$s. I just did it.</string>
     <string name="card_month">A month of this now. What I am working on is %1$s.</string>
+
+
+    <!--
+      The day between sessions. ADDENDUM-03 Part 8 item 1: one line on Today with no
+      goal attached. There is no number in it, no comparison, and no line at all for
+      an ordinary day or a quiet one. It is the only thing the app records without
+      somebody doing anything, so the switch says exactly what it turns on.
+    -->
+    <string name="up_and_about">You were up and about more than usual today.</string>
+    <string name="settings_up_and_about">The day between sessions</string>
+    <string name="settings_up_and_about_sub">One line, now and then, when you have been up more than usual</string>
+    <string name="settings_up_and_about_why">Your phone already counts steps. With this on, the app reads that count when you open it and says one line on the days you were up more than your own usual. It never shows a number, never sets one, and says nothing on an ordinary day.</string>
 
 </resources>

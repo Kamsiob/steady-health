@@ -8,7 +8,6 @@
       build still cannot open a network connection.
 
       Still to come, each with the one sentence that justifies it to a person:
-        ACTIVITY_RECOGNITION  counts your steps while a walk is running.
         ACCESS_FINE_LOCATION  measures distance, only if you turn it on.
         INTERNET              downloads the optional reader once, if you ask.
     -->
@@ -30,11 +29,46 @@
     <uses-permission android:name="android.permission.CAMERA" />
 
     <!--
+      Asked the first time somebody taps "Start talking" on the say it out loud way
+      into a therapist's plan, never before, and only while that screen is listening.
+      ADDENDUM-03 Part 6: the sentence is turned into words by the phone's on device
+      recogniser and no audio leaves the device. Where a phone has no on device
+      recogniser the app does not fall back to the networked one and does not ask for
+      this permission at all, because the fallback that would work is the one that
+      sends somebody's voice to a server. The app works exactly the same if it is
+      refused, and typing reaches the same screen.
+    -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO" />
+
+    <!--
       Declared so that a phone with no camera can still install the app. Somebody
       using this on an old tablet loses one feature, not the whole thing.
     -->
     <uses-feature
         android:name="android.hardware.camera"
+        android:required="false" />
+
+    <!-- The same, for a device with no microphone. One way in of four, not the app. -->
+    <uses-feature
+        android:name="android.hardware.microphone"
+        android:required="false" />
+
+    <!--
+      Asked only if somebody turns on the one line about the day between sessions,
+      never before, and the app is complete without it. ADDENDUM-03 Part 8 item 1
+      wants "steps and time spent up, from the phone, one line on Today with no goal
+      attached", and this is the permission the phone's own step counter sits behind.
+
+      Nothing runs in the background because of it. There is no service and no
+      periodic wake: the counter is read when the app is opened and the listener is
+      unregistered in the same breath. What is stored is a reading and a day, inside
+      the same encrypted database as everything else, for a fortnight.
+    -->
+    <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
+
+    <!-- A phone with no step counter loses one line, not the app. -->
+    <uses-feature
+        android:name="android.hardware.sensor.stepcounter"
         android:required="false" />
 
     <!--
@@ -43,6 +77,28 @@
       install, and the app works the same without a vibrator in the device.
     -->
     <uses-permission android:name="android.permission.VIBRATE" />
+
+    <!--
+      Taken back out, because a library asks for it and this app does not.
+      ML Kit reads a page with a model that ships inside this APK and needs no
+      network to do it, but it arrives with Google's usage telemetry transport
+      attached, and that library declares INTERNET and sends events of its own
+      accord. Left alone, the merger hands the finished app a network permission
+      nothing anybody wrote here ever uses.
+
+      Removing it is what keeps the sentence at the top of this file true. A
+      promise that a photographed letter and a spoken sentence stay on the phone
+      is then held by the system rather than by everyone remembering, which is
+      the only version of that promise worth making. PermissionsTest reads the
+      merged manifest and fails the build if it comes back.
+
+      Part 7's optional reader is the one thing that will ever need it. On the day
+      that download is built, this node goes and the permission is declared above
+      with the one sentence that justifies it to a person.
+    -->
+    <uses-permission
+        android:name="android.permission.INTERNET"
+        tools:node="remove" />
 
     <!--
       localeConfig is read from Android 13 onward, where the system settings

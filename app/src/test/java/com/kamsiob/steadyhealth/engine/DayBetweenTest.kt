@@ -106,6 +106,54 @@ class DayBetweenTest {
         assertThat(DayBetween.median(emptyList())).isEqualTo(0.0)
     }
 
+    @Test
+    fun aDaysStepsAreItsReadingLessTheDayBefores() {
+        val readings = listOf(
+            StepReading(TODAY - 2, 1000),
+            StepReading(TODAY - 1, 4000),
+            StepReading(TODAY, 9000),
+        )
+
+        assertThat(DayBetween.daysFrom(readings))
+            .containsExactly(DayUp(TODAY - 1, 3000), DayUp(TODAY, 5000))
+            .inOrder()
+    }
+
+    @Test
+    fun aDayWithNoDayBeforeItIsLeftOutRatherThanGuessedAt() {
+        val readings = listOf(StepReading(TODAY - 5, 1000), StepReading(TODAY, 9000))
+
+        assertThat(DayBetween.daysFrom(readings)).isEmpty()
+    }
+
+    @Test
+    fun aRebootIsLeftOutRatherThanCountedAsANegativeDay() {
+        // The counter goes back to zero on a reboot. That day is unknowable and
+        // guessing it would put a number in front of somebody their phone never took.
+        val readings = listOf(StepReading(TODAY - 1, 40_000), StepReading(TODAY, 900))
+
+        assertThat(DayBetween.daysFrom(readings)).isEmpty()
+    }
+
+    @Test
+    fun oneReadingIsNoDaysAtAll() {
+        assertThat(DayBetween.daysFrom(listOf(StepReading(TODAY, 900)))).isEmpty()
+        assertThat(DayBetween.daysFrom(emptyList())).isEmpty()
+    }
+
+    @Test
+    fun readingsOutOfOrderStillComeBackInOrder() {
+        val readings = listOf(
+            StepReading(TODAY, 9000),
+            StepReading(TODAY - 2, 1000),
+            StepReading(TODAY - 1, 4000),
+        )
+
+        assertThat(DayBetween.daysFrom(readings).map { it.epochDay })
+            .containsExactly(TODAY - 1, TODAY)
+            .inOrder()
+    }
+
     private fun week(steps: Int) =
         (1..DayBetween.ENOUGH_DAYS).map { DayUp(TODAY - it, steps) }
 

@@ -71,6 +71,7 @@ import com.kamsiob.steadyhealth.engine.Reading
 import com.kamsiob.steadyhealth.engine.ReminderKind
 import com.kamsiob.steadyhealth.engine.Reminders
 import com.kamsiob.steadyhealth.engine.Smoothed
+import com.kamsiob.steadyhealth.engine.StepReading
 import com.kamsiob.steadyhealth.engine.Variable
 import com.kamsiob.steadyhealth.engine.VisitInputs
 import com.kamsiob.steadyhealth.engine.VisitSummaryEngine
@@ -90,6 +91,7 @@ import com.kamsiob.steadyhealth.session.Result
 import com.kamsiob.steadyhealth.session.TheChair
 import com.kamsiob.steadyhealth.session.Week
 import java.time.LocalDate
+import java.time.ZoneId
 
 /**
  * The only things that touch the database.
@@ -1496,7 +1498,37 @@ class ContextRepository(private val db: SteadyDatabase) {
     /** Going through it again starts from nothing, which is what again means. */
     suspend fun forgetPlaces() = Places.all.forEach { put("place_${'$'}{it.id}", "") }
 
+    /**
+     * The phone's step counter, as it stood on one day. ADDENDUM-03 Part 8 item 1.
+     *
+     * A fortnight of them and no more. This is the only thing in the app that is
+     * recorded without somebody doing anything, so it keeps the shortest history that
+     * answers the question, which is what an ordinary day looks like for this person.
+     */
+    suspend fun stepReadings(): List<StepReading> = (0..A_FORTNIGHT).mapNotNull { back ->
+        val day = LocalDate.now(ZoneId.systemDefault()).toEpochDay() - back
+        get("steps_${'$'}day")?.toLongOrNull()?.let { StepReading(day, it) }
+    }
+
+    suspend fun setStepReading(day: Long, sinceBoot: Long) {
+        put("steps_${'$'}day", sinceBoot.toString())
+        // The day that has just fallen out of the fortnight, so this cannot grow.
+        put("steps_${'$'}{day - A_FORTNIGHT - 1}", "")
+    }
+
+    /** The days the up and about line has already been said, so it is not said twice. */
+    suspend fun upAndAboutSaid(): Set<Long> =
+        get(UP_AND_ABOUT).orEmpty().split(" ").mapNotNull { it.toLongOrNull() }.toSet()
+
+    suspend fun sayUpAndAbout(day: Long) {
+        val kept = (upAndAboutSaid() + day).sorted().takeLast(A_FEW)
+        put(UP_AND_ABOUT, kept.joinToString(" "))
+    }
+
     private companion object {
+        const val A_FORTNIGHT = 14L
+        const val A_FEW = 4
+        const val UP_AND_ABOUT = "up_and_about_said"
         const val CHAIR_HEIGHT = "chair_height"
         const val CHAIR_FROM = "chair_from"
         const val CHAIR_CHANGED_ON = "chair_changed_on"

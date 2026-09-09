@@ -4,6 +4,15 @@ package com.kamsiob.steadyhealth.engine
 data class DayUp(val epochDay: Long, val steps: Int)
 
 /**
+ * What the phone's counter said on one day, and when.
+ *
+ * TYPE_STEP_COUNTER counts since the phone last booted, so a reading on its own says
+ * nothing. What says something is the difference between two of them, which is why
+ * this is what gets stored and the arithmetic happens on the way out.
+ */
+data class StepReading(val epochDay: Long, val sinceBoot: Long)
+
+/**
  * What, if anything, the app says about a day between sessions.
  *
  * ADDENDUM-03 Part 8 item 1: "Steps and time spent up, from the phone, one line on
@@ -75,6 +84,27 @@ object DayBetween {
             UpAndAbout.MoreThanUsual
         } else {
             UpAndAbout.Quiet
+        }
+    }
+
+    /**
+     * Readings turned into days, with the days that cannot be worked out left out.
+     *
+     * A day's steps are its reading less the day before's, which needs the app to have
+     * been opened on both. Two things make a day unknowable and both are dropped
+     * rather than guessed at: a gap, where the day before has no reading, and a
+     * reboot, where the counter went backwards. Guessing either would put a number in
+     * front of somebody that their phone never counted.
+     */
+    fun daysFrom(readings: List<StepReading>): List<DayUp> {
+        val ordered = readings.sortedBy { it.epochDay }
+        return ordered.zipWithNext().mapNotNull { (before, now) ->
+            val steps = now.sinceBoot - before.sinceBoot
+            when {
+                now.epochDay != before.epochDay + 1 -> null
+                steps < 0 -> null
+                else -> DayUp(now.epochDay, steps.toInt())
+            }
         }
     }
 
